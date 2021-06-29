@@ -1,4 +1,4 @@
-module github.com/byte-plus/sdk-go
+module github.com/byteplus-sdk/sdk-go
 
 go 1.16
 

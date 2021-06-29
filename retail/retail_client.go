@@ -1,8 +1,8 @@
 package retail
 
 import (
-	"github.com/byte-plus/sdk-go/core/option"
-	. "github.com/byte-plus/sdk-go/retail/protocol"
+	"github.com/byteplus-sdk/sdk-go/core/option"
+	. "github.com/byteplus-sdk/sdk-go/retail/protocol"
 )
 
 type Client interface {

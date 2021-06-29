@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"github.com/byte-plus/sdk-go/core/logs"
+	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/valyala/fasthttp"
 	"sort"
 	"time"

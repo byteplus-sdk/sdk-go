@@ -1,6 +1,6 @@
 package retail
 
-import "github.com/byte-plus/sdk-go/core"
+import "github.com/byteplus-sdk/sdk-go/core"
 
 type ClientBuilder struct {
 	param core.ContextParam

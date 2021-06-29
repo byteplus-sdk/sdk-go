@@ -1,6 +1,6 @@
 syntax = "proto3";
 package bytedance.byteplus.retail;
-option go_package="github.com/byte-plus/sdk-go/retail/protocol";
+option go_package="github.com/byteplus-sdk/sdk-go/retail/protocol";
 
 //// This is the raw proto file which will not be shown to end customer.
 //// This file will be compiled to Chinese version and English version to

@@ -2,7 +2,7 @@ package retail
 
 import (
 	"fmt"
-	"github.com/byte-plus/sdk-go/core"
+	"github.com/byteplus-sdk/sdk-go/core"
 )
 
 const (

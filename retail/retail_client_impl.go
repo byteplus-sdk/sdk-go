@@ -3,10 +3,10 @@ package retail
 import (
 	"errors"
 	"fmt"
-	. "github.com/byte-plus/sdk-go/core"
-	"github.com/byte-plus/sdk-go/core/logs"
-	"github.com/byte-plus/sdk-go/core/option"
-	. "github.com/byte-plus/sdk-go/retail/protocol"
+	. "github.com/byteplus-sdk/sdk-go/core"
+	"github.com/byteplus-sdk/sdk-go/core/logs"
+	"github.com/byteplus-sdk/sdk-go/core/option"
+	. "github.com/byteplus-sdk/sdk-go/retail/protocol"
 	"strings"
 )
 
