@@ -1,15 +1,19 @@
 package core
 
-import "errors"
+import (
+	"errors"
+	"github.com/valyala/fasthttp"
+)
 
 type ContextParam struct {
-	Tenant   string
-	TenantId string
-	Token    string
-	Schema   string
-	Hosts    []string
-	Headers  map[string]string
-	Region   Region
+	Tenant     string
+	TenantId   string
+	Token      string
+	Schema     string
+	HostHeader string
+	Hosts      []string
+	Headers    map[string]string
+	Region     Region
 }
 
 func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
@@ -38,10 +42,12 @@ func NewContext(param *ContextParam) (*Context, error) {
 		tenantId:        param.TenantId,
 		token:           param.Token,
 		schema:          param.Schema,
+		hostHeader:      param.HostHeader,
 		hosts:           param.Hosts,
 		customerHeaders: param.Headers,
 	}
 	result.fillHosts(param)
+	result.httpCli = &fasthttp.HostClient{Addr: result.hosts[0]}
 	result.fillDefault()
 	return result, nil
 }
@@ -65,12 +71,19 @@ type Context struct {
 	// in order to ensure communication security, please use "HTTPS"
 	schema string
 
+	// This field will be used when use ips to request server,
+	// it will be set in http header, which named "Host"
+	hostHeader string
+
 	// Server address, china use "rec-b.volcengineapi.com",
 	// other area use "tob.sgsnssdk.com" in default
 	hosts []string
 
 	// Customer-defined http headers, all requests will include these headers
 	customerHeaders map[string]string
+
+	// fasthttp default client not support define host
+	httpCli *fasthttp.HostClient
 }
 
 func (receiver *Context) Tenant() string {
@@ -87,6 +100,10 @@ func (receiver *Context) Token() string {
 
 func (receiver *Context) Schema() string {
 	return receiver.schema
+}
+
+func (receiver *Context) HostHeader() string {
+	return receiver.hostHeader
 }
 
 func (receiver *Context) Hosts() []string {

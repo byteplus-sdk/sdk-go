@@ -3,6 +3,8 @@ package retail
 import (
 	"errors"
 	"fmt"
+	"github.com/byteplus-sdk/sdk-go/common"
+	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
@@ -11,15 +13,16 @@ import (
 )
 
 var (
-	writeMsgFormat  = "Only can receive %d items in one write request"
+	writeMsgFormat  = "Only can receive max to %d items in one write request"
 	writeTooManyErr = errors.New(fmt.Sprintf(writeMsgFormat, MaxWriteItemCount))
 
-	importMsgFormat  = "Only can receive %d items in one import request"
+	importMsgFormat  = "Only can receive max to %d items in one import request"
 	importTooManyErr = errors.New(fmt.Sprintf(importMsgFormat, MaxImportItemCount))
 )
 
 type clientImpl struct {
-	httpCli *HttpCaller
+	cCli    common.Client
+	hCaller *HttpCaller
 	ru      *retailURL
 }
 
@@ -28,9 +31,9 @@ func (c *clientImpl) WriteUsers(request *WriteUsersRequest,
 	if len(request.Users) > MaxWriteItemCount {
 		return nil, writeTooManyErr
 	}
-	url := c.ru.writeUsersUrl
+	url := c.ru.writeUsersURL
 	response := &WriteUsersResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +47,9 @@ func (c *clientImpl) ImportUsers(request *ImportUsersRequest,
 	if len(users) > MaxImportItemCount {
 		return nil, importTooManyErr
 	}
-	url := c.ru.importUsersUrl
+	url := c.ru.importUsersURL
 	response := &OperationResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -59,9 +62,9 @@ func (c *clientImpl) WriteProducts(request *WriteProductsRequest,
 	if len(request.Products) > MaxWriteItemCount {
 		return nil, writeTooManyErr
 	}
-	url := c.ru.writeProductsUrl
+	url := c.ru.writeProductsURL
 	response := &WriteProductsResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +78,9 @@ func (c *clientImpl) ImportProducts(request *ImportProductsRequest,
 	if len(products) > MaxImportItemCount {
 		return nil, importTooManyErr
 	}
-	url := c.ru.importProductsUrl
+	url := c.ru.importProductsURL
 	response := &OperationResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +93,9 @@ func (c *clientImpl) WriteUserEvents(request *WriteUserEventsRequest,
 	if len(request.UserEvents) > MaxWriteItemCount {
 		return nil, writeTooManyErr
 	}
-	url := c.ru.writeUserEventsUrl
+	url := c.ru.writeUserEventsURL
 	response := &WriteUserEventsResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,9 +109,9 @@ func (c *clientImpl) ImportUserEvents(request *ImportUserEventsRequest,
 	if len(userEvents) > MaxImportItemCount {
 		return nil, importTooManyErr
 	}
-	url := c.ru.importUserEventsUrl
+	url := c.ru.importUserEventsURL
 	response := &OperationResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,35 +119,11 @@ func (c *clientImpl) ImportUserEvents(request *ImportUserEventsRequest,
 	return response, nil
 }
 
-func (c *clientImpl) GetOperation(request *GetOperationRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	url := c.ru.getOperationUrl
-	response := &OperationResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[GetOperations] rsp:\n%s\n", response)
-	return response, nil
-}
-
-func (c *clientImpl) ListOperations(request *ListOperationsRequest,
-	opts ...option.Option) (*ListOperationsResponse, error) {
-	url := c.ru.listOperationsUrl
-	response := &ListOperationsResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[ListOperation] rsp:\n%s\n", response)
-	return response, nil
-}
-
 func (c *clientImpl) Predict(request *PredictRequest, scene string,
 	opts ...option.Option) (*PredictResponse, error) {
-	url := strings.ReplaceAll(c.ru.predictUrlFormat, "{}", scene)
+	url := strings.ReplaceAll(c.ru.predictURLFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -154,12 +133,28 @@ func (c *clientImpl) Predict(request *PredictRequest, scene string,
 
 func (c *clientImpl) AckServerImpressions(request *AckServerImpressionsRequest,
 	opts ...option.Option) (*AckServerImpressionsResponse, error) {
-	url := c.ru.ackImpressionUrl
+	url := c.ru.ackImpressionURL
 	response := &AckServerImpressionsResponse{}
-	err := c.httpCli.DoRequest(url, request, response, opts...)
+	err := c.hCaller.DoRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
 	logs.Debug("[AckImpressions] rsp:\n%s\n", response)
 	return response, nil
+}
+
+// GetOperation
+//
+// Gets the operation of a previous long running call.
+func (c *clientImpl) GetOperation(request *GetOperationRequest,
+	opts ...option.Option) (*OperationResponse, error) {
+	return c.cCli.GetOperation(request, opts...)
+}
+
+// ListOperations
+//
+// Lists operations that match the specified filter in the request.
+func (c *clientImpl) ListOperations(request *ListOperationsRequest,
+	opts ...option.Option) (*ListOperationsResponse, error) {
+	return c.cCli.ListOperations(request, opts...)
 }

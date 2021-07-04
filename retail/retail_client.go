@@ -1,11 +1,14 @@
 package retail
 
 import (
+	"github.com/byteplus-sdk/sdk-go/common"
+	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	. "github.com/byteplus-sdk/sdk-go/retail/protocol"
 )
 
 type Client interface {
+	common.Client
 	// WriteUsers
 	//
 	// Writes at most 100 users at a time. Exceeding 100 in a request protocol.results protocol.in
@@ -75,16 +78,6 @@ type Client interface {
 	// check the status.
 	// Please make sure the requests are deduplicated before sending over.
 	ImportUserEvents(request *ImportUserEventsRequest, opts ...option.Option) (*OperationResponse, error)
-
-	// GetOperation
-	//
-	// Gets the operation of a previous long running call.
-	GetOperation(request *GetOperationRequest, opts ...option.Option) (*OperationResponse, error)
-
-	// ListOperations
-	//
-	// Lists operations that match the specified filter in the request.
-	ListOperations(request *ListOperationsRequest, opts ...option.Option) (*ListOperationsResponse, error)
 
 	// Predict
 	//

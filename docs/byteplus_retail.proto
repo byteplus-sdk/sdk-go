@@ -1,5 +1,6 @@
 syntax = "proto3";
 package bytedance.byteplus.retail;
+option java_package = "byteplus.sdk.retail.protocol";
 option go_package="github.com/byteplus-sdk/sdk-go/retail/protocol";
 
 //// This is the raw proto file which will not be shown to end customer.
@@ -9,146 +10,7 @@ option go_package="github.com/byteplus-sdk/sdk-go/retail/protocol";
 ////   All comments start with "///" will be kept for Chinese version
 ////   All comments start with "////" will be filtered
 
-import "google/protobuf/any.proto";
-
-// The `Status` type defines a logical error model, Each `Status` message
-// contains 2 pieces of data: error code, error message.
-message Status {
-  // Output only.
-  // The error code. Callers should expect this field for all
-  // responses.
-  // Here is the table for the possible codes.
-  // 0   : The request is successfully returned. Other values indicates errors.
-  // xxx : The 3-digit error codes align with standard http error codes, e.g.
-  //       4xx indicates user error while 5xx indicates server error.
-  // 1xxx: The errors related to Import calls.
-  // 2xxx: The errors related to Predict calls.
-  // Please refer to [this](../docs/error-code) for more details. 
-  int32 code = 1;
-
-  // Output only. Detailed error message.
-  string message = 2;
-}
-
-// Metadata related to the progress of the Import operation. This will be
-// returned by the Operation.metadata field.
-message Metadata {
-  // Output only.
-  // The date of entries, please refer to `DateConfig.date`
-  string date = 1;
-
-  // Output only.
-  // The total number of entries.
-  // This should be equal to `failure_count` + `success_count` finally.
-  int64 total_count = 2;
-
-  // Output only.
-  // The count of entries that were processed successfully.
-  int64 success_count = 3;
-
-  // Output only.
-  // The count of entries that encountered errors while processing.
-  int64 failure_count = 4;
-
-  // Output only.
-  // The time when the task is submitted.
-  // It's formatted according to 'rcf3339'
-  string submit_time = 5;
-
-  // Output only.
-  // Operation last update time.
-  // If the operation is done, this is also the finish time.
-  // It's formatted according to 'rcf3339'
-  string update_time = 6;
-}
-
-// This resource represents a long-running operation that is the result of a
-// long running API call.
-message Operation {
-  // Output only.
-  // The server-assigned name, which is only unique within the same service
-  // that originally returns it.
-  string name = 1;
-
-  // Output only.
-  // Service-specific metadata associated with the operation.
-  Metadata metadata = 2;
-
-  // Output only.
-  // If the value is `false`, it means the operation is still in progress.
-  // If `true`, the operation is completed, response is populated.
-  bool done = 3;
-
-  // Output only.
-  // The operation result of one of the XXXResponse.
-  // If `done` == `false`,  `response` is not set.
-  // If `done` == `true`, `response` is set.
-  google.protobuf.Any response = 4;
-}
-
-// The response for the operation itself.
-message OperationResponse {
-  // Output only.
-  // The status of the call to fetch the operation.
-  // Note: This status is unrelated to the actual long running call.
-  Status status = 1;
-
-  // Output only.
-  // The operation itself.
-  Operation operation = 2;
-}
-
-// The request for `GetOperation`.
-message GetOperationRequest {
-  // Required.
-  // The name of the operation.
-  // This field is returned by all the long running calls.
-  string name = 1;
-}
-
-// The request message for ListOperations
-message ListOperationsRequest {
-  // Optional. An expression for filtering the results of the request.
-  // Composite filters should be provided with ['and']
-  //
-  //   * `date` supports ['=' '!=' '>' '<' '>=' '<=']. Please refer to
-  //   `DateConfig.date` for the format.
-  //   * `worksOn` supports ['=' '!='].
-  //   The acceptable values are "ImportUsers", "ImportProducts",
-  //   "ImportUserEvents".
-  //   * `done` supports ['=' '!=']. The operation has finished running or not.
-  //
-  // Some single filter examples:
-  //   * `date=2021-05-02`，`date>=2021-05-02`
-  //   * `worksOn=ImportUsers`
-  //   * `done=true`、`done=false`.
-  //
-  // A composite filter examples:
-  //   * `date=2021-05-02 and worksOn=ImportUsers and done=true`
-  string filter = 1;
-
-  // Optional, default 20
-  // The standard list page size. max to 
-  int32 page_size = 2;
-
-  // Optional
-  // The standard list page token.
-  string page_token = 3;
-}
-
-// The response message for ListOperations.
-message ListOperationsResponse {
-  // Output only.
-  // The status of this response.
-  // `operations` is only populated if `status.code` is 0
-  Status status = 1;
-
-  // A list of operations that matches the specified filter in the request.
-  repeated Operation operations = 2;
-
-  // The standard List next-page token.
-  string next_page_token = 3;
-}
+import "byteplus_common.proto";
 
 // The user proto.
 message User {
@@ -168,8 +30,8 @@ message User {
   // To avoid this, we suggested that you can use consistent ID like device ID.
   // Sample values are "1234567", "359938082141597",
   // "665DEA957EBFB34D41B1F1D80E4B5F89"
-  // Please refer to 
-  // [this](../docs/effective-and-efficient-data-synchronization#stable-user-identifier) for more details. 
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#stable-user-identifier) for more details.
   string user_id = 1;
 
   // Optional.
@@ -188,8 +50,9 @@ message User {
   // Please send as many tags as possible here, even it might be a bit
   // inaccurate or has low coverage.
   // Some sample values are "new users", "high buying power", etc.
-  // Please refer to 
+  // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   repeated string tags = 4;
 
   // Optional.
@@ -197,6 +60,7 @@ message User {
   // Some sample values are "AppStore", "GoogleAds", "FacebookAds", etc.
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string activation_channel = 5;
 
   // Optional.
@@ -204,6 +68,7 @@ message User {
   // Some sample values are "silver", "elite", "4", "5", etc.
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string membership_level = 6;
 
   // Optional.
@@ -218,6 +83,7 @@ message User {
     // Some sample values are "USA", "UK", etc.
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string country = 1;
 
     // Optional.
@@ -225,6 +91,7 @@ message User {
     // Some sample values are "San Jose", "Chicago", "NYC", etc.
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string city = 2;
 
     // Optional.
@@ -232,6 +99,7 @@ message User {
     // Some sample values are "king county", "santa monica county", etc.
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string district_or_area = 3;
 
     // Optional.
@@ -249,8 +117,8 @@ message User {
   Location location = 8;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -258,13 +126,13 @@ message User {
 message WriteUsersRequest {
   // Required.
   // A list of users to write.
-  // The max number of users allowed is 100, otherwise a standard 400 error is
+  // The max # of users allowed is 100, otherwise a standard 400 error is
   // returned.
   repeated User users = 1;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -296,7 +164,7 @@ message WriteUsersResponse {
 // The inline source for the input config for ImportUsers method.
 message UsersInlineSource {
   // Optional.
-  // A list of users to import. The max number of items supported is 10k.
+  // A list of users to import. The max # of items supported is 2k.
   repeated User users = 1;
 }
 
@@ -316,7 +184,7 @@ message DateConfig {
   // This should be the same as all dates from `XXXInputConfig`
   // Any violation will result in a standard 400 error.
   // The value of date should to be formatted like this:
-  // "yyyy-mm-dd", e.g., "2021-06-10".
+  // " yyyy-mm-dd ", for example, "2021-06-10"
   string date = 2;
 
   // Optional.
@@ -357,8 +225,8 @@ message ImportUsersRequest {
   ImportErrorsConfig errors_config = 3;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -381,6 +249,7 @@ message ImportUsersResponse {
 message Product {
   // Required.
   // The unique identifier for the product.
+  // [link to best practices on deciding product ids](./ways-to-improve-recommendation-performance)
   string product_id = 1;
 
   // The category proto.
@@ -397,6 +266,7 @@ message Product {
       // The unique identifier of the category.
       // Please refer to
       // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+      /// 该字段是取值无关的 link guide 2.5.2 取值无关
       string id_or_name = 1;
     }
 
@@ -471,7 +341,7 @@ message Product {
 
   // Required.
   // The product price info.
-  // Please be aware of the accuracy and recency.
+  // Please make sure the accuracy and recency.
   // Please refer to
   // [this](../docs/ways-to-improve-recommendation-performance#data-recency) for more details.
   Price price = 4;
@@ -485,12 +355,11 @@ message Product {
   bool is_recommendable = 5;
 
   // Required.
-  // The product title. Callers can use the text name of the product here, or
-  // the title in the HTML page.
+  // The product title.
   string title = 6;
 
   // Optional.
-  // The product quality score given by the seller.
+  // The product quality score.
   // Note: this is different than user ratings.
   // It is normally computed as a composite score considering many factors,
   // including sales, customer feedback, information completeness, etc.
@@ -503,7 +372,8 @@ message Product {
   // Sample values are: "New", "Summer", "Clearance", etc.
 
   // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   repeated string tags = 8;
 
   // The product display information.
@@ -514,7 +384,8 @@ message Product {
     // Sample values are: "best seller", "hot sales", etc.
 
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     repeated string listing_page_display_tags = 1;
 
     // Optional.
@@ -522,7 +393,8 @@ message Product {
     // Please fill as much as possible.
     // Sample values are: "free shipping", "1 year guarantee", etc
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     repeated string detail_page_display_tags = 2;
 
     // Optional.
@@ -532,7 +404,7 @@ message Product {
 
     // Optional.
     // When `listing_page_display_type` is one of the multi-media types,
-    // put the url to the media file here.
+    // put the url here.
     string cover_multimedia_url = 4;
   }
 
@@ -542,11 +414,12 @@ message Product {
 
   // The detailed product specs.
   message ProductSpec {
+
     // Required.
     // The product group id.
     // For example, the beer (same brand) might have 6-pack, 12-pack, etc,
     // each has a different `product_id`, then they should have the
-    // same `product_group_id`.
+    // `same product_group_id`
     string product_group_id = 1;
 
     // Optional.
@@ -555,7 +428,7 @@ message Product {
     double user_rating = 2;
 
     // Optional.
-    // The number of comments for this product.
+    // The # of comments for this product.
     int32 comment_count = 3;
 
     // Optional.
@@ -582,11 +455,12 @@ message Product {
     // The seller's level.
     // The sample values are "gold", "silver", etc.
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string seller_level = 2;
 
     // Optional.
-    // The seller's rating given by the customers.
+    // The seller's rating.
     // Normalized to [0.0, 5.0].
     double seller_rating = 3;
   }
@@ -596,8 +470,8 @@ message Product {
   Seller seller = 11;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -608,8 +482,8 @@ message WriteProductsRequest {
   repeated Product products = 1;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -624,7 +498,7 @@ message ProductError {
   Product product = 2;
 }
 
-// The response for the `WriteProducts` call.
+// The response for the WriteProduct call.
 message WriteProductsResponse {
   // Output only.
   // When `status.code` is 0, all payload are successfully written.
@@ -642,7 +516,7 @@ message WriteProductsResponse {
 message ProductsInlineSource {
   // Optional.
   // A list of products to import.
-  // The max number of items allowed is 10k.
+  // The max # of items allowed is 2k.
   repeated Product products = 1;
 }
 
@@ -671,12 +545,12 @@ message ImportProductsRequest {
   ImportErrorsConfig errors_config = 3;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
-// The response proto for `ImportProducts` call.
+// The response proto for ImportProducts call.
 message ImportProductsResponse {
   // Output only.
   // The status of the import call.
@@ -703,9 +577,10 @@ message UserEvent {
   // The acceptable values are:
   // "impression", "click", "add-to-cart", "remove-from-cart",
   // "add-to-favorites", "remove-from-favorites", "purchase", "search",
-  // "stay-detail-page".
+  // "stay-detail-page"
   //
   // Here are the definitions:
+  //
   // impression: The product is shown to the user.
   //             It can be server-side impression or (prefered) client-side.
   //             Note: product_id must be non-empty.
@@ -752,7 +627,7 @@ message UserEvent {
     // It can be Home page, Search page, Details page, etc.
     // It is strongly recommended that you split the scene if possible.
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
     string scene_name = 1;
 
     // Optional.
@@ -785,9 +660,9 @@ message UserEvent {
     // Required.
     // The platform used by the user.
     // The acceptable values are "app", "desktop-web", "mobile-web", "other".
-    // app: user uses mobile via mobile app.
-    // desktop-web: user uses desktop via web browser.
-    // mobile-web: user uses mobile via web browser.
+    // app: user use APP
+    // desktop-web: user use desktop web
+    // mobile-web: user use mobile web
     string platform = 1;
 
     // Optional.
@@ -800,14 +675,16 @@ message UserEvent {
     // Your application version.
     // e.g. V9.0.8.
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string app_version = 3;
 
     // Optional.
     // The device model.
     // e.g. "iPhone10", "Pixel 4".
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string device_model = 4;
 
     // Optional.
@@ -815,6 +692,7 @@ message UserEvent {
     // e.g. "Samsung"
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string device_brand = 5;
 
     // Optional.
@@ -822,19 +700,22 @@ message UserEvent {
     // e.g. "14.4.2"
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string os_version = 6;
 
     // Optional.
     // The type of the browser.
     // e.g. "chrome", "firefox", etc.
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string browser_type = 7;
 
     // Optional.
     // The UserAgent for the browser.
     // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details. 
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string user_agent = 8;
 
     // Optional.
@@ -872,6 +753,7 @@ message UserEvent {
   // This contains the strategy info from BytePlus.
   // Please refer to
   // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+  /// 可选字段，只需要对来自Byteplus的推荐结果填充此字段，获取Byteplus推荐结果时，可选保存PredictResult.ResponseProduct.rec_info字段值到此字段，并透传到后续曝光点击转化等用户行为中，用户辅助Byteplus提升推荐效果。参照 link PredictResult.ResponseProduct.rec_info
   string rec_info = 9;
 
   // Optional.
@@ -894,24 +776,24 @@ message UserEvent {
   int32 detail_page_stay_time = 12;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
-// Request proto for `WriteUserEvent` call.
+// Request proto for WriteUserEvent method.
 message WriteUserEventsRequest {
   // Required. A list of user events to write.
-  // The max number of events allowed is 100.
+  // The max # of events allowed is 100.
   repeated UserEvent user_events = 1;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
-// The error details for a single user event.
+// The error detail for a single user event.
 message UserEventError {
   // Output only.
   // The detailed error message.
@@ -922,7 +804,7 @@ message UserEventError {
   UserEvent user_event = 2;
 }
 
-// The response proto for `WriteUserEvents` call.
+// The response proto for WriteUserEvents.
 message WriteUserEventsResponse {
   // Output only.
   // When `status.code` is 0, all payload are successfully written.
@@ -936,11 +818,11 @@ message WriteUserEventsResponse {
   repeated UserEventError errors = 2;
 }
 
-// The inline source for the input config for `ImportUserEvents` call.
+// The inline source for the input config for ImportUserEvents method.
 message UserEventsInlineSource {
   // Optional.
   // A list of user events to import.
-  // The max number of items allowed is 10k.
+  // The max # of items allowed is 2k.
   repeated UserEvent user_events = 1;
 }
 
@@ -954,7 +836,7 @@ message UserEventsInputConfig {
   }
 }
 
-// Request proto for the `ImportUserEvents` call.
+// Request proto for the ImportUserEvents request.
 message ImportUserEventsRequest {
   // Required.
   // The desired input location of the data.
@@ -969,8 +851,8 @@ message ImportUserEventsRequest {
   ImportErrorsConfig errors_config = 3;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -996,10 +878,10 @@ message PredictRequest {
 
   // Required.
   // The maximum number of products returned.
-  // The actual number of products returned is the min of:
+  // The actual # of products returned is the min of:
   // `size`
   // length(`context.candidates_product_ids`)
-  // total number of products with `is_recommendable=True`
+  // total # of products with `is_recommendable=True`
   int32 size = 2;
 
   // Required.
@@ -1027,8 +909,8 @@ message PredictRequest {
   Context context = 4;
 
   // Optional.
-  // This field is used to pack key-value pairs.
-  // See [this](../docs/effective-and-efficient-data-synchronization#handling-extra-data) for more details.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
   map<string, string> extra = 100;
 }
 
@@ -1059,8 +941,7 @@ message PredictResult {
     string rec_info = 5;
 
     // Output only.
-    // This field is used to provide customized info only.
-    // Please talk to BytePlus Recommend team first before using it.
+    // All the extra info here.
     map<string, string> extra = 100;
   }
 
@@ -1069,8 +950,7 @@ message PredictResult {
   repeated ResponseProduct response_products = 1;
 
   // Output only.
-  // This field is used to provide customized info only.
-  // Please talk to BytePlus Recommend team first before using it.
+  // Extra debug info.
   map<string, string> extra = 100;
 }
 
@@ -1081,7 +961,7 @@ message PredictResponse {
   Status status = 1;
 
   // Output only.
-  // This is same as `PredictRequest.request_id`.
+  // This is same as the request id of request.
   string request_id = 2;
 
   // Output only.
@@ -1092,7 +972,7 @@ message PredictResponse {
 // The request proto for AckServerImpressions call.
 message AckServerImpressionsRequest {
   // Required.
-  // This should be same as `PredictRequest.request_id`.
+  // This should be same as `PredictResponse.request_id`.
   string predict_request_id = 1;
 
   // Required.
@@ -1142,8 +1022,8 @@ message AckServerImpressionsResponse {
   Status status = 1;
 }
 
-// The BytePlus Retail service.
-service BytePlusRetailService {
+// The Byteplus Retail service.
+service ByteplusRetailService {
   // WriteUsers
   //
   // Writes at most 100 users at a time. Exceeding 100 in a request results in
@@ -1219,16 +1099,6 @@ service BytePlusRetailService {
   // Please make sure the requests are deduplicated before sending over.
   // Refer to [this](../docs/rpcs) for how to use RPCs.
   rpc ImportUserEvents(ImportUserEventsRequest) returns (OperationResponse);
-
-  // GetOperation
-  //
-  // Gets the operation of a previous long running call.
-  rpc GetOperation(GetOperationRequest) returns (OperationResponse);
-
-  // ListOperations
-  //
-  // Lists operations that match the specified filter in the request.
-  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
 
   // Predict
   //

@@ -1,0 +1,166 @@
+syntax = "proto3";
+package bytedance.byteplus;
+option java_package = "byteplus.sdk.common.protocol";
+option go_package="github.com/byteplus-sdk/sdk-go/common/protocol";
+
+//// This is the raw proto file which will not be shown to end customer.
+//// This file will be compiled to Chinese version and English version to
+//// serve end customer. During compiling:
+////   All comments start with "//" will be kept for English version
+////   All comments start with "///" will be kept for Chinese version
+////   All comments start with "////" will be filtered
+
+import "google/protobuf/any.proto";
+
+// The `Status` type defines a logical error model, Each `Status` message
+// contains 2 pieces of data: error code, error message.
+/// Chinese version.
+///
+message Status {
+  // Output only.
+  // The error code. Callers should expect this field for all
+  // responses.
+  // Here is the table for the possible codes.
+  // 0   : The request is successfully returned. Other values indicates errors.
+  // xxx : The 3-digit error codes align with standard http error codes, e.g.
+  //       4xx indicates user error while 5xx indicates server error.
+  // 1xxx: The errors related to Import calls.
+  // 2xxx: The errors related to Predict calls.
+  // Please refer to [this](../docs/error-code) for more details.
+  int32 code = 1;
+
+  // Output only. Detailed error message.
+  string message = 2;
+}
+
+// Metadata related to the progress of the Import operation. This will be
+// returned by the Operation.metadata field.
+message Metadata {
+  // Output only.
+  // The date of entries, please refer to `DateConfig.date`
+  string date = 1;
+
+  // Output only.
+  // The total number of entries.
+  // This should be equal to `failure_count` + `success_count` finally.
+  int64 total_count = 2;
+
+  // Output only.
+  // The count of entries that were processed successfully.
+  int64 success_count = 3;
+
+  // Output only.
+  // The count of entries that encountered errors while processing.
+  int64 failure_count = 4;
+
+  // Output only.
+  // The time when the task is submitted.
+  // It's formatted according to 'rcf3339'
+  string submit_time = 5;
+
+  // Output only.
+  // Operation last update time.
+  // If the operation is done, this is also the finish time.
+  // It's formatted according to 'rcf3339'
+  string update_time = 6;
+}
+
+// This resource represents a long-running operation that is the result of a
+// network API call.
+message Operation {
+  // Output only.
+  // The server-assigned name, which is only unique within the same service
+  // that originally returns it.
+  string name = 1;
+
+  // Output only.
+  // Service-specific metadata associated with the operation.
+  Metadata metadata = 2;
+
+  // Output only.
+  // If the value is `false`, it means the operation is still in progress.
+  // If `true`, the operation is completed, response is populated.
+  bool done = 3;
+
+  // Output only.
+  // The operation result of one of the XXXResponse.
+  // If `done` == `false`,  `response` is not set.
+  // If `done` == `true`, `response` is set.
+  google.protobuf.Any response = 4;
+}
+
+// The response for the operation itself.
+message OperationResponse {
+  // Output only.
+  // The status of the call to fetch the operation.
+  // Note: This status is unrelated to the actual long running call.
+  Status status = 1;
+
+  // Output only.
+  // The operation itself.
+  Operation operation = 2;
+}
+
+// The request for `GetOperation`.
+message GetOperationRequest {
+  // Required.
+  // The name of the operation.
+  // This field is returned by all the long running calls.
+  string name = 1;
+}
+
+// The request message for ListOperations
+message ListOperationsRequest {
+  // Optional. An expression for filtering the results of the request.
+  // Composite filters should be provided with ['and']
+  //
+  //   * `date` supports ['=' '!=' '>' '<' '>=' '<=']. Please refer to
+  //   `DateConfig.date` for the format.
+  //   * `worksOn` supports ['=' '!='].
+  //   The acceptable values are "ImportUsers", "ImportProducts",
+  //   "ImportUserEvents".
+  //   * `done` supports ['=' '!=']. The operation has finished running or not
+  //
+  // Some single filter examples:
+  //   * `date=2021-05-02`，`date>=2021-05-02`
+  //   * `worksOn=ImportUsers`
+  //   * `done=true`、`done=false`
+  //
+  // A composite filter examples:
+  //   * `date=2021-05-02 and worksOn=ImportUsers and done=true`
+  string filter = 1;
+
+  // Optional, default 20
+  // The standard list page size.
+  int32 page_size = 2;
+
+  // Optional
+  // The standard list page token.
+  string page_token = 3;
+}
+
+// The response message for ListOperations.
+message ListOperationsResponse {
+  // Output only.
+  // The status of this response.
+  // `operations` is only populated if `status.code` is 0
+  Status status = 1;
+
+  // A list of operations that matches the specified filter in the request.
+  repeated Operation operations = 2;
+
+  // The standard List next-page token.
+  string next_page_token = 3;
+}
+
+service ByteplusCommonService {
+  // GetOperation
+  //
+  // Gets the operation of a previous long running call.
+  rpc GetOperation(GetOperationRequest) returns (OperationResponse);
+
+  // ListOperations
+  //
+  // Lists operations that match the specified filter in the request.
+  rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+}

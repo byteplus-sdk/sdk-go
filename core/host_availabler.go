@@ -5,14 +5,15 @@ import (
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/valyala/fasthttp"
 	"sort"
+	"strings"
 	"time"
 )
 
 const (
+	pingUrlFormat        = "{}://%s/predict/api/ping"
 	pingInterval         = time.Second
 	windowSize           = 60
 	failureRateThreshold = 0.1
-	pingUrlFormat        = "https://%s/air/api/ping"
 	pingTimeout          = 200 * time.Millisecond
 )
 
@@ -21,16 +22,20 @@ func NewHostAvailabler(urlCenter URLCenter, context *Context) *HostAvailabler {
 		context:   context,
 		urlCenter: urlCenter,
 	}
+	availabler.pingUrlFormat = strings.ReplaceAll(pingUrlFormat, "{}", context.Schema())
 	if len(context.hosts) <= 1 {
 		return availabler
 	}
 	availabler.currentHost = context.hosts[0]
 	availabler.availableHosts = context.hosts
 	hostWindowMap := make(map[string]*window, len(context.hosts))
+	hostHttpCliMap := make(map[string]*fasthttp.HostClient, len(context.hosts))
 	for _, host := range context.hosts {
 		hostWindowMap[host] = newWindow(windowSize)
+		hostHttpCliMap[host] = &fasthttp.HostClient{Addr: host}
 	}
 	availabler.hostWindowMap = hostWindowMap
+	availabler.hostHttpCliMap = hostHttpCliMap
 	AsyncExecute(availabler.startSchedule())
 	return availabler
 }
@@ -41,6 +46,8 @@ type HostAvailabler struct {
 	currentHost    string
 	availableHosts []string
 	hostWindowMap  map[string]*window
+	hostHttpCliMap map[string]*fasthttp.HostClient
+	pingUrlFormat  string
 }
 
 func (receiver *HostAvailabler) startSchedule() func() {
@@ -75,14 +82,31 @@ func (receiver *HostAvailabler) checkHost() {
 }
 
 func (receiver *HostAvailabler) ping(host string) bool {
-	url := fmt.Sprintf(pingUrlFormat, host)
 	start := time.Now()
-	status, _, err := fasthttp.GetTimeout(nil, url, pingTimeout)
-	logs.Debug("ping host:'%s' cost:'%s'", host, time.Now().Sub(start))
-	if status == fasthttp.StatusOK {
+	request := fasthttp.AcquireRequest()
+	response := fasthttp.AcquireResponse()
+	defer func() {
+		fasthttp.ReleaseRequest(request)
+		fasthttp.ReleaseResponse(response)
+	}()
+	url := fmt.Sprintf(receiver.pingUrlFormat, host)
+	request.SetRequestURI(url)
+	request.Header.SetMethod(fasthttp.MethodGet)
+	for k, v := range receiver.context.CustomerHeaders() {
+		request.Header.Set(k, v)
+	}
+	if len(receiver.context.hostHeader) > 0 {
+		request.SetHost(receiver.context.hostHeader)
+	}
+	httpCli := receiver.hostHttpCliMap[host]
+	err := httpCli.DoTimeout(request, response, pingTimeout)
+	cost := time.Now().Sub(start)
+	if err == nil && response.StatusCode() == fasthttp.StatusOK {
+		logs.Trace("ping success host:'%s' cost:'%s'", host, cost)
 		return true
 	}
-	logs.Warn("ping fail, host:%s status:%d err:%v", host, status, err)
+	logs.Warn("ping fail, host:%s cost:%s status:%d err:%v",
+		host, cost, response.StatusCode(), err)
 	return false
 }
 
@@ -98,6 +122,7 @@ func (receiver *HostAvailabler) switchHost() {
 			newHost, receiver.currentHost)
 		receiver.currentHost = newHost
 		receiver.urlCenter.Refresh(newHost)
+		receiver.context.httpCli = &fasthttp.HostClient{Addr: newHost}
 	}
 }
 

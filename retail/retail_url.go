@@ -2,75 +2,78 @@ package retail
 
 import (
 	"fmt"
-	"github.com/byteplus-sdk/sdk-go/core"
+	"github.com/byteplus-sdk/sdk-go/common"
 )
 
 const (
 	// The URL template of "predict" request, which need fill with "scene" info when use
 	// Example: https://tob.sgsnssdk.com/predict/api/retail/demo/home
-	predictUrlFormat = "%s://%s/predict/api/retail/%s/{}"
+	predictURLFormat = "%s://%s/predict/api/retail/%s/{}"
 
 	// The URL format of reporting the real exposure list
 	// Example: https://tob.sgsnssdk.com/predict/api/retail/demo/ack_impression
-	ackImpressionUrlFormat = "%s://%s/predict/api/retail/%s/ack_server_impressions"
+	ackImpressionURLFormat = "%s://%s/predict/api/retail/%s/ack_server_impressions"
 
 	// The URL format of data uploading
 	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user?method=write
-	uploadUrlFormat = "%s://%s/data/api/retail/%s/%s?method=%s"
-
-	// The URL format of operation information
-	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/operation?method=get
-	operationUrlFormat = "%s://%s/data/api/retail/%s/operation?method=%s"
+	uploadURLFormat = "%s://%s/data/api/retail/%s/%s?method=%s"
 )
 
 type retailURL struct {
-	context             *core.Context
-	hostAvailabler      *core.HostAvailabler
-	predictUrlFormat    string
-	ackImpressionUrl    string
-	writeUsersUrl       string
-	importUsersUrl      string
-	writeProductsUrl    string
-	importProductsUrl   string
-	writeUserEventsUrl  string
-	importUserEventsUrl string
-	getOperationUrl     string
-	listOperationsUrl   string
+	cu     *common.URL
+	schema string
+	tenant string
+
+	// The URL template of "predict" request, which need fill with "scene" info when use
+	// Example: https://tob.sgsnssdk.com/predict/api/retail/demo/home
+	predictURLFormat string
+
+	// The URL of reporting the real exposure list
+	// Example: https://tob.sgsnssdk.com/predict/api/retail/demo/ack_server_impression
+	ackImpressionURL string
+
+	// The URL of uploading real-time user data
+	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user?method=write
+	writeUsersURL string
+	// The URL of importing daily offline user data
+	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user?method=import
+	importUsersURL string
+
+	// The URL of uploading real-time product data
+	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/product?method=write
+	writeProductsURL string
+	// The URL of importing daily offline product data
+	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/product?method=import
+	importProductsURL string
+
+	// The URL of uploading real-time user event data
+	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user_event?method=write
+	writeUserEventsURL string
+	// The URL of importing daily offline product data
+	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user_event?method=import
+	importUserEventsURL string
 }
 
 func (receiver *retailURL) Refresh(host string) {
-	receiver.predictUrlFormat = receiver.generatePredictUrl(host)
-	receiver.ackImpressionUrl = receiver.generateAckUrl(host)
-	receiver.writeUsersUrl = receiver.generateUploadUrl(host, "user", "write")
-	receiver.importUsersUrl = receiver.generateUploadUrl(host, "user", "import")
-	receiver.writeProductsUrl = receiver.generateUploadUrl(host, "product", "write")
-	receiver.importProductsUrl = receiver.generateUploadUrl(host, "product", "import")
-	receiver.writeUserEventsUrl = receiver.generateUploadUrl(host, "user_event", "write")
-	receiver.importUserEventsUrl = receiver.generateUploadUrl(host, "user_event", "import")
-	receiver.getOperationUrl = receiver.generateOperationUrl(host, "get")
-	receiver.listOperationsUrl = receiver.generateOperationUrl(host, "list")
+	receiver.cu.Refresh(host)
+	receiver.predictURLFormat = receiver.generatePredictURLFormat(host)
+	receiver.ackImpressionURL = receiver.generateAckURL(host)
+	receiver.writeUsersURL = receiver.generateUploadURL(host, "user", "write")
+	receiver.importUsersURL = receiver.generateUploadURL(host, "user", "import")
+	receiver.writeProductsURL = receiver.generateUploadURL(host, "product", "write")
+	receiver.importProductsURL = receiver.generateUploadURL(host, "product", "import")
+	receiver.writeUserEventsURL = receiver.generateUploadURL(host, "user_event", "write")
+	receiver.importUserEventsURL = receiver.generateUploadURL(host, "user_event", "import")
 }
 
-func (receiver *retailURL) generatePredictUrl(host string) string {
-	schema := receiver.context.Schema()
-	tenant := receiver.context.Tenant()
-	return fmt.Sprintf(predictUrlFormat, schema, host, tenant)
+func (receiver *retailURL) generatePredictURLFormat(host string) string {
+	return fmt.Sprintf(predictURLFormat, receiver.schema, host, receiver.tenant)
 }
 
-func (receiver *retailURL) generateAckUrl(host string) string {
-	schema := receiver.context.Schema()
-	tenant := receiver.context.Tenant()
-	return fmt.Sprintf(ackImpressionUrlFormat, schema, host, tenant)
+func (receiver *retailURL) generateAckURL(host string) string {
+	return fmt.Sprintf(ackImpressionURLFormat, receiver.schema, host, receiver.tenant)
 }
 
-func (receiver *retailURL) generateUploadUrl(host string, topic string, method string) string {
-	schema := receiver.context.Schema()
-	tenant := receiver.context.Tenant()
-	return fmt.Sprintf(uploadUrlFormat, schema, host, tenant, topic, method)
-}
-
-func (receiver *retailURL) generateOperationUrl(host string, method string) string {
-	schema := receiver.context.Schema()
-	tenant := receiver.context.Tenant()
-	return fmt.Sprintf(operationUrlFormat, schema, host, tenant, method)
+func (receiver *retailURL) generateUploadURL(host string, topic string, method string) string {
+	return fmt.Sprintf(uploadURLFormat, receiver.schema, host, receiver.tenant, topic, method)
 }

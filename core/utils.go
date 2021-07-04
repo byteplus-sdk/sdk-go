@@ -24,3 +24,7 @@ func IsNetError(err error) bool {
 	}
 	return strings.Contains(err.Error(), netErrMark)
 }
+
+func IsTimeoutError(err error) bool {
+	return strings.Contains(strings.ToLower(err.Error()), "timeout")
+}
