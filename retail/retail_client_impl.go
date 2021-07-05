@@ -24,6 +24,11 @@ type clientImpl struct {
 	cCli    common.Client
 	hCaller *HttpCaller
 	ru      *retailURL
+	hostAva *HostAvailabler
+}
+
+func (c *clientImpl) Release() {
+	c.hostAva.Shutdown()
 }
 
 func (c *clientImpl) WriteUsers(request *WriteUsersRequest,

@@ -36,11 +36,12 @@ func NewHostAvailabler(urlCenter URLCenter, context *Context) *HostAvailabler {
 	}
 	availabler.hostWindowMap = hostWindowMap
 	availabler.hostHttpCliMap = hostHttpCliMap
-	AsyncExecute(availabler.startSchedule())
+	AsyncExecute(availabler.scheduleFunc())
 	return availabler
 }
 
 type HostAvailabler struct {
+	abort          bool
 	context        *Context
 	urlCenter      URLCenter
 	currentHost    string
@@ -50,13 +51,21 @@ type HostAvailabler struct {
 	pingUrlFormat  string
 }
 
-func (receiver *HostAvailabler) startSchedule() func() {
+func (receiver *HostAvailabler) Shutdown() {
+	receiver.abort = true
+}
+
+func (receiver *HostAvailabler) scheduleFunc() func() {
 	return func() {
-		tick := time.Tick(pingInterval)
+		ticker := time.NewTicker(pingInterval)
 		for true {
+			if receiver.abort {
+				ticker.Stop()
+				return
+			}
 			receiver.checkHost()
 			receiver.switchHost()
-			<-tick
+			<-ticker.C
 		}
 	}
 }

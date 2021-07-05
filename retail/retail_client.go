@@ -9,6 +9,11 @@ import (
 
 type Client interface {
 	common.Client
+
+	// Release
+	// release resources
+	Release()
+
 	// WriteUsers
 	//
 	// Writes at most 100 users at a time. Exceeding 100 in a request protocol.results protocol.in

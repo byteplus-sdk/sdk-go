@@ -22,6 +22,11 @@ type clientImpl struct {
 	cCli    common.Client
 	hCaller *HttpCaller
 	gu      *generalURL
+	hostAva *HostAvailabler
+}
+
+func (c *clientImpl) Release() {
+	c.hostAva.Shutdown()
 }
 
 func (c *clientImpl) GetOperation(request *GetOperationRequest,

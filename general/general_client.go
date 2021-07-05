@@ -11,6 +11,10 @@ import (
 type Client interface {
 	common.Client
 
+	// Release
+	// release resources
+	Release()
+
 	// WriteData
 	//
 	// Writes at most 100 data at a time. Exceeding 100 in a request results in

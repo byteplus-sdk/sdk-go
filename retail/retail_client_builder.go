@@ -54,22 +54,23 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	ru := &retailURL{
-		schema: context.Schema(),
-		tenant: context.Tenant(),
-		cu:     common.NewURL(context),
-	}
+	ru := receiver.buildRetailURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
 		cCli:    common.NewClient(httpCaller, ru.cu),
 		hCaller: httpCaller,
 		ru:      ru,
+		hostAva: core.NewHostAvailabler(ru, context),
 	}
-	initRetailURL(context, client.ru)
 	return client, nil
 }
 
-func initRetailURL(context *core.Context, ru *retailURL) {
+func (receiver *ClientBuilder) buildRetailURL(context *core.Context) *retailURL {
+	ru := &retailURL{
+		schema: context.Schema(),
+		tenant: context.Tenant(),
+		cu:     common.NewURL(context),
+	}
 	ru.Refresh(context.Hosts()[0])
-	core.NewHostAvailabler(ru, context)
+	return ru
 }
