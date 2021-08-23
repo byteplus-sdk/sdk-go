@@ -5,13 +5,19 @@ type Region int
 const (
 	RegionUnknown Region = iota
 	RegionCn
-	RegionOther
+	RegionSg
+	RegionUs
+	RegionAir
 )
 
 var (
 	cnHosts = []string{"rec-b.volcengineapi.com", "rec.volcengineapi.com"}
 
-	sgHosts = []string{"tob.sgsnssdk.com"}
+	sgHosts = []string{"rec-ap-singapore-1.byteplusapi.com"}
+
+	usHosts = []string{"rec-us-east-1.byteplusapi.com"}
+
+	airHosts = []string{"byteair-api-cn1.snssdk.com"}
 )
 
 const (

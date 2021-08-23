@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	"github.com/google/uuid"
 	"github.com/valyala/fasthttp"
 	"google.golang.org/protobuf/proto"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const netErrMark = "[netErr]"
@@ -35,6 +36,7 @@ func (c *HttpCaller) DoJsonRequest(url string, request interface{},
 	}
 	options := option.Conv2Options(opts...)
 	headers := c.buildHeaders(options, reqBytes, "application/json")
+	url = c.withOptionQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
 	if err != nil {
 		return err
@@ -56,7 +58,7 @@ func (c *HttpCaller) jsonMarshal(request interface{}) ([]byte, error) {
 	return reqBytes, nil
 }
 
-func (c *HttpCaller) DoRequest(url string, request proto.Message,
+func (c *HttpCaller) DoPbRequest(url string, request proto.Message,
 	response proto.Message, opts ...option.Option) error {
 	reqBytes, err := c.marshal(request)
 	if err != nil {
@@ -65,6 +67,7 @@ func (c *HttpCaller) DoRequest(url string, request proto.Message,
 	}
 	options := option.Conv2Options(opts...)
 	headers := c.buildHeaders(options, reqBytes, "application/x-protobuf")
+	url = c.withOptionQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
 	if err != nil {
 		return err
@@ -159,6 +162,26 @@ func (c *HttpCaller) calSignature(reqBytes []byte, ts, nonce string) string {
 	return fmt.Sprintf("%x", shaHash.Sum(nil))
 }
 
+func (c *HttpCaller) withOptionQueries(options *option.Options, url string) string {
+	var queriesParts []string
+	if options.Stage != "" {
+		queriesParts = append(queriesParts, "stage="+options.Stage)
+	}
+	for name, value := range options.Queries {
+		queriesParts = append(queriesParts, name+"="+value)
+	}
+	optionQuery := strings.Join(queriesParts, "&")
+	if optionQuery == "" {
+		return url
+	}
+	if strings.Contains(url, "?") {
+		url = url + "&" + optionQuery
+	} else {
+		url = url + "?" + optionQuery
+	}
+	return url
+}
+
 func (c *HttpCaller) doHttpRequest(url string, headers map[string]string,
 	reqBytes []byte, timeout time.Duration) ([]byte, error) {
 	request := c.acquireRequest(url, headers, reqBytes)
@@ -174,7 +197,7 @@ func (c *HttpCaller) doHttpRequest(url string, headers map[string]string,
 	}()
 	logs.Trace("http request header:\n%s", string(request.Header.Header()))
 	var err error
-	var httpCli= c.context.httpCli
+	var httpCli = c.context.httpCli
 	if timeout > 0 {
 		err = httpCli.DoTimeout(request, response, timeout)
 	} else {

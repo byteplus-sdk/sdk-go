@@ -49,3 +49,15 @@ func WithServerTimeout(timeout time.Duration) Option {
 		options.ServerTimeout = timeout
 	}
 }
+
+func WithStage(stage string) Option {
+	return func(options *Options) {
+		options.Stage = stage
+	}
+}
+
+func WithQueries(queries map[string]string) Option {
+	return func(options *Options) {
+		options.Queries = queries
+	}
+}

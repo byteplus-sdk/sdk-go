@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -123,7 +124,18 @@ func (receiver *Context) fillHosts(param *ContextParam) {
 		receiver.hosts = cnHosts
 		return
 	}
-	receiver.hosts = sgHosts
+	if param.Region == RegionSg {
+		receiver.hosts = sgHosts
+		return
+	}
+	if param.Region == RegionUs {
+		receiver.hosts = usHosts
+		return
+	}
+	if param.Region == RegionAir {
+		receiver.hosts = airHosts
+		return
+	}
 }
 
 func (receiver *Context) fillDefault() {

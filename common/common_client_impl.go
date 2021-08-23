@@ -23,7 +23,7 @@ func (c *clientImpl) GetOperation(request *GetOperationRequest,
 	opts ...option.Option) (*OperationResponse, error) {
 	url := c.cu.getOperationUrl
 	response := &OperationResponse{}
-	err := c.cli.DoRequest(url, request, response, opts...)
+	err := c.cli.DoPbRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 	opts ...option.Option) (*ListOperationsResponse, error) {
 	url := c.cu.listOperationsUrl
 	response := &ListOperationsResponse{}
-	err := c.cli.DoRequest(url, request, response, opts...)
+	err := c.cli.DoPbRequest(url, request, response, opts...)
 	if err != nil {
 		return nil, err
 	}

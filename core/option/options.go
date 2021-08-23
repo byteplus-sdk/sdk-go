@@ -9,4 +9,6 @@ type Options struct {
 	DataDate      time.Time
 	DataIsEnd     bool
 	ServerTimeout time.Duration
+	Stage         string
+	Queries       map[string]string
 }
