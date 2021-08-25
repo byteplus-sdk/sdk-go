@@ -123,7 +123,17 @@ func (receiver *Context) fillHosts(param *ContextParam) {
 		receiver.hosts = cnHosts
 		return
 	}
-	receiver.hosts = sgHosts
+	if param.Region == RegionUs {
+		receiver.hosts = usHosts
+		return
+	}
+	if param.Region == RegionSg {
+		receiver.hosts = sgHosts
+		return
+	}
+	if param.Region == RegionAir {
+		receiver.hosts = airHosts
+	}
 }
 
 func (receiver *Context) fillDefault() {

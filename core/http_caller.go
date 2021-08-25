@@ -65,6 +65,7 @@ func (c *HttpCaller) DoRequest(url string, request proto.Message,
 	}
 	options := option.Conv2Options(opts...)
 	headers := c.buildHeaders(options, reqBytes, "application/x-protobuf")
+	url = c.buildUrlWithQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
 	if err != nil {
 		return err
@@ -96,6 +97,30 @@ func (c *HttpCaller) buildHeaders(options *option.Options,
 	c.withOptionHeaders(headers, options)
 	c.withAuthHeaders(headers, reqBytes)
 	return headers
+}
+
+func (c *HttpCaller) buildUrlWithQueries(options *option.Options, url string) string {
+	queries := make(map[string]string)
+	if options.Stage != "" {
+		queries["stage"] = options.Stage
+	}
+	if len(options.Queries) != 0 {
+		for queryName, queryValue := range options.Queries {
+			queries[queryName] = queryValue
+		}
+	}
+	if len(queries) == 0 {
+		return url
+	}
+	var queryParts []string
+	for queryName, queryValue := range queries {
+		queryParts = append(queryParts, queryName+"="+queryValue)
+	}
+	queryString := strings.Join(queryParts, "&")
+	if strings.Contains(url, "?") {
+		return url + "&" + queryString
+	}
+	return url + "?" + queryString
 }
 
 func (c *HttpCaller) withOptionHeaders(headers map[string]string, options *option.Options) {
@@ -174,7 +199,7 @@ func (c *HttpCaller) doHttpRequest(url string, headers map[string]string,
 	}()
 	logs.Trace("http request header:\n%s", string(request.Header.Header()))
 	var err error
-	var httpCli= c.context.httpCli
+	var httpCli = c.context.httpCli
 	if timeout > 0 {
 		err = httpCli.DoTimeout(request, response, timeout)
 	} else {
