@@ -35,6 +35,7 @@ func (c *HttpCaller) DoJsonRequest(url string, request interface{},
 	}
 	options := option.Conv2Options(opts...)
 	headers := c.buildHeaders(options, reqBytes, "application/json")
+	url = c.buildUrlWithQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
 	if err != nil {
 		return err
