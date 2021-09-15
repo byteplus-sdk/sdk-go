@@ -247,9 +247,10 @@ func (c *HttpCaller) acquireRequest(url string,
 func (c *HttpCaller) logHttpResponse(url string, response *fasthttp.Response) {
 	rspBytes := response.Body()
 	if len(rspBytes) > 0 {
-		logs.Error("http status not 200, url:%s code:%d body:\n%s\n",
-			url, response.StatusCode(), string(rspBytes))
+		logs.Error("http status not 200, url:%s code:%d headers:\n%s\n body:\n%s",
+			url, response.StatusCode(), string(response.Header.Header()), string(rspBytes))
 		return
 	}
-	logs.Error("http status not 200, url:%s code:%d", url, response.StatusCode())
+	logs.Error("http status not 200, url:%s code:%d headers:\n%s\n",
+		url, response.StatusCode(), string(response.Header.Header()))
 }
