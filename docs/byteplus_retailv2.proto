@@ -1,0 +1,892 @@
+syntax = "proto3";
+package bytedance.byteplus.retailv2;
+option java_package = "byteplus.sdk.retailv2.protocol";
+option go_package="github.com/byteplus-sdk/sdk-go/retailv2/protocol";
+
+//// This is the raw proto file which will not be shown to end customer.
+//// This file will be compiled to Chinese version and English version to
+//// serve end customer. During compiling:
+////   All comments start with "//" will be kept for English version
+////   All comments start with "///" will be kept for Chinese version
+////   All comments start with "////" will be filtered
+
+import "byteplus_common.proto";
+
+// The user proto.
+message User {
+  // Required.
+  // The unique user identifier.
+  // The consistency is required (for the same user) among different
+  // UserEvents, PredictRequest, or any other places.
+  // Device ID or member ID is often used as user_id here.
+  //
+  // Note: If you want to encrypt the id and used the hashed value here,
+  // please do the consistent encryption for all its appearances,
+  // including UserEvents and Predict Requests.
+  //
+  // Note: If your users often switch between login/logout status
+  // (In web or mobile application), you might get inconsistent IDs
+  // (member v.s. visitor) for the same user.
+  // To avoid this, we suggested that you can use consistent ID like device ID.
+  // Sample values are "1234567", "359938082141597",
+  // "665DEA957EBFB34D41B1F1D80E4B5F89"
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#stable-user-identifier) for more details.
+  string user_id = 1;
+
+  // Optional.
+  // The gender of the given user.
+  // The accepted values are: "male", "female", and "other".
+  string gender = 2;
+
+  // Optional.
+  // The age of the given user.
+  // It can be the an (estimate) single value, or a range.
+  // e.g. "23", "18-25", "0-15", "50-100", etc
+  string age = 3;
+
+  // Optional.
+  // The tags for the given user.
+  // Please send as many tags as possible here, even it might be a bit
+  // inaccurate or has low coverage.
+  // Some sample values are "new users", "high buying power", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  repeated string tags = 4;
+
+  // Optional.
+  // The channel where the given user is acquired.
+  // Some sample values are "AppStore", "GoogleAds", "FacebookAds", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string activation_channel = 5;
+
+  // Optional.
+  // The level of the membership.
+  // Some sample values are "silver", "elite", "4", "5", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string membership_level = 6;
+
+  // Optional.
+  // The timestamp when the given user activated or registered.
+  int64 registration_timestamp = 7;
+
+  // Optional.
+  // The location info.
+  message Location {
+    // Optional.
+    // Country name.
+    // Some sample values are "USA", "UK", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string country = 1;
+
+    // Optional.
+    // City name.
+    // Some sample values are "San Jose", "Chicago", "NYC", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string city = 2;
+
+    // Optional.
+    // The more fine grained district or area.
+    // Some sample values are "king county", "santa monica county", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string district_or_area = 3;
+
+    // Optional.
+    // Postal code of the address. Not all countries use or require postal codes
+    // to be present.
+    string postcode = 4;
+  }
+
+  // Optional.
+  // The user location info.
+  // If the user has multiple locations, please make sure you update it with the
+  // most recent one.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#data-recency) for more details.
+  Location location = 8;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// Request proto for WriteUsers method.
+message WriteUsersRequest {
+  // Required.
+  // A list of users to write.
+  // The max # of users allowed is 100, otherwise a standard 400 error is
+  // returned.
+  repeated User users = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The error proto for a single user.
+message UserError {
+  // Output only.
+  // The detailed error message.
+  string message = 1;
+
+  // Output only.
+  // This is the exact same user proto that was passed in the request.
+  User user = 2;
+}
+
+// The response proto for WriteUsers call.
+message WriteUsersResponse {
+  // Output only.
+  // When `status.code` is 0, all payload are successfully written.
+  // If `status.code` is 1001, `errors` is populated.
+  // Other non-zero values indicate all payload failed.
+  Status status = 1;
+
+  // Output only.
+  // This field is populated when `status.code` is 1001.
+  // When populated, this field contains the errors.
+  repeated UserError errors = 2;
+}
+
+// The product proto.
+message Product {
+  // Required.
+  // The unique identifier for the product.
+  // [link to best practices on deciding product ids](./ways-to-improve-recommendation-performance)
+  string product_id = 1;
+
+  // The category proto.
+  message Category {
+    // Required.
+    // The depth of the category.
+    // This is consecutive (1-based) and ascending.
+    int32 category_depth = 1;
+
+    // The single node of the category.
+    message CategoryNode {
+
+      // Required.
+      // The unique identifier of the category.
+      // Please refer to
+      // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+      /// 该字段是取值无关的 link guide 2.5.2 取值无关
+      string id_or_name = 1;
+    }
+
+    // Required.
+    // The category nodes belong to the same depth.
+    repeated CategoryNode category_nodes = 2;
+  }
+
+  // Required.
+  // The categorical information of the product.
+  // Missing this will significantly hurt the performance.
+  // For example, if a product has "Shoes -> Men's Shoes -> Basketball Shoes"
+  // This should be:
+  // [
+  //   {"category_depth":1,
+  //    "category_nodes": [{"id_or_name":"Shoes"}] },
+  //   {"category_depth":2,
+  //    "category_nodes": [{"id_or_name":"Men's Shoes"}] },
+  //   {"category_depth":3,
+  //    "category_nodes": [{"id_or_name":"Basketball Shoes"}] },
+  // ]
+  // If a product belongs to 2 different categories,
+  // "Shoes -> Men's shoes" and "Sports -> Basketball"
+  // then
+  //
+  // [
+  //   {"category_depth":1,
+  //    "category_nodes": [{"id_or_name":"Shoes"},
+  //                       {"id_or_name":"Men's shoes"}] },
+  //   {"category_depth":2,
+  //    "category_nodes": [{"id_or_name":"Sports"},
+  //                       {"id_or_name":"Basketball"}] },
+  // ]
+  repeated Category categories = 2;
+
+  // The brand proto.
+  message Brand {
+    // Required.
+    // The brand depth. This is consecutive (1-based) and ascending.
+    int32 brand_depth = 1;
+
+    // Required.
+    // The id or name of the brand at this depth.
+    string id_or_name = 2;
+  }
+
+  // Required.
+  // Missing this will significantly hurt the performance.
+  // The order should be asending on depth.
+  // For example, if a product belongs to "Adidas -> Yeezy",
+  // this field should be:
+  // [
+  //   {"brand_depth": 1, "id_or_name":"Adidas"},
+  //   {"brand_depth": 2, "id_or_name":"Yeezy"},
+  // ]
+  repeated Brand brands = 3;
+
+  // The price proto.
+  // Please make sure the products that need to be ranked together
+  // have the same currency.
+  message Price {
+    // Required.
+    // The current price in cents.
+    // e.g. $100.12 should be 10012 here.
+    int64 current_price = 1;
+
+    // Required.
+    // The original price in cents.
+    // e.g. $100.12 should be 10012 here.
+    int64 origin_price = 2;
+  }
+
+  // Required.
+  // The product price info.
+  // Please make sure the accuracy and recency.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#data-recency) for more details.
+  Price price = 4;
+
+  // Required.
+  // True if the product is recommendable (result in `Predict` call).
+  // Note: Any change of this takes up to 1 hour to take effect.
+  // Note: Even if a product isn't recommendable, please still send this to us.
+  // This is because that users might interact with such products historically,
+  // therefore it provides reasonably strong signals.
+  bool is_recommendable = 5;
+
+  // Required.
+  // The product title.
+  string title = 6;
+
+  // Optional.
+  // The product quality score.
+  // Note: this is different than user ratings.
+  // It is normally computed as a composite score considering many factors,
+  // including sales, customer feedback, information completeness, etc.
+  // This score should be normalized to [1.0, 5.0]
+  double quality_score = 7;
+
+  // Optional.
+  // The tags given by the seller for this product.
+  // This is used to lift the performance.
+  // Sample values are: "New", "Summer", "Clearance", etc.
+
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  repeated string tags = 8;
+
+  // The product display information.
+  message Display {
+    // Optional.
+    // The tags visible to the users on the listing page.
+    // Please fill as much as possible.
+    // Sample values are: "best seller", "hot sales", etc.
+
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    repeated string listing_page_display_tags = 1;
+
+    // Optional.
+    // The tags visible in the details page.
+    // Please fill as much as possible.
+    // Sample values are: "free shipping", "1 year guarantee", etc
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    repeated string detail_page_display_tags = 2;
+
+    // Optional.
+    // The product display media type in ths listing page.
+    // The only acceptable values are ["image", "video", "other"].
+    string listing_page_display_type = 3;
+
+    // Optional.
+    // When `listing_page_display_type` is one of the multi-media types,
+    // put the url here.
+    string cover_multimedia_url = 4;
+  }
+
+  // Optional.
+  // The display information of the product.
+  Display display = 9;
+
+  // The detailed product specs.
+  message ProductSpec {
+
+    // Required.
+    // The product group id.
+    // For example, the beer (same brand) might have 6-pack, 12-pack, etc,
+    // each has a different `product_id`, then they should have the
+    // `same product_group_id`
+    string product_group_id = 1;
+
+    // Optional.
+    // The rating given by the users.
+    // The value is normalized to [0.0, 5.0].
+    double user_rating = 2;
+
+    // Optional.
+    // The # of comments for this product.
+    int32 comment_count = 3;
+
+    // Optional.
+    // The source of the product.
+    // The accepted values are ["self", "thirdparty", "other"].
+    string source = 4;
+
+    // Optional.
+    // The time that the product is on sales.
+    int64 publish_timestamp = 5;
+  }
+
+  // Optional.
+  // The product specs.
+  ProductSpec product_spec = 10;
+
+  // Seller info.
+  message Seller {
+    // Required.
+    // The id for the seller.
+    string id = 1;
+
+    // Optional.
+    // The seller's level.
+    // The sample values are "gold", "silver", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string seller_level = 2;
+
+    // Optional.
+    // The seller's rating.
+    // Normalized to [0.0, 5.0].
+    double seller_rating = 3;
+  }
+
+  // Optional.
+  // The seller proto.
+  Seller seller = 11;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// Request proto for WriteProduct method.
+message WriteProductsRequest {
+  // Required.
+  // A list of product to write. The max is 100 items.
+  repeated Product products = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The product error.
+message ProductError {
+  // Output only.
+  // The detailed error message.
+  string message = 1;
+
+  // Output only.
+  // The product that failed.
+  Product product = 2;
+}
+
+// The response for the WriteProduct call.
+message WriteProductsResponse {
+  // Output only.
+  // When `status.code` is 0, all payload are successfully written.
+  // If `status.code` is 1001, `errors` is populated.
+  // Other non-zero values indicate all payload failed.
+  Status status = 1;
+
+  // Output only.
+  // This field is populated when `status.code` is 1001.
+  // When populated, this field contains the errors.
+  repeated ProductError errors = 2;
+}
+
+// The proto that represents an user event.
+message UserEvent {
+  // Required.
+  // The unique user identifier.
+  // Please refer to `User.user_id` for the details.
+  string user_id = 1;
+
+  // Required.
+  // The user event type.
+  // The acceptable values are:
+  // "impression", "click", "add-to-cart", "remove-from-cart",
+  // "add-to-favorites", "remove-from-favorites", "purchase", "search",
+  // "stay-detail-page"
+  //
+  // Here are the definitions:
+  //
+  // impression: The product is shown to the user.
+  //             It can be server-side impression or (prefered) client-side.
+  //             Note: product_id must be non-empty.
+  //
+  // click     : The user clicked into the product details page.
+  //             Note: product_id must be non-empty.
+  //
+  // add-to-cart : The user added the product in the shopping cart.
+  //             Note: product_id must be non-empty.
+  //
+  // remove-from-cart : The user removed the product from the shopping cart.
+  //             Note: product_id must be non-empty.
+  //
+  // add-to-favorites : The user added the product to favorites.
+  //             Note: product_id must be non-empty.
+  //
+  // remove-from-favorites : The user removed the product from favorites.
+  //             Note: product_id must be non-empty.
+  //
+  // purchase  : The user finished the purchase.
+  //             Note: If one order contains multiple products, please use
+  //             more than one user event to transmit. If one order contains
+  //             the same product multiple times, use `this.purchase_count`.
+  //
+  // search    : The user search event.
+  //           : Note: `this.Context.query` must be non-empty.
+  //
+  // stay-detail-page: The user leave product details page, report the user stay
+  //             time on product details page.
+  //             Note: product_id must be non-empty.
+  //
+  // Note: This field is only for the event type, the actual scene is kept
+  // separately.
+  string event_type = 2;
+
+  // Required.
+  // The time when the event happened.
+  int64 event_timestamp = 3;
+
+  // The scene where the event happened.
+  message Scene {
+    // Required.
+    // The unique identifier for the scene.
+    // It can be Home page, Search page, Details page, etc.
+    // It is strongly recommended that you split the scene if possible.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    string scene_name = 1;
+
+    // Optional.
+    // The page number.
+    // It can be:
+    // 1. Users swipe the screen for X times then see the product.
+    // 2. Users go to page X and see the product.
+    // In this case, X is the page number.
+    //
+    // This should default to be 0. That means everything fits into 1 page.
+    int32 page_number = 2;
+
+    // Optional.
+    // The offset (1-based) within the page above.
+    int32 offset = 3;
+  }
+
+  // Optional.
+  // If `event_type` is impression or click, this is required.
+  // If `event type` is cart/favorite/purchase, this is optional.
+  Scene scene = 4;
+
+  // Optional.
+  // When event_type is search, this field should be empty.
+  // Otherwise it is required.
+  string product_id = 5;
+
+  // The device proto.
+  message Device {
+    // Required.
+    // The platform used by the user.
+    // The acceptable values are "app", "desktop-web", "mobile-web", "other".
+    // app: user use APP
+    // desktop-web: user use desktop web
+    // mobile-web: user use mobile web
+    string platform = 1;
+
+    // Optional.
+    // The platform used by the user.
+    // The acceptable values are "android", "ios", "windows", "other"
+    // and "other".
+    string os_type = 2;
+
+    // Optional.
+    // Your application version.
+    // e.g. V9.0.8.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string app_version = 3;
+
+    // Optional.
+    // The device model.
+    // e.g. "iPhone10", "Pixel 4".
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string device_model = 4;
+
+    // Optional.
+    // The brand of the device.
+    // e.g. "Samsung"
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string device_brand = 5;
+
+    // Optional.
+    // The operating system version.
+    // e.g. "14.4.2"
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string os_version = 6;
+
+    // Optional.
+    // The type of the browser.
+    // e.g. "chrome", "firefox", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string browser_type = 7;
+
+    // Optional.
+    // The UserAgent for the browser.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string user_agent = 8;
+
+    // Optional.
+    // The network used.
+    // The acceptable values are "2g", "3g", "4g", "5g", "wifi", "other".
+    string network = 9;
+  }
+
+  // Required.
+  // The device info.
+  Device device = 6;
+
+  // The context for this event.
+  message Context {
+    // Optional.
+    // This is required for the search event.
+    // Please also provide this when the purchase/impression event follows the search event.
+    string query = 1;
+
+    // Optional.
+    // The main product id on the "related to this product" page.
+    string root_product_id = 2;
+  }
+
+  // Optional.
+  // The context for this event.
+  Context context = 7;
+
+  // Optional.
+  // This is strongly recommended to hook all the relevant events towards
+  // purchase.
+  string attribution_token = 8;
+
+  // Optional.
+  // This contains the strategy info from BytePlus.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+  /// 可选字段，只需要对来自Byteplus的推荐结果填充此字段，获取Byteplus推荐结果时，可选保存PredictResult.ResponseProduct.rec_info字段值到此字段，并透传到后续曝光点击转化等用户行为中，用户辅助Byteplus提升推荐效果。参照 link PredictResult.ResponseProduct.rec_info
+  string rec_info = 9;
+
+  // Optional.
+  // The source strategy for this user event.
+  // Acceptable values are "self", "byteplus", "other".
+  // self   :  came from caller's own engine.
+  // byteplus:  came from byteplus's engine.
+  // other  :  came from the third-party engine.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+  string traffic_source = 10;
+
+  // Optional.
+  // When event_type is purchase, this field must be non-zero.
+  int32 purchase_count = 11;
+
+  // Optional.
+  // The stay time(in seconds) on detail page.
+  // When event_type is stay-detail-page, this field must be non-zero.
+  int32 detail_page_stay_time = 12;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// Request proto for WriteUserEvent method.
+message WriteUserEventsRequest {
+  // Required. A list of user events to write.
+  // The max # of events allowed is 100.
+  repeated UserEvent user_events = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The error detail for a single user event.
+message UserEventError {
+  // Output only.
+  // The detailed error message.
+  string message = 1;
+
+  // Output only.
+  // This is the exact same user proto that was passed in the request.
+  UserEvent user_event = 2;
+}
+
+// The response proto for WriteUserEvents.
+message WriteUserEventsResponse {
+  // Output only.
+  // When `status.code` is 0, all payload are successfully written.
+  // If `status.code` is 1001, `errors` is populated.
+  // Other non-zero values indicate all payload failed.
+  Status status = 1;
+
+  // Output only.
+  // This field is populated when `status.code` is 1001.
+  // When populated, this field contains the errors.
+  repeated UserEventError errors = 2;
+}
+
+// The request proto for `Predict` call.
+message PredictRequest {
+  // Required.
+  // This is same as `User.user_id`.
+  string user_id = 1;
+
+  // Required.
+  // The maximum number of products returned.
+  // The actual # of products returned is the min of:
+  // `size`
+  // length(`context.candidates_product_ids`)
+  // total # of products with `is_recommendable=True`
+  int32 size = 2;
+
+  // Required.
+  // The scene for the recommendation.
+  UserEvent.Scene scene = 3;
+
+  // The context of this request.
+  message Context {
+    // Optional.
+    // This is only required for product details page.
+    Product root_product = 1;
+
+    // Optional.
+    // Make sure this is as close to `UserEvent.device` as possible.
+    UserEvent.Device device = 2;
+
+    // Optional.
+    // The list of candidates for the recommendation.
+    // If this is empty, all products are the candidates.
+    repeated string candidate_product_ids = 3;
+  }
+
+  // Optional.
+  // The context of this request.
+  Context context = 4;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// A single predict call result.
+message PredictResult {
+  // The response of a product.
+  message ResponseProduct {
+    // Output only.
+    // The product id.
+    // This is consistent with `Product.product_id`.
+    string product_id = 1;
+
+    // Output only.
+    // This is the 1-based ranking of the product.
+    int32 rank = 2;
+
+    // Output only.
+    // The is the predicted CTR.
+    double pctr = 3;
+
+    // Output only.
+    // This is the predicted CVR.
+    double pcvr = 4;
+
+    // Output only.
+    // The strategy used for this particular recommendation result.
+    // Please refer to [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+    string rec_info = 5;
+
+    // Output only.
+    // All the extra info here.
+    map<string, string> extra = 100;
+  }
+
+  // Output only.
+  // The list of predicted products.
+  repeated ResponseProduct response_products = 1;
+
+  // Output only.
+  // Extra debug info.
+  map<string, string> extra = 100;
+}
+
+// The response proto the predict call.
+message PredictResponse {
+  // Output only.
+  // The status of the call.
+  Status status = 1;
+
+  // Output only.
+  // This is same as the request id of request.
+  string request_id = 2;
+
+  // Output only.
+  // This is only populated when `PredictResponse.status.code` is not 0.
+  PredictResult value = 3;
+}
+
+// The request proto for AckServerImpressions call.
+message AckServerImpressionsRequest {
+  // Required.
+  // This should be same as `PredictResponse.request_id`.
+  string predict_request_id = 1;
+
+  // Required.
+  // This should be same as `PredictRequest.user_id`.
+  string user_id = 2;
+
+  // Required.
+  // This should be the traffic source.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+  string traffic_source = 3;
+
+  // Required.
+  // The scene info.
+  // Please make sure this is as close to UserEvent.scene as possible.
+  UserEvent.Scene scene = 4;
+
+  // The product that was altered.
+  message AlteredProduct {
+    // Required.
+    // This is same as `Product.product_id`.
+    string product_id = 1;
+
+    // Required.
+    // The final state of the product.
+    // The acceptable values are "kept", "filtered", "inserted".
+    // kept     : The product was kept as is.
+    // filtered : The product is filtered by the caller's own logic.
+    // inserted : The product is inserted by the caller's own logic.
+    string altered_reason = 2;
+
+    // Required.
+    // The final rank.
+    // If this is unset (or 0), we assume it is same as the value in the predict response.
+    int32 rank = 3;
+  }
+
+  // Required.
+  // The list of altered products.
+  repeated AlteredProduct altered_products = 5;
+}
+
+// The response message for AckServerImpressions.
+message AckServerImpressionsResponse {
+  // Output only.
+  // The status of this response.
+  Status status = 1;
+}
+
+// The Byteplus Retail service.
+service ByteplusRetailService {
+  // WriteUsers
+  //
+  // Writes at most 100 users at a time. Exceeding 100 in a request results in
+  // a rejection. One can use this to upload new users, or update existing
+  // users (by providing all the fields).
+  // Refer to [this](../docs/rpcs) for how to use RPCs.
+  rpc WriteUsers(WriteUsersRequest) returns (WriteUsersResponse);
+
+  // WriteProducts
+  //
+  // Writes at most 100 products at a time. Exceeding 100 in a request results
+  // in a rejection.
+  // One can use this to upload new products, or update existing products (by
+  // providing all the fields).  Deleting a product is unsupported. One can
+  // update the existing product by
+  // setting `product.is_recommendable` to False.
+  // Refer to [this](../docs/rpcs) for how to use RPCs.
+  rpc WriteProducts(WriteProductsRequest) returns (WriteProductsResponse);
+
+  // WriteUserEvents
+  //
+  // Writes at most 100 UserEvents at a time. Exceeding 100 in a request
+  // results in a rejection. One should use this to upload new realtime
+  // UserEvents.  Note: This is processing realtime data, so we won't dedupe
+  // the requests.
+  // Please make sure the requests are deduplicated before sending over.
+  // Refer to [this](../docs/rpcs) for how to use RPCs.
+  rpc WriteUserEvents(WriteUserEventsRequest) returns (WriteUserEventsResponse);
+
+  // Predict
+  //
+  // Gets the list of products (ranked).
+  // The updated user data will take effect in 24 hours.
+  // The updated product data will take effect in 30 mins.
+  // Depending how (realtime or batch) the UserEvents are sent back, it will
+  // be fed into the models and take effect after that.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+
+  // AckServerImpressions
+  //
+  // Sends back the actual product list shown to the users based on the
+  // customized changes from `PredictResponse`.
+  // example: our Predict call returns the list of items [1, 2, 3, 4].
+  // Your custom logic have decided that product 3 has been sold out and
+  // product 10 needs to be inserted before 2 based on some promotion rules,
+  // the AckServerImpressionsRequest content items should looks like
+  // [
+  //   {id:1, altered_reason: "kept", rank:1},
+  //   {id:10, altered_reason: "inserted", rank:2},
+  //   {id:2, altered_reason: "kept", rank:3},
+  //   {id:4, altered_reason: "kept", rank:4},
+  //   {id:3, altered_reason: "filtered", rank:0},
+  // ].
+  rpc AckServerImpressions(AckServerImpressionsRequest) returns (AckServerImpressionsResponse);
+}
