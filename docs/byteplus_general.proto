@@ -49,6 +49,192 @@ message DoneResponse {
   Status status = 1;
 }
 
+// Represents a whole or partial calendar date, such as a birthday. The time of
+// day and time zone are either specified elsewhere or are insignificant. The
+// date is relative to the Gregorian Calendar. This can represent one of the
+// following:
+//
+// * A full date, with non-zero year, month, and day values
+// * A month and day value, with a zero year, such as an anniversary
+// * A year on its own, with zero month and day values
+// * A year and month value, with a zero day, such as a credit card expiration
+// date
+message Date {
+  // Year of the date. Must be from 1 to 9999, or 0 to specify a date without
+  // a year.
+  int32 year = 1;
+
+  // Month of a year. Must be from 1 to 12, or 0 to specify a year without a
+  // month and day.
+  int32 month = 2;
+
+  // Day of a month. Must be from 1 to 31 and valid for the year and month, or 0
+  // to specify a year by itself or a year and month where the day isn't
+  // significant.
+  int32 day = 3;
+}
+
+// Configuration of destination for Import related errors.
+message ImportErrorsConfig {
+  // Required.
+  // Errors destination. Currently only default to inline.
+  oneof destination {
+    // This is just a placeholder.
+    string empty_destination = 1;
+  }
+}
+
+message FTPConfig {
+  // Required
+  // The ftp address.
+  // Sample value: "127.0.0.1:8080"
+  string ip_port = 1;
+
+  // Required
+  // The ftp username
+  string username = 2;
+
+  // Required
+  // The ftp password
+  string password = 3;
+}
+
+message FTPSource {
+  // Required
+  // The ftp connection config
+  FTPConfig ftp_config = 1;
+
+  // Required
+  // The file path, not a directory.
+  // Example, "user/20130412.json"
+  string path = 2;
+
+  // Optional
+  // The compress type of target file.
+  // If the value is emtpy, we will read file without decompressing.
+  // The acceptable values are: "gzip"、"tar.gzip"
+  string compress_type = 3;
+
+  // Required
+  // The content type of target file.
+  // The acceptable values are: "application/json"、 "text/csv"
+  string content_type = 4;
+}
+
+message BigquerySource {
+  // The id of target bigquery project
+  string project_id = 1;
+
+  // The name of target bigquery dataset
+  string dataset = 2;
+
+  // The name of target bigquery table
+  string table = 3;
+
+  // Contains the raw bytes from a JSON credentials file
+  bytes credentials_json = 4;
+}
+
+message GCSSource {
+  // File path to this resource in Cloud Storage.
+  // Only support file (not directory) path,
+  // for example, "gs://forbyteplus/user/user_20210617"
+  string gcs_uri = 1;
+
+  // The content type of target resource.
+  // The acceptable values are: "application/json"、 "text/csv"
+  string content_type = 2;
+
+  // Contains the string contents from a JSON credentials file
+  string credentials_json = 3;
+}
+
+message OSSConfig {
+  // Required
+  // address, like "http://oss-cn-beijing.aliyuncs.com"
+  string ip_port = 1;
+
+  // Required
+  // access_key_id, like "LTAI5tEB4TrPTxWENP5aVFGJ"
+  string username = 2;
+
+  // Required
+  // access_key_secret, like "AZzF0rktBA3qIfsVMeUzumhzp1LM9W"
+  string password = 3;
+}
+
+message OSSSource {
+  // Required
+  // The oss connection config
+  OSSConfig oss_config = 1;
+
+  // Required
+  // oss bucket name
+  string bucket_name = 2;
+
+  // Required
+  // oss object name
+  string object_name = 3;
+
+  // Required
+  // The content type of target file.
+  // The acceptable values are: "application/json"、 "text/csv"
+  string content_type = 4;
+}
+
+message DataInputConfig {
+  oneof source {
+    // The ftp source for the input content.
+    FTPSource ftp_source = 1;
+
+    // The bigquery source for the input content.
+    BigquerySource bigquery_source = 2;
+
+    // The gcs source for the input content.
+    GCSSource gcs_source = 3;
+
+    // The oss source for the input content.
+    OSSSource oss_source = 4;
+  }
+}
+
+// Request proto for ImportData request.
+message ImportDataRequest {
+  // Required
+  // The desired input config of the data.
+  DataInputConfig input_config = 1;
+
+  // Required
+  // The desired date of the data.
+  Date date = 2;
+
+  // Optional.
+  // The desired location of errors incurred during the Import.
+  ImportErrorsConfig errors_config = 3;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// General write request,supported import realtime data
+message WriteDataRequest{
+  // Required
+  // Array of json strings.
+  // Each element of the array is a json serialized string of customer data.
+  repeated string datas = 1;
+
+  // Required
+  // The stage of importing data
+  string stage = 2;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
 message PredictDevice {
   // Optional
   // Device id, such as 'imei'

@@ -8,6 +8,7 @@ const (
 	RegionSg
 	RegionUs
 	RegionAir
+	RegionSaas
 )
 
 var (
@@ -18,6 +19,8 @@ var (
 	usHosts = []string{"rec-us-east-1.byteplusapi.com"}
 
 	airHosts = []string{"byteair-api-cn1.snssdk.com"}
+
+	saasHosts = []string{"byteair-api-sg1.recplusapi.com"}
 )
 
 const (
