@@ -136,6 +136,10 @@ func (receiver *Context) fillHosts(param *ContextParam) {
 		receiver.hosts = airHosts
 		return
 	}
+	if param.Region == RegionSaas {
+		receiver.hosts = saasHosts
+		return
+	}
 }
 
 func (receiver *Context) fillDefault() {

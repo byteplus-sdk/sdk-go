@@ -1,0 +1,754 @@
+syntax = "proto3";
+package bytedance.byteplus.general;
+option java_package = "byteplus.sdk.saas.protocol";
+option go_package = "github.com/byteplus-sdk/sdk-go/saas/protocol";
+
+import "byteplus_common.proto";
+
+message DoneRequest {
+  // The target data date list
+  repeated Date data_dates = 1;
+}
+
+// Represents a whole or partial calendar date, such as a birthday. The time of
+// day and time zone are either specified elsewhere or are insignificant. The
+// date is relative to the Gregorian Calendar. This can represent one of the
+// following:
+//
+// * A full date, with non-zero year, month, and day values
+// * A month and day value, with a zero year, such as an anniversary
+// * A year on its own, with zero month and day values
+// * A year and month value, with a zero day, such as a credit card expiration
+// date
+message Date {
+  // Year of the date. Must be from 1 to 9999, or 0 to specify a date without
+  // a year.
+  int32 year = 1;
+
+  // Month of a year. Must be from 1 to 12, or 0 to specify a year without a
+  // month and day.
+  int32 month = 2;
+
+  // Day of a month. Must be from 1 to 31 and valid for the year and month, or 0
+  // to specify a year by itself or a year and month where the day isn't
+  // significant.
+  int32 day = 3;
+}
+
+// Configuration of destination for Import related errors.
+message ImportErrorsConfig {
+  // Required.
+  // Errors destination. Currently only default to inline.
+  oneof destination {
+    // This is just a placeholder.
+    string empty_destination = 1;
+  }
+}
+
+// The product proto.
+message Product {
+  // Required.
+  // The unique identifier for the product.
+  // [link to best practices on deciding product ids](./ways-to-improve-recommendation-performance)
+  string product_id = 1;
+
+  // The category proto.
+  message Category {
+    // Required.
+    // The depth of the category.
+    // This is consecutive (1-based) and ascending.
+    int32 category_depth = 1;
+
+    // The single node of the category.
+    message CategoryNode {
+
+      // Required.
+      // The unique identifier of the category.
+      // Please refer to
+      // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+      /// 该字段是取值无关的 link guide 2.5.2 取值无关
+      string id_or_name = 1;
+    }
+
+    // Required.
+    // The category nodes belong to the same depth.
+    repeated CategoryNode category_nodes = 2;
+  }
+
+  // Required.
+  // The categorical information of the product.
+  // Missing this will significantly hurt the performance.
+  // For example, if a product has "Shoes -> Men's Shoes -> Basketball Shoes"
+  // This should be:
+  // [
+  //   {"category_depth":1,
+  //    "category_nodes": [{"id_or_name":"Shoes"}] },
+  //   {"category_depth":2,
+  //    "category_nodes": [{"id_or_name":"Men's Shoes"}] },
+  //   {"category_depth":3,
+  //    "category_nodes": [{"id_or_name":"Basketball Shoes"}] },
+  // ]
+  // If a product belongs to 2 different categories,
+  // "Shoes -> Men's shoes" and "Sports -> Basketball"
+  // then
+  //
+  // [
+  //   {"category_depth":1,
+  //    "category_nodes": [{"id_or_name":"Shoes"},
+  //                       {"id_or_name":"Men's shoes"}] },
+  //   {"category_depth":2,
+  //    "category_nodes": [{"id_or_name":"Sports"},
+  //                       {"id_or_name":"Basketball"}] },
+  // ]
+  repeated Category categories = 2;
+
+  // The brand proto.
+  message Brand {
+    // Required.
+    // The brand depth. This is consecutive (1-based) and ascending.
+    int32 brand_depth = 1;
+
+    // Required.
+    // The id or name of the brand at this depth.
+    string id_or_name = 2;
+  }
+
+  // Required.
+  // Missing this will significantly hurt the performance.
+  // The order should be asending on depth.
+  // For example, if a product belongs to "Adidas -> Yeezy",
+  // this field should be:
+  // [
+  //   {"brand_depth": 1, "id_or_name":"Adidas"},
+  //   {"brand_depth": 2, "id_or_name":"Yeezy"},
+  // ]
+  repeated Brand brands = 3;
+
+  // The price proto.
+  // Please make sure the products that need to be ranked together
+  // have the same currency.
+  message Price {
+    // Required.
+    // The current price in cents.
+    // e.g. $100.12 should be 10012 here.
+    int64 current_price = 1;
+
+    // Required.
+    // The original price in cents.
+    // e.g. $100.12 should be 10012 here.
+    int64 origin_price = 2;
+  }
+
+  // Required.
+  // The product price info.
+  // Please make sure the accuracy and recency.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#data-recency) for more details.
+  Price price = 4;
+
+  // Required.
+  // True if the product is recommendable (result in `Predict` call).
+  // Note: Any change of this takes up to 1 hour to take effect.
+  // Note: Even if a product isn't recommendable, please still send this to us.
+  // This is because that users might interact with such products historically,
+  // therefore it provides reasonably strong signals.
+  bool is_recommendable = 5;
+
+  // Required.
+  // The product title.
+  string title = 6;
+
+  // Optional.
+  // The product quality score.
+  // Note: this is different than user ratings.
+  // It is normally computed as a composite score considering many factors,
+  // including sales, customer feedback, information completeness, etc.
+  // This score should be normalized to [1.0, 5.0]
+  double quality_score = 7;
+
+  // Optional.
+  // The tags given by the seller for this product.
+  // This is used to lift the performance.
+  // Sample values are: "New", "Summer", "Clearance", etc.
+
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  repeated string tags = 8;
+
+  // The product display information.
+  message Display {
+    // Optional.
+    // The tags visible to the users on the listing page.
+    // Please fill as much as possible.
+    // Sample values are: "best seller", "hot sales", etc.
+
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    repeated string listing_page_display_tags = 1;
+
+    // Optional.
+    // The tags visible in the details page.
+    // Please fill as much as possible.
+    // Sample values are: "free shipping", "1 year guarantee", etc
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    repeated string detail_page_display_tags = 2;
+
+    // Optional.
+    // The product display media type in ths listing page.
+    // The only acceptable values are ["image", "video", "other"].
+    string listing_page_display_type = 3;
+
+    // Optional.
+    // When `listing_page_display_type` is one of the multi-media types,
+    // put the url here.
+    string cover_multimedia_url = 4;
+  }
+
+  // Optional.
+  // The display information of the product.
+  Display display = 9;
+
+  // The detailed product specs.
+  message ProductSpec {
+
+    // Required.
+    // The product group id.
+    // For example, the beer (same brand) might have 6-pack, 12-pack, etc,
+    // each has a different `product_id`, then they should have the
+    // `same product_group_id`
+    string product_group_id = 1;
+
+    // Optional.
+    // The rating given by the users.
+    // The value is normalized to [0.0, 5.0].
+    double user_rating = 2;
+
+    // Optional.
+    // The # of comments for this product.
+    int32 comment_count = 3;
+
+    // Optional.
+    // The source of the product.
+    // The accepted values are ["self", "thirdparty", "other"].
+    string source = 4;
+
+    // Optional.
+    // The time that the product is on sales.
+    int64 publish_timestamp = 5;
+  }
+
+  // Optional.
+  // The product specs.
+  ProductSpec product_spec = 10;
+
+  // Seller info.
+  message Seller {
+    // Required.
+    // The id for the seller.
+    string id = 1;
+
+    // Optional.
+    // The seller's level.
+    // The sample values are "gold", "silver", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+    /// 该字段是取值无关的 link guide 2.5.2 取值无关
+    string seller_level = 2;
+
+    // Optional.
+    // The seller's rating.
+    // Normalized to [0.0, 5.0].
+    double seller_rating = 3;
+  }
+
+  // Optional.
+  // The seller proto.
+  Seller seller = 11;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The scene where the event happened.
+message Scene {
+  // Required.
+  // The unique identifier for the scene.
+  // It can be Home page, Search page, Details page, etc.
+  // It is strongly recommended that you split the scene if possible.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  string scene_name = 1;
+
+  // Optional.
+  // The page number.
+  // It can be:
+  // 1. Users swipe the screen for X times then see the product.
+  // 2. Users go to page X and see the product.
+  // In this case, X is the page number.
+  //
+  // This should default to be 0. That means everything fits into 1 page.
+  int32 page_number = 2;
+
+  // Optional.
+  // The offset (1-based) within the page above.
+  int32 offset = 3;
+}
+
+// The device proto.
+message Device {
+  // Required.
+  // The platform used by the user.
+  // The acceptable values are "app", "desktop-web", "mobile-web", "other".
+  // app: user use APP
+  // desktop-web: user use desktop web
+  // mobile-web: user use mobile web
+  string platform = 1;
+
+  // Optional.
+  // The platform used by the user.
+  // The acceptable values are "android", "ios", "windows", "other"
+  // and "other".
+  string os_type = 2;
+
+  // Optional.
+  // Your application version.
+  // e.g. V9.0.8.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string app_version = 3;
+
+  // Optional.
+  // The device model.
+  // e.g. "iPhone10", "Pixel 4".
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string device_model = 4;
+
+  // Optional.
+  // The brand of the device.
+  // e.g. "Samsung"
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string device_brand = 5;
+
+  // Optional.
+  // The operating system version.
+  // e.g. "14.4.2"
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string os_version = 6;
+
+  // Optional.
+  // The type of the browser.
+  // e.g. "chrome", "firefox", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string browser_type = 7;
+
+  // Optional.
+  // The UserAgent for the browser.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  /// 该字段是取值无关的 link guide 2.5.2 取值无关
+  string user_agent = 8;
+
+  // Optional.
+  // The network used.
+  // The acceptable values are "2g", "3g", "4g", "5g", "wifi", "other".
+  string network = 9;
+}
+
+message DoneResponse {
+  // Output only.
+  // The status of this response.
+  bytedance.byteplus.Status status = 1;
+}
+
+message DataError {
+  // Detail error message, which should be in English.
+  // Example, "An unexpected value XXX is included in the XXX field, only ["xx", "yy", "zz"] can be accepted"
+  string message = 1;
+
+  // 具体的异常数据
+  string data = 2;
+}
+
+message WriteResponse {
+  // 任务执行结果，当status.code为0时，执行过程未发生任何异常，全部写入成功
+  bytedance.byteplus.Status status = 1;
+
+  // 当status.code为1206时，error_samples有值
+  // 执行写入过程中部分数据可能处理失败，所有的失败信息都将通过error_samples返回
+  // 如果status.code不为0，但error_samples没有值，代表所有数据均写入失败
+  repeated DataError errors = 2;
+}
+
+message FTPConfig {
+  // Required
+  // The ftp address.
+  // Sample value: "127.0.0.1:8080"
+  string ip_port = 1;
+
+  // Required
+  // The ftp username
+  string username = 2;
+
+  // Required
+  // The ftp password
+  string password = 3;
+}
+
+message FTPSource {
+  // Required
+  // The ftp connection config
+  FTPConfig ftp_config = 1;
+
+  // Required
+  // The file path, not a directory.
+  // Example, "user/20130412.json"
+  string path = 2;
+
+  // Optional
+  // The compress type of target file.
+  // If the value is emtpy, we will read file without decompressing.
+  // The acceptable values are: "gzip"、"tar.gzip"
+  string compress_type = 3;
+
+  // Required
+  // The content type of target file.
+  // The acceptable values are: "application/json"、 "text/csv"
+  string content_type = 4;
+}
+
+message BigquerySource {
+  // The id of target bigquery project
+  string project_id = 1;
+
+  // The name of target bigquery dataset
+  string dataset = 2;
+
+  // The name of target bigquery table
+  string table = 3;
+
+  // Contains the raw bytes from a JSON credentials file
+  bytes credentials_json = 4;
+}
+
+message GCSSource {
+  // File path to this resource in Cloud Storage.
+  // Only support file (not directory) path,
+  // for example, "gs://forbyteplus/user/user_20210617"
+  string gcs_uri = 1;
+
+  // The content type of target resource.
+  // The acceptable values are: "application/json"、 "text/csv"
+  string content_type = 2;
+
+  // Contains the string contents from a JSON credentials file
+  string credentials_json = 3;
+}
+
+message OSSConfig {
+  // Required
+  // address, like "http://oss-cn-beijing.aliyuncs.com"
+  string ip_port = 1;
+
+  // Required
+  // access_key_id, like "LTAI5tEB4TrPTxWENP5aVFGJ"
+  string username = 2;
+
+  // Required
+  // access_key_secret, like "AZzF0rktBA3qIfsVMeUzumhzp1LM9W"
+  string password = 3;
+}
+
+message OSSSource {
+  // Required
+  // The oss connection config
+  OSSConfig oss_config = 1;
+
+  // Required
+  // oss bucket name
+  string bucket_name = 2;
+
+  // Required
+  // oss object name
+  string object_name = 3;
+
+  // Required
+  // The content type of target file.
+  // The acceptable values are: "application/json"、 "text/csv"
+  string content_type = 4;
+}
+
+message DataInputConfig {
+  oneof source {
+    // The ftp source for the input content.
+    FTPSource ftp_source = 1;
+
+    // The bigquery source for the input content.
+    BigquerySource bigquery_source = 2;
+
+    // The gcs source for the input content.
+    GCSSource gcs_source = 3;
+
+    // The oss source for the input content.
+    OSSSource oss_source = 4;
+  }
+}
+
+// general write request,supported import realtime data
+message WriteDataRequest{
+  // Required
+  // Array of json strings.
+  // Each element of the array is a json serialized string of customer data.
+  repeated string datas = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+message ImportDataRequest {
+  // Required
+  // The desired input config of the data.
+  DataInputConfig input_config = 1;
+
+  // Optional.
+  // The desired location of errors incurred during the Import.
+  ImportErrorsConfig errors_config = 2;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The request proto for `Predict` call.
+message PredictRequest {
+  // Required.
+  // This is same as `User.user_id`.
+  string user_id = 1;
+
+  // Required.
+  // The maximum number of products returned.
+  // The actual # of products returned is the min of:
+  // `size`
+  // length(`context.candidates_product_ids`)
+  // total # of products with `is_recommendable=True`
+  int32 size = 2;
+
+  // Required.
+  // The scene for the recommendation.
+  Scene scene = 3;
+
+  // The context of this request.
+  message Context {
+    // Optional.
+    // This is only required for product details page.
+    Product root_product = 1;
+
+    // Optional.
+    // Make sure this is as close to `UserEvent.device` as possible.
+    Device device = 2;
+
+    // Optional.
+    // The list of candidates for the recommendation.
+    // If this is empty, all products are the candidates.
+    repeated string candidate_product_ids = 3;
+  }
+
+  // Optional.
+  // The context of this request.
+  Context context = 4;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// A single predict call result.
+message PredictResult {
+  // The response of a product.
+  message ResponseProduct {
+    // Output only.
+    // The product id.
+    // This is consistent with `Product.product_id`.
+    string product_id = 1;
+
+    // Output only.
+    // This is the 1-based ranking of the product.
+    int32 rank = 2;
+
+    // Output only.
+    // The is the predicted CTR.
+    double pctr = 3;
+
+    // Output only.
+    // This is the predicted CVR.
+    double pcvr = 4;
+
+    // Output only.
+    // The strategy used for this particular recommendation result.
+    // Please refer to [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+    /// 只用作返回值。base64编码的字符串，记录了该次推荐的一些模型和策略信息，建议将此字段携带到行为数据中，用来辅助提升推荐效果。如base64编码不能满足要求，可联系对接同学调整编码方式。
+    string rec_info = 5;
+
+    // Output only.
+    // All the extra debug info here.
+    map<string, string> extra = 100;
+  }
+
+  // Output only.
+  // The list of predicted products.
+  repeated ResponseProduct response_products = 1;
+
+  // Output only.
+  // Extra debug info.
+  map<string, string> extra = 100;
+}
+
+// The response proto the predict call.
+message PredictResponse {
+  // Output only.
+  // The status of the call.
+  bytedance.byteplus.Status status = 1;
+
+  // Output only.
+  // This is same as `PredictRequest.request_id`.
+  string request_id = 2;
+
+  // Output only.
+  // This is only populated when `PredictResponse.status.code` is not 0.
+  PredictResult value = 3;
+}
+
+// The request proto for AckServerImpressions call.
+message AckServerImpressionsRequest {
+  // Required.
+  // This should be same as `PredictRequest.request_id`.
+  string predict_request_id = 1;
+
+  // Required.
+  // This should be same as `PredictRequest.user_id`.
+  string user_id = 2;
+
+  // Required.
+  // This should be the traffic source.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+  string traffic_source = 3;
+
+  // Required.
+  // The scene info.
+  // Please make sure this is as close to UserEvent.scene as possible.
+  Scene scene = 4;
+
+  // The product that was altered.
+  message AlteredProduct {
+    // Required.
+    // This is same as `Product.product_id`.
+    string product_id = 1;
+
+    // Required.
+    // The final state of the product.
+    // The acceptable values are "kept", "filtered", "inserted".
+    // kept     : The product was kept as is.
+    // filtered : The product is filtered by the caller's own logic.
+    // inserted : The product is inserted by the caller's own logic.
+    string altered_reason = 2;
+
+    // Required.
+    // The final rank.
+    // If this is unset (or 0), we assume it is same as the value in the predict response.
+    int32 rank = 3;
+
+    // Internal
+    // If `product_id` is a number, `product_id_hash` equals to `product_id`
+    // If `product_id` is not a number, `product_id_hash` equals to `fnv(product_id)`
+    int64 product_id_hash = 100;
+  }
+
+  // Required.
+  // The list of altered products.
+  repeated AlteredProduct altered_products = 5;
+}
+
+// The response message for AckServerImpressions.
+message AckServerImpressionsResponse {
+  // Output only.
+  // The status of this response.
+  bytedance.byteplus.Status status = 1;
+}
+
+// The BytePlus Retail service.
+service BytePlusRetailService {
+  // Write
+  //
+  // Writes at most 100 data at a time. Exceeding 100 in a request results in
+  // a rejection. One can use this to upload new data, or update existing
+  // data (by providing all the fields, some data type not support update, e.g. user event).
+  rpc WriteData(WriteDataRequest) returns (WriteResponse);
+
+  // Import
+  //
+  // Bulk import of data.
+  //
+  // `Operation.response` is of type ImportResponse. Note that it is
+  // possible for a subset of the items to be successfully inserted.
+  // Operation.metadata is of type Metadata.
+  // This call returns immediately after the server finishes the
+  // preliminary validations and persists the request. The caller should
+  // keep polling `OperationResponse.operation.name` using `GetOperation`
+  // call below to check the status.
+  // Note: This can also be used to update the existing data(some data type not support).
+  // In this case, please make sure you provide all fields.
+  rpc ImportData(ImportDataRequest) returns (OperationResponse);
+
+  // Done
+  //
+  // When the data of a day is imported completely,
+  // you should notify bytedance through `done` method,
+  // then bytedance will start handling the data in this day.
+  // If param is empty, indicate target date is previous day
+  rpc Done(DoneRequest) returns (DoneResponse);
+
+  // Predict
+  //
+  // Gets the list of products (ranked).
+  // The updated user data will take effect in 24 hours.
+  // The updated product data will take effect in 30 mins.
+  // Depending how (realtime or batch) the UserEvents are sent back, it will
+  // be fed into the models and take effect after that.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+
+  // AckServerImpressions
+  //
+  // Sends back the actual product list shown to the users based on the
+  // customized changes from `PredictResponse`.
+  // example: our Predict call returns the list of items [1, 2, 3, 4].
+  // Your custom logic have decided that product 3 has been sold out and
+  // product 10 needs to be inserted before 2 based on some promotion rules,
+  // the AckServerImpressionsRequest content items should looks like
+  // [
+  //   {id:1, altered_reason: "kept", rank:1},
+  //   {id:10, altered_reason: "inserted", rank:2},
+  //   {id:2, altered_reason: "kept", rank:3},
+  //   {id:4, altered_reason: "kept", rank:4},
+  //   {id:3, altered_reason: "filtered", rank:0},
+  // ].
+  rpc AckServerImpressions(AckServerImpressionsRequest) returns (AckServerImpressionsResponse);
+}
