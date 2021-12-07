@@ -35,7 +35,7 @@ func (c *HttpCaller) DoJsonRequest(url string, request interface{},
 		return err
 	}
 	options := option.Conv2Options(opts...)
-	headers := c.buildHeaders(options, reqBytes, "application/json")
+	headers := c.buildHeaders(options, "application/json")
 	url = c.withOptionQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
 	if err != nil {
@@ -66,7 +66,7 @@ func (c *HttpCaller) DoPbRequest(url string, request proto.Message,
 		return err
 	}
 	options := option.Conv2Options(opts...)
-	headers := c.buildHeaders(options, reqBytes, "application/x-protobuf")
+	headers := c.buildHeaders(options, "application/x-protobuf")
 	url = c.withOptionQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
 	if err != nil {
@@ -89,15 +89,14 @@ func (c *HttpCaller) marshal(request proto.Message) ([]byte, error) {
 	return reqBytes, nil
 }
 
-func (c *HttpCaller) buildHeaders(options *option.Options,
-	reqBytes []byte, contentType string) map[string]string {
+func (c *HttpCaller) buildHeaders(options *option.Options, contentType string) map[string]string {
 	headers := make(map[string]string)
 	headers["Content-Encoding"] = "gzip"
 	headers["Accept-Encoding"] = "gzip"
 	headers["Content-Type"] = contentType
 	headers["Accept"] = "application/x-protobuf"
+	headers["Tenant-Id"] = c.context.tenantId
 	c.withOptionHeaders(headers, options)
-	c.withAuthHeaders(headers, reqBytes)
 	return headers
 }
 
@@ -123,9 +122,17 @@ func (c *HttpCaller) withOptionHeaders(headers map[string]string, options *optio
 	}
 }
 
-func (c *HttpCaller) withAuthHeaders(headers map[string]string, reqBytes []byte) {
+func (c *HttpCaller) withAuthHeaders(req *fasthttp.Request, reqBytes []byte) {
+	// use volc auth first
+	if c.context.volcCredentials.AccessKeyID != "" {
+		c.withVolcAuthHeaders(req)
+		return
+	}
+	c.withAirAuthHeaders(req, reqBytes)
+}
+
+func (c *HttpCaller) withAirAuthHeaders(req *fasthttp.Request, reqBytes []byte) {
 	var (
-		tenantId = c.context.tenantId
 		// Gets the second-level timestamp of the current time.
 		// The server only supports the second-level timestamp.
 		// The 'ts' must be the current time.
@@ -138,11 +145,13 @@ func (c *HttpCaller) withAuthHeaders(headers map[string]string, reqBytes []byte)
 		// calculate the authentication signature
 		signature = c.calSignature(reqBytes, ts, nonce)
 	)
+	req.Header.Set("Tenant-Ts", ts)
+	req.Header.Set("Tenant-Nonce", nonce)
+	req.Header.Set("Tenant-Signature", signature)
+}
 
-	headers["Tenant-Id"] = tenantId
-	headers["Tenant-Ts"] = ts
-	headers["Tenant-Nonce"] = nonce
-	headers["Tenant-Signature"] = signature
+func (c *HttpCaller) withVolcAuthHeaders(req *fasthttp.Request) {
+	VolcSign(req, c.context.volcCredentials)
 }
 
 func (c *HttpCaller) calSignature(reqBytes []byte, ts, nonce string) string {
@@ -190,7 +199,7 @@ func (c *HttpCaller) doHttpRequest(url string, headers map[string]string,
 		fasthttp.ReleaseRequest(request)
 		fasthttp.ReleaseResponse(response)
 	}()
-
+	c.withAuthHeaders(request, reqBytes)
 	start := time.Now()
 	defer func() {
 		logs.Debug("http url:%s, cost:%s", url, time.Now().Sub(start))

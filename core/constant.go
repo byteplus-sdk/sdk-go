@@ -42,3 +42,7 @@ const (
 	// StatusCodeTooManyRequest The server hope slow down request frequency, and this request was rejected
 	StatusCodeTooManyRequest = 429
 )
+
+const (
+	volcAuthService = "air"
+)

@@ -10,6 +10,8 @@ type ContextParam struct {
 	Tenant     string
 	TenantId   string
 	Token      string
+	AK         string
+	SK         string
 	Schema     string
 	HostHeader string
 	Hosts      []string
@@ -24,12 +26,24 @@ func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
 	if param.TenantId == "" {
 		return errors.New("tenant id is null")
 	}
-	if param.Token == "" {
-		return errors.New("token is null")
+	if err := receiver.checkAuthRequiredField(param); err != nil {
+		return err
 	}
 	if param.Region == RegionUnknown {
 		return errors.New("region is null")
 	}
+	return nil
+}
+
+func (receiver *ContextParam) checkAuthRequiredField(param *ContextParam) error {
+	if param.Token == "" && param.AK == "" {
+		return errors.New("token and ak are null")
+	}
+
+	if param.AK != "" && param.SK == "" {
+		return errors.New("sk is null")
+	}
+
 	return nil
 }
 
@@ -48,6 +62,7 @@ func NewContext(param *ContextParam) (*Context, error) {
 		customerHeaders: param.Headers,
 	}
 	result.fillHosts(param)
+	result.fillVolcCredentials(param)
 	result.httpCli = &fasthttp.HostClient{Addr: result.hosts[0]}
 	result.fillDefault()
 	return result, nil
@@ -67,6 +82,8 @@ type Context struct {
 	// A unique identity assigned by Bytedance, which is need to fill in URL.
 	// It is sometimes called "company".
 	token string
+
+	volcCredentials Credentials
 
 	// Schema of URL, server supports both "HTTPS" and "HTTP",
 	// in order to ensure communication security, please use "HTTPS"
@@ -97,6 +114,14 @@ func (receiver *Context) TenantId() string {
 
 func (receiver *Context) Token() string {
 	return receiver.token
+}
+
+func (receiver *Context) AK() string {
+	return receiver.volcCredentials.AccessKeyID
+}
+
+func (receiver *Context) SK() string {
+	return receiver.volcCredentials.SecretAccessKey
 }
 
 func (receiver *Context) Schema() string {
@@ -142,4 +167,24 @@ func (receiver *Context) fillDefault() {
 	if receiver.schema == "" {
 		receiver.schema = "https"
 	}
+}
+
+func (receiver *Context) fillVolcCredentials(param *ContextParam) {
+	c := Credentials{
+		AccessKeyID:     param.AK,
+		SecretAccessKey: param.SK,
+		Service:         volcAuthService,
+	}
+
+	// fill region
+	switch param.Region {
+	case RegionSg:
+		c.Region = "ap-singapore-1"
+	case RegionUs:
+		c.Region = "us-east-1"
+	default:
+		c.Region = "cn-north-1"
+	}
+
+	receiver.volcCredentials = c
 }
