@@ -19,11 +19,6 @@ func (receiver *ClientBuilder) TenantId(tenantId string) *ClientBuilder {
 	return receiver
 }
 
-func (receiver *ClientBuilder) ProjectId(projectId string) *ClientBuilder {
-	receiver.param.Tenant = projectId
-	return receiver
-}
-
 func (receiver *ClientBuilder) Token(token string) *ClientBuilder {
 	receiver.param.Token = token
 	return receiver
@@ -51,16 +46,6 @@ func (receiver *ClientBuilder) Headers(headers map[string]string) *ClientBuilder
 
 func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 	receiver.param.Region = region
-	return receiver
-}
-
-func (receiver *ClientBuilder) AK(ak string) *ClientBuilder {
-	receiver.param.AK = ak
-	return receiver
-}
-
-func (receiver *ClientBuilder) SK(sk string) *ClientBuilder {
-	receiver.param.SK = sk
 	return receiver
 }
 

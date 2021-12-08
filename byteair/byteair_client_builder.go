@@ -49,6 +49,16 @@ func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 	return receiver
 }
 
+func (receiver *ClientBuilder) AK(ak string) *ClientBuilder {
+	receiver.param.AK = ak
+	return receiver
+}
+
+func (receiver *ClientBuilder) SK(sk string) *ClientBuilder {
+	receiver.param.SK = sk
+	return receiver
+}
+
 func (receiver *ClientBuilder) Build() (Client, error) {
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {

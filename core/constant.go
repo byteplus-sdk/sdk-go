@@ -7,7 +7,8 @@ const (
 	RegionCn
 	RegionSg
 	RegionUs
-	RegionAir
+	RegionAirCn
+	RegionAirSg
 )
 
 var (
@@ -17,7 +18,9 @@ var (
 
 	usHosts = []string{"rec-us-east-1.byteplusapi.com"}
 
-	airHosts = []string{"byteair-api-cn1.snssdk.com"}
+	airCnHosts = []string{"byteair-api-cn1.snssdk.com"}
+
+	airSgHosts = []string{"byteair-api-sg1.byteintlapi.com"}
 )
 
 const (
