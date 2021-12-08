@@ -9,11 +9,6 @@ type ClientBuilder struct {
 	param core.ContextParam
 }
 
-func (receiver *ClientBuilder) ProjectId(ProjectId string) *ClientBuilder {
-	receiver.param.Tenant = ProjectId
-	return receiver
-}
-
 func (receiver *ClientBuilder) TenantId(tenantId string) *ClientBuilder {
 	receiver.param.TenantId = tenantId
 	return receiver

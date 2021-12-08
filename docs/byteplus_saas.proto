@@ -1,49 +1,9 @@
 syntax = "proto3";
-package bytedance.byteplus.general;
+package bytedance.byteplus.rec.saas;
 option java_package = "byteplus.sdk.saas.protocol";
 option go_package = "github.com/byteplus-sdk/sdk-go/saas/protocol";
 
 import "byteplus_common.proto";
-
-message DoneRequest {
-  // The target data date list
-  repeated Date data_dates = 1;
-}
-
-// Represents a whole or partial calendar date, such as a birthday. The time of
-// day and time zone are either specified elsewhere or are insignificant. The
-// date is relative to the Gregorian Calendar. This can represent one of the
-// following:
-//
-// * A full date, with non-zero year, month, and day values
-// * A month and day value, with a zero year, such as an anniversary
-// * A year on its own, with zero month and day values
-// * A year and month value, with a zero day, such as a credit card expiration
-// date
-message Date {
-  // Year of the date. Must be from 1 to 9999, or 0 to specify a date without
-  // a year.
-  int32 year = 1;
-
-  // Month of a year. Must be from 1 to 12, or 0 to specify a year without a
-  // month and day.
-  int32 month = 2;
-
-  // Day of a month. Must be from 1 to 31 and valid for the year and month, or 0
-  // to specify a year by itself or a year and month where the day isn't
-  // significant.
-  int32 day = 3;
-}
-
-// Configuration of destination for Import related errors.
-message ImportErrorsConfig {
-  // Required.
-  // Errors destination. Currently only default to inline.
-  oneof destination {
-    // This is just a placeholder.
-    string empty_destination = 1;
-  }
-}
 
 // The product proto.
 message Product {
@@ -66,7 +26,6 @@ message Product {
       // The unique identifier of the category.
       // Please refer to
       // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-      /// 该字段是取值无关的 link guide 2.5.2 取值无关
       string id_or_name = 1;
     }
 
@@ -173,7 +132,6 @@ message Product {
 
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   repeated string tags = 8;
 
   // The product display information.
@@ -185,7 +143,6 @@ message Product {
 
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     repeated string listing_page_display_tags = 1;
 
     // Optional.
@@ -194,7 +151,6 @@ message Product {
     // Sample values are: "free shipping", "1 year guarantee", etc
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     repeated string detail_page_display_tags = 2;
 
     // Optional.
@@ -256,7 +212,6 @@ message Product {
     // The sample values are "gold", "silver", etc.
     // Please refer to
     // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-    /// 该字段是取值无关的 link guide 2.5.2 取值无关
     string seller_level = 2;
 
     // Optional.
@@ -321,7 +276,6 @@ message Device {
   // e.g. V9.0.8.
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string app_version = 3;
 
   // Optional.
@@ -329,7 +283,6 @@ message Device {
   // e.g. "iPhone10", "Pixel 4".
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string device_model = 4;
 
   // Optional.
@@ -337,7 +290,6 @@ message Device {
   // e.g. "Samsung"
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string device_brand = 5;
 
   // Optional.
@@ -345,7 +297,6 @@ message Device {
   // e.g. "14.4.2"
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string os_version = 6;
 
   // Optional.
@@ -353,14 +304,12 @@ message Device {
   // e.g. "chrome", "firefox", etc.
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string browser_type = 7;
 
   // Optional.
   // The UserAgent for the browser.
   // Please refer to
   // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-  /// 该字段是取值无关的 link guide 2.5.2 取值无关
   string user_agent = 8;
 
   // Optional.
@@ -369,166 +318,46 @@ message Device {
   string network = 9;
 }
 
-message DoneResponse {
-  // Output only.
-  // The status of this response.
-  bytedance.byteplus.Status status = 1;
-}
-
+// Summary of error messages in imported data processing
 message DataError {
   // Detail error message, which should be in English.
   // Example, "An unexpected value XXX is included in the XXX field, only ["xx", "yy", "zz"] can be accepted"
   string message = 1;
 
-  // 具体的异常数据
+  // Specific abnormal data
   string data = 2;
 }
 
 message WriteResponse {
-  // 任务执行结果，当status.code为0时，执行过程未发生任何异常，全部写入成功
+  // Task execution result.
+  // when status.code is 0, no exception occurred during execution, and all writing was successful
   bytedance.byteplus.Status status = 1;
 
-  // 当status.code为1206时，error_samples有值
-  // 执行写入过程中部分数据可能处理失败，所有的失败信息都将通过error_samples返回
-  // 如果status.code不为0，但error_samples没有值，代表所有数据均写入失败
+  // When status.code is 1206, errors has a value.
+  // Some data may fail to be processed during the writing process, and all failure information will be returned through errors.
+  // If status.code is not 0, but errors has no value, it means that all data is Write failed
   repeated DataError errors = 2;
 }
 
-message FTPConfig {
-  // Required
-  // The ftp address.
-  // Sample value: "127.0.0.1:8080"
-  string ip_port = 1;
-
-  // Required
-  // The ftp username
-  string username = 2;
-
-  // Required
-  // The ftp password
-  string password = 3;
-}
-
-message FTPSource {
-  // Required
-  // The ftp connection config
-  FTPConfig ftp_config = 1;
-
-  // Required
-  // The file path, not a directory.
-  // Example, "user/20130412.json"
-  string path = 2;
-
-  // Optional
-  // The compress type of target file.
-  // If the value is emtpy, we will read file without decompressing.
-  // The acceptable values are: "gzip"、"tar.gzip"
-  string compress_type = 3;
-
-  // Required
-  // The content type of target file.
-  // The acceptable values are: "application/json"、 "text/csv"
-  string content_type = 4;
-}
-
-message BigquerySource {
-  // The id of target bigquery project
-  string project_id = 1;
-
-  // The name of target bigquery dataset
-  string dataset = 2;
-
-  // The name of target bigquery table
-  string table = 3;
-
-  // Contains the raw bytes from a JSON credentials file
-  bytes credentials_json = 4;
-}
-
-message GCSSource {
-  // File path to this resource in Cloud Storage.
-  // Only support file (not directory) path,
-  // for example, "gs://forbyteplus/user/user_20210617"
-  string gcs_uri = 1;
-
-  // The content type of target resource.
-  // The acceptable values are: "application/json"、 "text/csv"
-  string content_type = 2;
-
-  // Contains the string contents from a JSON credentials file
-  string credentials_json = 3;
-}
-
-message OSSConfig {
-  // Required
-  // address, like "http://oss-cn-beijing.aliyuncs.com"
-  string ip_port = 1;
-
-  // Required
-  // access_key_id, like "LTAI5tEB4TrPTxWENP5aVFGJ"
-  string username = 2;
-
-  // Required
-  // access_key_secret, like "AZzF0rktBA3qIfsVMeUzumhzp1LM9W"
-  string password = 3;
-}
-
-message OSSSource {
-  // Required
-  // The oss connection config
-  OSSConfig oss_config = 1;
-
-  // Required
-  // oss bucket name
-  string bucket_name = 2;
-
-  // Required
-  // oss object name
-  string object_name = 3;
-
-  // Required
-  // The content type of target file.
-  // The acceptable values are: "application/json"、 "text/csv"
-  string content_type = 4;
-}
-
-message DataInputConfig {
-  oneof source {
-    // The ftp source for the input content.
-    FTPSource ftp_source = 1;
-
-    // The bigquery source for the input content.
-    BigquerySource bigquery_source = 2;
-
-    // The gcs source for the input content.
-    GCSSource gcs_source = 3;
-
-    // The oss source for the input content.
-    OSSSource oss_source = 4;
-  }
-}
 
 // general write request,supported import realtime data
 message WriteDataRequest{
   // Required
+  // Id of the recommendation project.
+  string project_id = 1;
+
+  // Required
+  // The stage of importing data，Corresponding to the three synchronization stages of the recommendation platform
+  // Possible type values:
+  // "trial":Test data/pre-synchronization stage
+  // "historical":Historical data synchronization stage
+  // "incremental":Incremental real-time data synchronization stage
+  string stage = 2;
+
+  // Required
   // Array of json strings.
   // Each element of the array is a json serialized string of customer data.
-  repeated string datas = 1;
-
-  // Optional.
-  // This is a catch-all field to pass all the additional information.
-  // Please provide as much information as possible.
-  map<string, string> extra = 100;
-}
-
-message ImportDataRequest {
-  // Required
-  // The desired input config of the data.
-  DataInputConfig input_config = 1;
-
-  // Optional.
-  // The desired location of errors incurred during the Import.
-  ImportErrorsConfig errors_config = 2;
+  repeated string datas = 10;
 
   // Optional.
   // This is a catch-all field to pass all the additional information.
@@ -538,9 +367,17 @@ message ImportDataRequest {
 
 // The request proto for `Predict` call.
 message PredictRequest {
+  // Required
+  // Id of the recommendation project.
+  string project_id = 1;
+
+  // Required
+  // Recommended model unique identification.
+  string model_id = 2;
+
   // Required.
   // This is same as `User.user_id`.
-  string user_id = 1;
+  string user_id = 10;
 
   // Required.
   // The maximum number of products returned.
@@ -548,11 +385,11 @@ message PredictRequest {
   // `size`
   // length(`context.candidates_product_ids`)
   // total # of products with `is_recommendable=True`
-  int32 size = 2;
+  int32 size = 11;
 
   // Required.
   // The scene for the recommendation.
-  Scene scene = 3;
+  Scene scene = 12;
 
   // The context of this request.
   message Context {
@@ -572,7 +409,7 @@ message PredictRequest {
 
   // Optional.
   // The context of this request.
-  Context context = 4;
+  Context context = 13;
 
   // Optional.
   // This is a catch-all field to pass all the additional information.
@@ -638,24 +475,32 @@ message PredictResponse {
 
 // The request proto for AckServerImpressions call.
 message AckServerImpressionsRequest {
+  // Required
+  // Id of the recommendation project.
+  string project_id = 1;
+
+  // Required
+  // Recommended model unique identification.
+  string model_id = 2;
+
   // Required.
   // This should be same as `PredictRequest.request_id`.
-  string predict_request_id = 1;
+  string predict_request_id = 10;
 
   // Required.
   // This should be same as `PredictRequest.user_id`.
-  string user_id = 2;
+  string user_id = 11;
 
   // Required.
   // This should be the traffic source.
   // Please refer to
   // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
-  string traffic_source = 3;
+  string traffic_source = 12;
 
   // Required.
   // The scene info.
   // Please make sure this is as close to UserEvent.scene as possible.
-  Scene scene = 4;
+  Scene scene = 13;
 
   // The product that was altered.
   message AlteredProduct {
@@ -684,7 +529,7 @@ message AckServerImpressionsRequest {
 
   // Required.
   // The list of altered products.
-  repeated AlteredProduct altered_products = 5;
+  repeated AlteredProduct altered_products = 14;
 }
 
 // The response message for AckServerImpressions.
@@ -694,37 +539,14 @@ message AckServerImpressionsResponse {
   bytedance.byteplus.Status status = 1;
 }
 
-// The BytePlus Retail service.
-service BytePlusRetailService {
+// The BytePlus Saas service.
+service BytePlusSaasService {
   // Write
   //
   // Writes at most 100 data at a time. Exceeding 100 in a request results in
   // a rejection. One can use this to upload new data, or update existing
   // data (by providing all the fields, some data type not support update, e.g. user event).
   rpc WriteData(WriteDataRequest) returns (WriteResponse);
-
-  // Import
-  //
-  // Bulk import of data.
-  //
-  // `Operation.response` is of type ImportResponse. Note that it is
-  // possible for a subset of the items to be successfully inserted.
-  // Operation.metadata is of type Metadata.
-  // This call returns immediately after the server finishes the
-  // preliminary validations and persists the request. The caller should
-  // keep polling `OperationResponse.operation.name` using `GetOperation`
-  // call below to check the status.
-  // Note: This can also be used to update the existing data(some data type not support).
-  // In this case, please make sure you provide all fields.
-  rpc ImportData(ImportDataRequest) returns (OperationResponse);
-
-  // Done
-  //
-  // When the data of a day is imported completely,
-  // you should notify bytedance through `done` method,
-  // then bytedance will start handling the data in this day.
-  // If param is empty, indicate target date is previous day
-  rpc Done(DoneRequest) returns (DoneResponse);
 
   // Predict
   //

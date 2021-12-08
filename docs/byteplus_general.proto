@@ -131,8 +131,8 @@ message BigquerySource {
   // The name of target bigquery table
   string table = 3;
 
-  // Contains the raw bytes from a JSON credentials file
-  bytes credentials_json = 4;
+  // Contains the string contents from a JSON credentials file
+  string credentials_json = 4;
 }
 
 message GCSSource {
@@ -155,11 +155,11 @@ message OSSConfig {
   string ip_port = 1;
 
   // Required
-  // access_key_id, like "LTAI5tEB4TrPTxWENP5aVFGJ"
+  // access_key_id
   string username = 2;
 
   // Required
-  // access_key_secret, like "AZzF0rktBA3qIfsVMeUzumhzp1LM9W"
+  // access_key_secret
   string password = 3;
 }
 

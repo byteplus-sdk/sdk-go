@@ -20,7 +20,7 @@ var (
 
 	airHosts = []string{"byteair-api-cn1.snssdk.com"}
 
-	saasHosts = []string{"byteair-api-sg1.recplusapi.com"}
+	saasHosts = []string{"rec-api-sg1.recplusapi.com"}
 )
 
 const (
