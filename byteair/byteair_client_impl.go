@@ -52,7 +52,7 @@ func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
 	urlFormat := c.gu.writeDataURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
 	response := &WriteResponse{}
-	err := c.hCaller.DoJsonRequest(url, dataList, response, opts...)
+	err := c.hCaller.DoJsonRequest(url, dataList, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (c *clientImpl) ImportData(dataList []map[string]interface{},
 	urlFormat := c.gu.importDataURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
 	response := &OperationResponse{}
-	err := c.hCaller.DoJsonRequest(url, dataList, response, opts...)
+	err := c.hCaller.DoJsonRequest(url, dataList, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (c *clientImpl) Done(dateList []time.Time,
 		DataDates: dates,
 	}
 	response := &DoneResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -113,10 +113,13 @@ func (c *clientImpl) appendDoneDate(dates []*Date,
 func (c *clientImpl) Predict(request *PredictRequest,
 	opts ...option.Option) (*PredictResponse, error) {
 	urlFormat := c.gu.predictUrlFormat
-	scene := c.getSceneFromOpts(opts...)
+	//The options conversion should be placed in xxx_client_impl,
+	//so that each client_impl could do some special processing according to options
+	options := option.Conv2Options(opts...)
+	scene := c.getSceneFromOpts(options)
 	url := strings.ReplaceAll(urlFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +127,8 @@ func (c *clientImpl) Predict(request *PredictRequest,
 	return response, nil
 }
 
-func (c *clientImpl) getSceneFromOpts(opts ...option.Option) string {
-	options := option.Conv2Options(opts...)
+func (c *clientImpl) getSceneFromOpts(options *option.Options) string {
+	// If predict scene option is not filled, add default value
 	if options.Scene == "" {
 		return DefaultPredictScene
 	}
@@ -136,7 +139,7 @@ func (c *clientImpl) Callback(request *CallbackRequest,
 	opts ...option.Option) (*CallbackResponse, error) {
 	url := c.gu.callbackURL
 	response := &CallbackResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}

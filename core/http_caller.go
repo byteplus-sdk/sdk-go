@@ -28,13 +28,12 @@ type HttpCaller struct {
 }
 
 func (c *HttpCaller) DoJsonRequest(url string, request interface{},
-	response proto.Message, opts ...option.Option) error {
+	response proto.Message, options *option.Options) error {
 	reqBytes, err := c.jsonMarshal(request)
 	if err != nil {
 		logs.Error("json marshal request fail, err:%s url:%s", err.Error(), url)
 		return err
 	}
-	options := option.Conv2Options(opts...)
 	headers := c.buildHeaders(options, "application/json")
 	url = c.withOptionQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
@@ -59,13 +58,12 @@ func (c *HttpCaller) jsonMarshal(request interface{}) ([]byte, error) {
 }
 
 func (c *HttpCaller) DoPbRequest(url string, request proto.Message,
-	response proto.Message, opts ...option.Option) error {
+	response proto.Message, options *option.Options) error {
 	reqBytes, err := c.marshal(request)
 	if err != nil {
 		logs.Error("marshal request fail, err:%s url:%s", err.Error(), url)
 		return err
 	}
-	options := option.Conv2Options(opts...)
 	headers := c.buildHeaders(options, "application/x-protobuf")
 	url = c.withOptionQueries(options, url)
 	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)

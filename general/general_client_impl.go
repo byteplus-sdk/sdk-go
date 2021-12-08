@@ -50,7 +50,7 @@ func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
 	urlFormat := c.gu.writeDataURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
 	response := &WriteResponse{}
-	err := c.hCaller.DoJsonRequest(url, dataList, response, opts...)
+	err := c.hCaller.DoJsonRequest(url, dataList, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (c *clientImpl) ImportData(dataList []map[string]interface{},
 	urlFormat := c.gu.importDataURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
 	response := &OperationResponse{}
-	err := c.hCaller.DoJsonRequest(url, dataList, response, opts...)
+	err := c.hCaller.DoJsonRequest(url, dataList, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (c *clientImpl) Done(dateList []time.Time,
 	urlFormat := c.gu.doneURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
 	response := &DoneResponse{}
-	err := c.hCaller.DoJsonRequest(url, dateMaps, response, opts...)
+	err := c.hCaller.DoJsonRequest(url, dateMaps, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (c *clientImpl) Predict(request *PredictRequest,
 	urlFormat := c.gu.predictUrlFormat
 	url := strings.ReplaceAll(urlFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (c *clientImpl) Callback(request *CallbackRequest,
 	opts ...option.Option) (*CallbackResponse, error) {
 	url := c.gu.callbackURL
 	response := &CallbackResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
