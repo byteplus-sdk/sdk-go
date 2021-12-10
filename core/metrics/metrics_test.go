@@ -2,23 +2,24 @@ package metrics
 
 import (
 	"github.com/byteplus-sdk/sdk-go/core/logs"
-	"math/rand"
 	"sync"
 	"testing"
 	"time"
 )
 
 func metricsInit() {
-	SetPrintLog(true)
 	logs.Level = logs.LevelDebug
+	// To close the metrics, just remove the Init function
+	Init(
+		WithMetricsLog(),
+		WithFlushInterval(10*time.Second),
+	)
 }
 
-func StoreReport()  {
-	report := NewReporterBuilder().
-		EnableMetrics(true).BaseTags(map[string]string{"tenant": "metrics_demo"}).Build()
+func StoreReport() {
 	for i := 0; i < 100000; i++ {
-		report.Store("request.store", 200, "type:test_metrics1")
-		report.Store("request.store", 100, "type:test_metrics2")
+		Store("request.store", 200, "type:test_metrics3")
+		Store("request.store", 100, "type:test_metrics4")
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -29,13 +30,11 @@ func TestStoreReport(t *testing.T) {
 	StoreReport()
 }
 
-func CounterReport()  {
-	report := NewReporterBuilder().
-		EnableMetrics(true).BaseTags(map[string]string{"tenant": "metrics_demo"}).Build()
+func CounterReport() {
 	for i := 0; i < 100000; i++ {
-		report.Counter("request.qps", 1, "type:test_metrics1")
-		report.Counter("request.qps", 1, "type:test_metrics2")
-		time.Sleep(100 * time.Millisecond)
+		Counter("request.counter", 1, "type:test_metrics3")
+		Counter("request.counter", 1, "type:test_metrics4")
+		time.Sleep(200 * time.Millisecond)
 	}
 }
 
@@ -45,16 +44,14 @@ func TestCounterReport(t *testing.T) {
 	CounterReport()
 }
 
-func TimerReport()  {
-	report := NewReporterBuilder().
-		EnableMetrics(true).BaseTags(map[string]string{"tenant": "metrics_demo"}).Build()
+func TimerReport() {
 	for i := 0; i < 100000; i++ {
 		begin := time.Now()
-		time.Sleep(time.Duration(rand.Int31n(100)) * time.Millisecond)
-		report.Latency("request.latency", begin, "type:test_metrics1")
+		time.Sleep(time.Duration(100) * time.Millisecond)
+		Latency("request.timer", begin, "type:test_metrics3")
 		begin = time.Now()
-		time.Sleep(time.Duration(rand.Int31n(150)) * time.Millisecond)
-		report.Latency("request.latency", begin, "type:test_metrics2")
+		time.Sleep(time.Duration(150) * time.Millisecond)
+		Latency("request.timer", begin, "type:test_metrics4")
 	}
 }
 
@@ -64,7 +61,7 @@ func TestTimerReport(t *testing.T) {
 	TimerReport()
 }
 
-func TestReportAll(t *testing.T)  {
+func TestReportAll(t *testing.T) {
 	metricsInit()
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
