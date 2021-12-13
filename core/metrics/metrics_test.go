@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var times = 100
+var times = 1500
 
 func metricsInit() {
 	logs.Level = logs.LevelDebug
@@ -69,38 +69,25 @@ func TestTimerReport(t *testing.T) {
 func TestReportAll(t *testing.T) {
 	metricsInit()
 	wg := &sync.WaitGroup{}
-	wg.Add(3)
-	go func() {
-		StoreReport(times)
-		time.Sleep(100 * time.Second)
-		wg.Done()
-	}()
-	go func() {
-		CounterReport(times)
-		time.Sleep(100 * time.Second)
-		wg.Done()
-	}()
-	go func() {
-		TimerReport(times)
-		time.Sleep(100 * time.Second)
-		wg.Done()
-	}()
-	go func() {
-		StoreReport(times)
-		time.Sleep(100 * time.Second)
-		wg.Done()
-	}()
-	go func() {
-		CounterReport(times)
-		time.Sleep(100 * time.Second)
-		wg.Done()
-	}()
-	go func() {
-		TimerReport(times)
-		time.Sleep(100 * time.Second)
-		wg.Done()
-	}()
-
+	goNum := 5
+	for i := 0; i < goNum; i++ {
+		wg.Add(3)
+		go func() {
+			StoreReport(times)
+			time.Sleep(100 * time.Second)
+			wg.Done()
+		}()
+		go func() {
+			CounterReport(times)
+			time.Sleep(100 * time.Second)
+			wg.Done()
+		}()
+		go func() {
+			TimerReport(times)
+			time.Sleep(100 * time.Second)
+			wg.Done()
+		}()
+	}
 
 	wg.Wait()
 }

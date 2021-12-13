@@ -159,7 +159,7 @@ func emitTimer(name string, value float64, tagKvs ...string) {
 	collectKey := buildCollectKey(name, tagKvs)
 	getOrStoreDefaultMetric(metricsTypeTimer, collectKey, &metricValue{
 		value: &timerValue{
-			sample: gm.NewUniformSample(reservoirSize),
+			sample: gm.NewExpDecaySample(reservoirSize, decayAlpha),
 			count:  0,
 		},
 		updated: false,
