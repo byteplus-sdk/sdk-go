@@ -7,7 +7,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"google.golang.org/protobuf/proto"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -17,7 +16,7 @@ var (
 )
 
 type collector struct {
-	collectors map[metricsType]map[string]*atomic.Value
+	collectors map[metricsType]map[string]*metricValue
 	locks      map[metricsType]*sync.RWMutex
 	httpCli    *fasthttp.Client
 }
@@ -37,7 +36,13 @@ type config struct {
 	flushInterval time.Duration
 }
 
-type timer struct {
+type metricValue struct {
+	value   interface{}
+	updated bool // When there is a new report, updated is true, otherwise it is false
+	lock    *sync.RWMutex
+}
+
+type timerValue struct {
 	sample gm.Sample
 	count  int64
 }
@@ -56,10 +61,10 @@ func Init(options ...Option) {
 	}
 	metricsCollector = &collector{
 		httpCli: &fasthttp.Client{},
-		collectors: map[metricsType]map[string]*atomic.Value{
-			metricsTypeCounter: make(map[string]*atomic.Value),
-			metricsTypeTimer:   make(map[string]*atomic.Value),
-			metricsTypeStore:   make(map[string]*atomic.Value),
+		collectors: map[metricsType]map[string]*metricValue{
+			metricsTypeCounter: make(map[string]*metricValue),
+			metricsTypeTimer:   make(map[string]*metricValue),
+			metricsTypeStore:   make(map[string]*metricValue),
 		},
 		locks: map[metricsType]*sync.RWMutex{
 			metricsTypeCounter: {},
@@ -125,17 +130,12 @@ func emitStore(name string, value float64, tagKvs ...string) {
 		return
 	}
 	collectKey := buildCollectKey(name, tagKvs)
-	if metricsCollector.collectors[metricsTypeStore][collectKey] == nil {
-		metricsCollector.locks[metricsTypeStore].Lock()
-		if metricsCollector.collectors[metricsTypeStore][collectKey] == nil {
-			metricsCollector.collectors[metricsTypeStore][collectKey] = &atomic.Value{}
-			metricsCollector.collectors[metricsTypeStore][collectKey].Store(float64(0))
-		}
-		metricsCollector.locks[metricsTypeStore].Unlock()
-	}
-	metricsCollector.locks[metricsTypeStore].RLock()
-	defer metricsCollector.locks[metricsTypeStore].RUnlock()
-	metricsCollector.collectors[metricsTypeStore][collectKey].Store(value)
+	getOrStoreDefaultMetric(metricsTypeStore, collectKey, &metricValue{
+		value:   float64(0),
+		updated: false,
+		lock:    &sync.RWMutex{},
+	})
+	updateMetric(metricsTypeStore, collectKey, value)
 }
 
 // 统计本次上报期间（flushInterval）内(name,tags)对应value的累加值，每次上报完需清空
@@ -144,18 +144,12 @@ func emitCounter(name string, value float64, tagKvs ...string) {
 		return
 	}
 	collectKey := buildCollectKey(name, tagKvs)
-	if metricsCollector.collectors[metricsTypeCounter][collectKey] == nil {
-		metricsCollector.locks[metricsTypeCounter].Lock()
-		if metricsCollector.collectors[metricsTypeCounter][collectKey] == nil {
-			metricsCollector.collectors[metricsTypeCounter][collectKey] = &atomic.Value{}
-			metricsCollector.collectors[metricsTypeCounter][collectKey].Store(float64(0))
-		}
-		metricsCollector.locks[metricsTypeCounter].Unlock()
-	}
-	metricsCollector.locks[metricsTypeCounter].RLock()
-	defer metricsCollector.locks[metricsTypeCounter].RUnlock()
-	oldValue := metricsCollector.collectors[metricsTypeCounter][collectKey].Load().(float64)
-	metricsCollector.collectors[metricsTypeCounter][collectKey].Store(oldValue + value)
+	getOrStoreDefaultMetric(metricsTypeCounter, collectKey, &metricValue{
+		value:   float64(0),
+		updated: false,
+		lock:    &sync.RWMutex{},
+	})
+	updateMetric(metricsTypeCounter, collectKey, value)
 }
 
 func emitTimer(name string, value float64, tagKvs ...string) {
@@ -163,23 +157,43 @@ func emitTimer(name string, value float64, tagKvs ...string) {
 		return
 	}
 	collectKey := buildCollectKey(name, tagKvs)
-	if metricsCollector.collectors[metricsTypeTimer][collectKey] == nil {
-		metricsCollector.locks[metricsTypeTimer].Lock()
-		if metricsCollector.collectors[metricsTypeTimer][collectKey] == nil {
-			metricsCollector.collectors[metricsTypeTimer][collectKey] = &atomic.Value{}
-			metricsCollector.collectors[metricsTypeTimer][collectKey].Store(&timer{
-				sample: gm.NewUniformSample(reservoirSize),
-				count:  0,
-			})
+	getOrStoreDefaultMetric(metricsTypeTimer, collectKey, &metricValue{
+		value: &timerValue{
+			sample: gm.NewUniformSample(reservoirSize),
+			count:  0,
+		},
+		updated: false,
+		lock:    &sync.RWMutex{},
+	})
+	updateMetric(metricsTypeTimer, collectKey, value)
+}
+
+func getOrStoreDefaultMetric(metricType metricsType, collectKey string, defaultValue *metricValue) {
+	if metricsCollector.collectors[metricType][collectKey] == nil {
+		metricsCollector.locks[metricType].Lock()
+		defer metricsCollector.locks[metricType].Unlock()
+		if metricsCollector.collectors[metricType][collectKey] == nil {
+			metricsCollector.collectors[metricType][collectKey] = defaultValue
 		}
-		metricsCollector.locks[metricsTypeTimer].Unlock()
 	}
-	metricsCollector.locks[metricsTypeTimer].RLock()
-	defer metricsCollector.locks[metricsTypeTimer].RUnlock()
-	oldValue := metricsCollector.collectors[metricsTypeTimer][collectKey].Load().(*timer)
-	oldValue.sample.Update(int64(value))
-	atomic.AddInt64(&oldValue.count, 1)
-	metricsCollector.collectors[metricsTypeTimer][collectKey].Store(oldValue)
+}
+
+func updateMetric(metricType metricsType, collectKey string, value float64) {
+	metricsCollector.locks[metricType].RLock()
+	defer metricsCollector.locks[metricType].RUnlock()
+	oldValue := metricsCollector.collectors[metricType][collectKey]
+	oldValue.lock.Lock()
+	defer oldValue.lock.Unlock()
+	oldValue.updated = true
+	switch metricType {
+	case metricsTypeStore:
+		oldValue.value = value
+	case metricsTypeCounter:
+		oldValue.value = oldValue.value.(float64) + value
+	case metricsTypeTimer:
+		oldValue.value.(*timerValue).sample.Update(int64(value))
+		oldValue.value.(*timerValue).count++
+	}
 }
 
 func startReport() {
@@ -198,29 +212,37 @@ func flushStore() {
 			<-ticker.C
 			metricsRequests := make([]*Metric, 0)
 			metricsCollector.locks[metricsTypeStore].RLock()
-			for key, value := range metricsCollector.collectors[metricsTypeStore] {
+			for key, metric := range metricsCollector.collectors[metricsTypeStore] {
 				name, tagKvs, ok := parseNameAndTags(key)
-				if ok {
+				if !ok {
+					continue
+				}
+				metric.lock.Lock()
+				if metric.updated { // if updated is false, means no metric emit
 					metricsRequest := &Metric{
 						Metric:    metricsCfg.prefix + "." + name,
 						Tags:      tagKvs,
-						Value:     value.Load().(float64),
+						Value:     metric.value.(float64),
 						Timestamp: uint64(time.Now().Unix()),
 					}
 					metricsRequests = append(metricsRequests, metricsRequest)
+					// reset updated tag after report
+					metric.updated = false
+					metric.value = float64(0)
 				}
+				metric.lock.Unlock()
 			}
 			metricsCollector.locks[metricsTypeStore].RUnlock()
 			if len(metricsRequests) > 0 {
 				url := fmt.Sprintf(otherUrlFormat, metricsCfg.domain)
 				if !send(&MetricMessage{Metrics: metricsRequests}, url) {
 					if isEnablePrintLog() {
-						logs.Error("exec store fail, url:%s", url)
+						logs.Error("[Metrics] exec store fail, url:%s", url)
 					}
 					continue
 				}
 				if isEnablePrintLog() {
-					logs.Debug("exec store success, url:%s, metricsRequests:%+v", url, metricsRequests)
+					logs.Debug("[Metrics] exec store success, url:%s, metricsRequests:%+v", url, metricsRequests)
 				}
 			}
 		}
@@ -234,19 +256,26 @@ func flushCounter() {
 			<-ticker.C
 			metricsRequests := make([]*Metric, 0)
 			metricsCollector.locks[metricsTypeCounter].RLock()
-			for key, value := range metricsCollector.collectors[metricsTypeCounter] {
+			for key, metric := range metricsCollector.collectors[metricsTypeCounter] {
 				name, tagKvs, ok := parseNameAndTags(key)
-				if ok {
+				if !ok {
+					continue
+				}
+				metric.lock.Lock()
+				if metric.updated {
 					metricsRequest := &Metric{
 						Metric:    metricsCfg.prefix + "." + name,
 						Tags:      tagKvs,
-						Value:     value.Load().(float64),
+						Value:     metric.value.(float64),
 						Timestamp: uint64(time.Now().Unix()),
 					}
 					metricsRequests = append(metricsRequests, metricsRequest)
+					// reset updated tag after report
+					metric.updated = false
+					// After each flushInterval of the counter is reported, the accumulated metric needs to be cleared
+					metric.value = float64(0)
 				}
-				// After each flushInterval of the counter is reported, the accumulated value needs to be cleared
-				value.Store(float64(0))
+				metric.lock.Unlock()
 			}
 			metricsCollector.locks[metricsTypeCounter].RUnlock()
 
@@ -254,12 +283,12 @@ func flushCounter() {
 				url := fmt.Sprintf(counterUrlFormat, metricsCfg.domain)
 				if !send(&MetricMessage{Metrics: metricsRequests}, url) {
 					if isEnablePrintLog() {
-						logs.Error("exec counter fail, url:%s", url)
+						logs.Error("[Metrics] exec counter fail, url:%s", url)
 					}
 					continue
 				}
 				if isEnablePrintLog() {
-					logs.Debug("exec counter success, url:%s, metricsRequests:%+v", url, metricsRequests)
+					logs.Debug("[Metrics] exec counter success, url:%s, metricsRequests:%+v", url, metricsRequests)
 				}
 			}
 		}
@@ -273,25 +302,27 @@ func flushTimer() {
 			<-ticker.C
 			metricsRequests := make([]*Metric, 0)
 			metricsCollector.locks[metricsTypeTimer].RLock()
-			for key, value := range metricsCollector.collectors[metricsTypeTimer] {
+			for key, metric := range metricsCollector.collectors[metricsTypeTimer] {
 				name, tagKvs, ok := parseNameAndTags(key)
-				if ok {
+				if !ok {
+					return
+				}
+				metric.lock.Lock()
+				if metric.updated {
 					timestamp := time.Now().Unix()
-					snapshot := value.Load().(*timer).sample.Snapshot()
-					count := atomic.LoadInt64(&value.Load().(*timer).count)
+					snapshot := metric.value.(*timerValue).sample.Snapshot()
+					count := metric.value.(*timerValue).count
 
 					//qps
-					//The timer data will be transmitted to metrics_proxy and reported as store value,
-					//so the qps here must also be store value, which need to be divided by flushInterval,
-					//and the qps value should be showed as store in grafana.
+					//The timerValue data will be transmitted to metrics_proxy and reported as store metric,
+					//so the qps here must also be store metric, which need to be divided by flushInterval,
+					//and the qps metric should be showed as store in grafana.
 					metricsRequests = append(metricsRequests, &Metric{
 						Metric:    metricsCfg.prefix + "." + name + "." + "qps",
 						Tags:      tagKvs,
 						Value:     float64(count) / metricsCfg.flushInterval.Seconds(),
 						Timestamp: uint64(timestamp),
 					})
-					//count is the counter value and needs to be cleared after each report
-					atomic.StoreInt64(&value.Load().(*timer).count, 0)
 					//max
 					metricsRequests = append(metricsRequests, &Metric{
 						Metric:    metricsCfg.prefix + "." + name + "." + "max",
@@ -341,26 +372,32 @@ func flushTimer() {
 						Value:     snapshot.Percentile(0.99),
 						Timestamp: uint64(timestamp),
 					})
-					//pc990
+					//pc999
 					metricsRequests = append(metricsRequests, &Metric{
 						Metric:    metricsCfg.prefix + "." + name + "." + "pct999",
 						Tags:      tagKvs,
 						Value:     snapshot.Percentile(0.999),
 						Timestamp: uint64(timestamp),
 					})
+
+					// reset updated tag after report
+					metric.updated = false
+					//count is the counter metric and needs to be cleared after each report
+					metric.value.(*timerValue).count = 0
 				}
+				metric.lock.Unlock()
 			}
 			metricsCollector.locks[metricsTypeTimer].RUnlock()
 			if len(metricsRequests) > 0 {
 				url := fmt.Sprintf(otherUrlFormat, metricsCfg.domain)
 				if !send(&MetricMessage{Metrics: metricsRequests}, url) {
 					if isEnablePrintLog() {
-						logs.Error("exec timer fail, url:%s", url)
+						logs.Error("[Metrics] exec timer fail, url:%s", url)
 					}
 					continue
 				}
 				if isEnablePrintLog() {
-					logs.Debug("exec timer success, url:%s, metricsRequests:%+v", url, metricsRequests)
+					logs.Debug("[Metrics] exec timer success, url:%s, metricsRequests:%+v", url, metricsRequests)
 				}
 			}
 		}
@@ -393,7 +430,7 @@ func doSend(request *fasthttp.Request) bool {
 		return true
 	}
 	if isEnablePrintLog() {
-		logs.Error("do http request occur error:%+v\n response:\n%+v", err, response)
+		logs.Error("[Metrics] do http request occur error:%+v\n response:\n%+v", err, response)
 	}
 	return false
 }

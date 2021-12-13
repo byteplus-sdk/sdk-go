@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var times = 100
+
 func metricsInit() {
 	logs.Level = logs.LevelDebug
 	// To close the metrics, just remove the Init function
@@ -16,36 +18,38 @@ func metricsInit() {
 	)
 }
 
-func StoreReport() {
-	for i := 0; i < 100000; i++ {
+func StoreReport(times int) {
+	for i := 0; i < times; i++ {
 		Store("request.store", 200, "type:test_metrics3")
 		Store("request.store", 100, "type:test_metrics4")
 		time.Sleep(100 * time.Millisecond)
 	}
+	println("stop store reporting")
 }
 
 // test demo for store report
 func TestStoreReport(t *testing.T) {
 	metricsInit()
-	StoreReport()
+	StoreReport(100000)
 }
 
-func CounterReport() {
-	for i := 0; i < 100000; i++ {
+func CounterReport(times int) {
+	for i := 0; i < times; i++ {
 		Counter("request.counter", 1, "type:test_metrics3")
 		Counter("request.counter", 1, "type:test_metrics4")
 		time.Sleep(200 * time.Millisecond)
 	}
+	println("stop counter reporting")
 }
 
 // test demo for counter report
 func TestCounterReport(t *testing.T) {
 	metricsInit()
-	CounterReport()
+	CounterReport(1000000)
 }
 
-func TimerReport() {
-	for i := 0; i < 100000; i++ {
+func TimerReport(times int) {
+	for i := 0; i < times; i++ {
 		begin := time.Now()
 		time.Sleep(time.Duration(100) * time.Millisecond)
 		Latency("request.timer", begin, "type:test_metrics3")
@@ -53,12 +57,13 @@ func TimerReport() {
 		time.Sleep(time.Duration(150) * time.Millisecond)
 		Latency("request.timer", begin, "type:test_metrics4")
 	}
+	println("stop timer reporting")
 }
 
-// test demo for timer report
+// test demo for timerValue report
 func TestTimerReport(t *testing.T) {
 	metricsInit()
-	TimerReport()
+	TimerReport(1000000)
 }
 
 func TestReportAll(t *testing.T) {
@@ -66,16 +71,36 @@ func TestReportAll(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
 	go func() {
-		StoreReport()
+		StoreReport(times)
+		time.Sleep(100 * time.Second)
 		wg.Done()
 	}()
 	go func() {
-		CounterReport()
+		CounterReport(times)
+		time.Sleep(100 * time.Second)
 		wg.Done()
 	}()
 	go func() {
-		TimerReport()
+		TimerReport(times)
+		time.Sleep(100 * time.Second)
 		wg.Done()
 	}()
+	go func() {
+		StoreReport(times)
+		time.Sleep(100 * time.Second)
+		wg.Done()
+	}()
+	go func() {
+		CounterReport(times)
+		time.Sleep(100 * time.Second)
+		wg.Done()
+	}()
+	go func() {
+		TimerReport(times)
+		time.Sleep(100 * time.Second)
+		wg.Done()
+	}()
+
+
 	wg.Wait()
 }
