@@ -3,14 +3,15 @@ package byteair
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	. "github.com/byteplus-sdk/sdk-go/byteair/protocol"
 	"github.com/byteplus-sdk/sdk-go/common"
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
-	"strings"
-	"time"
 )
 
 const DefaultPredictScene = "default"
@@ -60,22 +61,6 @@ func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
 	return response, nil
 }
 
-func (c *clientImpl) ImportData(dataList []map[string]interface{},
-	topic string, opts ...option.Option) (*OperationResponse, error) {
-	if len(dataList) > MaxImportItemCount {
-		return nil, TooManyItemsErr
-	}
-	urlFormat := c.gu.importDataURLFormat
-	url := strings.ReplaceAll(urlFormat, "{}", topic)
-	response := &OperationResponse{}
-	err := c.hCaller.DoJsonRequest(url, dataList, response, option.Conv2Options(opts...))
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[ImportData] rsp:\n%s\n", response)
-	return response, nil
-}
-
 func (c *clientImpl) Done(dateList []time.Time,
 	topic string, opts ...option.Option) (*DoneResponse, error) {
 	var dates []*Date
@@ -116,23 +101,19 @@ func (c *clientImpl) Predict(request *PredictRequest,
 	//The options conversion should be placed in xxx_client_impl,
 	//so that each client_impl could do some special processing according to options
 	options := option.Conv2Options(opts...)
-	scene := c.getSceneFromOpts(options)
+	scene := options.Scene
+	// If predict scene option is not filled, add default value
+	if scene == "" {
+		scene = DefaultPredictScene
+	}
 	url := strings.ReplaceAll(urlFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPbRequest(url, request, response, options)
 	if err != nil {
 		return nil, err
 	}
 	logs.Debug("[Predict] rsp:\n%s\n", response)
 	return response, nil
-}
-
-func (c *clientImpl) getSceneFromOpts(options *option.Options) string {
-	// If predict scene option is not filled, add default value
-	if options.Scene == "" {
-		return DefaultPredictScene
-	}
-	return options.Scene
 }
 
 func (c *clientImpl) Callback(request *CallbackRequest,

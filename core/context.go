@@ -83,7 +83,7 @@ type Context struct {
 	// It is sometimes called "company".
 	token string
 
-	volcCredentials Credentials
+	volcCredentials Credential
 
 	// Schema of URL, server supports both "HTTPS" and "HTTP",
 	// in order to ensure communication security, please use "HTTPS"
@@ -174,7 +174,7 @@ func (receiver *Context) fillDefault() {
 }
 
 func (receiver *Context) fillVolcCredentials(param *ContextParam) {
-	c := Credentials{
+	c := Credential{
 		AccessKeyID:     param.AK,
 		SecretAccessKey: param.SK,
 		Service:         volcAuthService,
@@ -182,7 +182,7 @@ func (receiver *Context) fillVolcCredentials(param *ContextParam) {
 
 	// fill region
 	switch param.Region {
-	case RegionSg,RegionAirSg:
+	case RegionSg, RegionAirSg:
 		c.Region = "ap-singapore-1"
 	case RegionUs:
 		c.Region = "us-east-1"

@@ -20,7 +20,7 @@ const (
 	timeFormatV4 = "20060102T150405Z"
 )
 
-type Credentials struct {
+type Credential struct {
 	AccessKeyID     string
 	SecretAccessKey string
 	Region          string
@@ -39,6 +39,32 @@ type metadata struct {
 
 var now = func() time.Time {
 	return time.Now().UTC()
+}
+
+func VolcSign(req *fasthttp.Request, cred Credential) *fasthttp.Request {
+	prepareRequestV4(req)
+
+	meta := &metadata{}
+	meta.service, meta.region = cred.Service, cred.Region
+
+	// Task 1
+	hashedCanonReq := hashedCanonicalRequestV4(req, meta)
+
+	// Task 2
+	stringToSignRet := stringToSign(req, hashedCanonReq, meta)
+
+	// Task 3
+
+	signingKeyRet := signingKey(cred.SecretAccessKey, meta.date, meta.region, meta.service)
+	signatureRet := signature(signingKeyRet, stringToSignRet)
+
+	req.Header.Set("Authorization", buildAuthHeader(signatureRet, meta, cred))
+
+	if cred.SessionToken != "" {
+		req.Header.Set("X-Security-Token", cred.SessionToken)
+	}
+
+	return req
 }
 
 func prepareRequestV4(req *fasthttp.Request) *fasthttp.Request {
@@ -212,37 +238,11 @@ func hmacSHA256(key []byte, content string) []byte {
 	return mac.Sum(nil)
 }
 
-func buildAuthHeader(signature string, meta *metadata, keys Credentials) string {
+func buildAuthHeader(signature string, meta *metadata, keys Credential) string {
 	credential := keys.AccessKeyID + "/" + meta.credentialScope
 
 	return meta.algorithm +
 		" Credential=" + credential +
 		", SignedHeaders=" + meta.signedHeaders +
 		", Signature=" + signature
-}
-
-func VolcSign(req *fasthttp.Request, cred Credentials) *fasthttp.Request {
-	prepareRequestV4(req)
-
-	meta := new(metadata)
-	meta.service, meta.region = cred.Service, cred.Region
-
-	// Task 1
-	hashedCanonReq := hashedCanonicalRequestV4(req, meta)
-
-	// Task 2
-	stringToSignRet := stringToSign(req, hashedCanonReq, meta)
-
-	// Task 3
-
-	signingKeyRet := signingKey(cred.SecretAccessKey, meta.date, meta.region, meta.service)
-	signatureRet := signature(signingKeyRet, stringToSignRet)
-
-	req.Header.Set("Authorization", buildAuthHeader(signatureRet, meta, cred))
-
-	if cred.SessionToken != "" {
-		req.Header.Set("X-Security-Token", cred.SessionToken)
-	}
-
-	return req
 }
