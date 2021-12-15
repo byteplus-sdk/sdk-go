@@ -17,6 +17,7 @@ type ContextParam struct {
 	Hosts      []string
 	Headers    map[string]string
 	Region     Region
+	UseAirAuth bool
 }
 
 func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
@@ -26,24 +27,18 @@ func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
 	if param.TenantId == "" {
 		return errors.New("tenant id is null")
 	}
-	if err := receiver.checkAuthRequiredField(param); err != nil {
-		return err
+	if param.UseAirAuth {
+		if param.Token == "" {
+			return errors.New("token is null")
+		}
+	} else {
+		if param.SK == "" || param.AK == "" {
+			return errors.New("ak and sk cannot be null")
+		}
 	}
 	if param.Region == RegionUnknown {
 		return errors.New("region is null")
 	}
-	return nil
-}
-
-func (receiver *ContextParam) checkAuthRequiredField(param *ContextParam) error {
-	if param.Token == "" && param.AK == "" {
-		return errors.New("token and ak are null")
-	}
-
-	if param.AK != "" && param.SK == "" {
-		return errors.New("sk is null")
-	}
-
 	return nil
 }
 
@@ -60,6 +55,7 @@ func NewContext(param *ContextParam) (*Context, error) {
 		hostHeader:      param.HostHeader,
 		hosts:           param.Hosts,
 		customerHeaders: param.Headers,
+		useAirAuth:      param.UseAirAuth,
 	}
 	result.fillHosts(param)
 	result.fillVolcCredentials(param)
@@ -102,6 +98,9 @@ type Context struct {
 
 	// fasthttp default client not support define host
 	httpCli *fasthttp.HostClient
+
+	// use air auth, otherwise use volc auth
+	useAirAuth bool
 }
 
 func (receiver *Context) Tenant() string {
@@ -138,6 +137,10 @@ func (receiver *Context) Hosts() []string {
 
 func (receiver *Context) CustomerHeaders() map[string]string {
 	return receiver.customerHeaders
+}
+
+func (receiver *Context) UseAirAuth() bool {
+	return receiver.useAirAuth
 }
 
 func (receiver *Context) fillHosts(param *ContextParam) {
