@@ -7,7 +7,8 @@ const (
 	RegionCn
 	RegionSg
 	RegionUs
-	RegionAir
+	RegionAirCn
+	RegionAirSg
 	RegionSaas
 )
 
@@ -18,7 +19,9 @@ var (
 
 	usHosts = []string{"rec-us-east-1.byteplusapi.com"}
 
-	airHosts = []string{"byteair-api-cn1.snssdk.com"}
+	airCnHosts = []string{"byteair-api-cn1.snssdk.com"}
+
+	airSgHosts = []string{"byteair-api-sg1.byteintlapi.com"}
 
 	saasHosts = []string{"rec-api-sg1.recplusapi.com"}
 )
@@ -44,4 +47,8 @@ const (
 
 	// StatusCodeTooManyRequest The server hope slow down request frequency, and this request was rejected
 	StatusCodeTooManyRequest = 429
+)
+
+const (
+	volcAuthService = "air"
 )

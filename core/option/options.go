@@ -11,4 +11,5 @@ type Options struct {
 	ServerTimeout time.Duration
 	Stage         string
 	Queries       map[string]string
+	Scene         string
 }

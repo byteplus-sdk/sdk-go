@@ -105,7 +105,7 @@ func (c *clientImpl) doWrite(request *protocol.WriteDataRequest, url string, opt
 	response := &protocol.WriteResponse{}
 	opts = append(opts, option.WithStage(request.Stage))
 	opts = addSaasFlag(opts)
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (c *clientImpl) Predict(request *protocol.PredictRequest, opts ...option.Op
 	}
 	response := &protocol.PredictResponse{}
 	opts = addSaasFlag(opts)
-	err := c.hCaller.DoPbRequest(c.su.predictURL, request, response, opts...)
+	err := c.hCaller.DoPbRequest(c.su.predictURL, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (c *clientImpl) AckServerImpressions(request *protocol.AckServerImpressions
 	}
 	response := &protocol.AckServerImpressionsResponse{}
 	opts = addSaasFlag(opts)
-	err := c.hCaller.DoPbRequest(c.su.ackImpressionURL, request, response, opts...)
+	err := c.hCaller.DoPbRequest(c.su.ackImpressionURL, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}

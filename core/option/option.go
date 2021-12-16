@@ -61,3 +61,9 @@ func WithQueries(queries map[string]string) Option {
 		options.Queries = queries
 	}
 }
+
+func WithScene(scene string) Option {
+	return func(options *Options) {
+		options.Scene = scene
+	}
+}
