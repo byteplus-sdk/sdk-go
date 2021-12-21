@@ -59,11 +59,6 @@ func (receiver *ClientBuilder) SK(sk string) *ClientBuilder {
 	return receiver
 }
 
-func (receiver *ClientBuilder) UseAirAuth() *ClientBuilder {
-	receiver.param.UseAirAuth = true
-	return receiver
-}
-
 func (receiver *ClientBuilder) Build() (Client, error) {
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {
