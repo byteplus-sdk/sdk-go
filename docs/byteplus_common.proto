@@ -204,6 +204,7 @@ service ByteplusCommonService {
   // Done
   //
   // Pass a date list to mark the completion of data synchronization for these days.
+  // Pass a date list to mark the completion of data synchronization for these days.
   // Suitable for new data API
   rpc Done(DoneRequest) returns (Response);
 }

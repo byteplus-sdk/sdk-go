@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/byteplus-sdk/sdk-go/common"
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
@@ -36,7 +37,7 @@ func (c *clientImpl) WriteUsers(request *WriteUsersRequest,
 	}
 	url := c.ru.writeUsersURL
 	response := &WriteUsersResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (c *clientImpl) WriteProducts(request *WriteProductsRequest,
 	}
 	url := c.ru.writeProductsURL
 	response := &WriteProductsResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (c *clientImpl) WriteUserEvents(request *WriteUserEventsRequest,
 	}
 	url := c.ru.writeUserEventsURL
 	response := &WriteUserEventsResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (c *clientImpl) Predict(request *PredictRequest, scene string,
 	opts ...option.Option) (*PredictResponse, error) {
 	url := strings.ReplaceAll(c.ru.predictURLFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func (c *clientImpl) AckServerImpressions(request *AckServerImpressionsRequest,
 	opts ...option.Option) (*AckServerImpressionsResponse, error) {
 	url := c.ru.ackImpressionURL
 	response := &AckServerImpressionsResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, opts...)
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +118,34 @@ func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 // Done
 // Pass a date list to mark the completion of data synchronization for these days
 // suitable for new API
-func (c *clientImpl) Done(request *DoneRequest, scene string, opts ...option.Option) (*Response, error) {
-	return c.cCli.Done(request, scene, opts...)
+func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Option) (*Response, error) {
+	var dates []*Date
+	if len(dateList) == 0 {
+		previousDay := time.Now().Add(-24 * time.Hour)
+		dates = c.appendDoneDate(dates, previousDay)
+	} else {
+		for _, date := range dateList {
+			dates = c.appendDoneDate(dates, date)
+		}
+	}
+	url := strings.ReplaceAll(c.ru.doneUrlFormat, "{}", topic)
+	request := &DoneRequest{
+		DataDates: dates,
+	}
+	response := &Response{}
+	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	if err != nil {
+		return nil, err
+	}
+	logs.Debug("[Done] rsp:\n%s\n", response)
+	return response, nil
+}
+
+func (c *clientImpl) appendDoneDate(dates []*Date,
+	date time.Time) []*Date {
+	return append(dates, &Date{
+		Year:  int32(date.Year()),
+		Month: int32(date.Month()),
+		Day:   int32(date.Day()),
+	})
 }

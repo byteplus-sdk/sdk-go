@@ -1,13 +1,12 @@
-package general
+package byteair
 
 import (
 	"time"
 
+	. "github.com/byteplus-sdk/sdk-go/byteair/protocol"
 	"github.com/byteplus-sdk/sdk-go/common"
-
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
+	commonprotocol "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
-	. "github.com/byteplus-sdk/sdk-go/general/protocol"
 )
 
 type Client interface {
@@ -25,22 +24,6 @@ type Client interface {
 	WriteData(dataList []map[string]interface{}, topic string,
 		opts ...option.Option) (*WriteResponse, error)
 
-	// ImportData
-	//
-	// Bulk import of data.
-	//
-	// `Operation.response` is of type ImportResponse. Note that it is
-	// possible for a subset of the items to be successfully inserted.
-	// Operation.metadata is of type Metadata.
-	// This call returns immediately after the server finishes the
-	// preliminary validations and persists the request. The caller should
-	// keep polling `OperationResponse.operation.name` using `GetOperation`
-	// call below to check the status.
-	// Note: This can also be used to update the existing data(some data type not support).
-	// In this case, please make sure you provide all fields.
-	ImportData(dataList []map[string]interface{}, topic string,
-		opts ...option.Option) (*OperationResponse, error)
-
 	// Done
 	//
 	// When the data of a day is imported completely,
@@ -49,6 +32,16 @@ type Client interface {
 	// @param dateList, optional, if dataList is empty, indicate target date is previous day
 	Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error)
 
+	// GetOperation
+	//
+	// Gets the operation of a previous long running call.
+	GetOperation(request *commonprotocol.GetOperationRequest, opts ...option.Option) (*commonprotocol.OperationResponse, error)
+
+	// ListOperations
+	//
+	// Lists operations that match the specified filter in the request.
+	ListOperations(request *commonprotocol.ListOperationsRequest, opts ...option.Option) (*commonprotocol.ListOperationsResponse, error)
+
 	// Predict
 	//
 	// Gets the list of products (ranked).
@@ -56,7 +49,7 @@ type Client interface {
 	// The updated product data will take effect in 30 mins.
 	// Depending how (realtime or batch) the UserEvents are sent back, it will
 	// be fed into the models and take effect after that.
-	Predict(request *PredictRequest, scene string, opts ...option.Option) (*PredictResponse, error)
+	Predict(request *PredictRequest, opts ...option.Option) (*PredictResponse, error)
 
 	// Callback
 	//

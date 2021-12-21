@@ -10,11 +10,14 @@ type ContextParam struct {
 	Tenant     string
 	TenantId   string
 	Token      string
+	AK         string
+	SK         string
 	Schema     string
 	HostHeader string
 	Hosts      []string
 	Headers    map[string]string
 	Region     Region
+	UseAirAuth bool
 }
 
 func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
@@ -24,8 +27,14 @@ func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
 	if param.TenantId == "" {
 		return errors.New("tenant id is null")
 	}
-	if param.Token == "" {
-		return errors.New("token is null")
+	if param.UseAirAuth {
+		if param.Token == "" {
+			return errors.New("token is null")
+		}
+	} else {
+		if param.SK == "" || param.AK == "" {
+			return errors.New("ak and sk cannot be null")
+		}
 	}
 	if param.Region == RegionUnknown {
 		return errors.New("region is null")
@@ -46,8 +55,10 @@ func NewContext(param *ContextParam) (*Context, error) {
 		hostHeader:      param.HostHeader,
 		hosts:           param.Hosts,
 		customerHeaders: param.Headers,
+		useAirAuth:      param.UseAirAuth,
 	}
 	result.fillHosts(param)
+	result.fillVolcCredentials(param)
 	result.httpCli = &fasthttp.HostClient{Addr: result.hosts[0]}
 	result.fillDefault()
 	return result, nil
@@ -68,6 +79,8 @@ type Context struct {
 	// It is sometimes called "company".
 	token string
 
+	volcCredentials Credential
+
 	// Schema of URL, server supports both "HTTPS" and "HTTP",
 	// in order to ensure communication security, please use "HTTPS"
 	schema string
@@ -85,6 +98,9 @@ type Context struct {
 
 	// fasthttp default client not support define host
 	httpCli *fasthttp.HostClient
+
+	// use air auth, otherwise use volc auth
+	useAirAuth bool
 }
 
 func (receiver *Context) Tenant() string {
@@ -97,6 +113,14 @@ func (receiver *Context) TenantId() string {
 
 func (receiver *Context) Token() string {
 	return receiver.token
+}
+
+func (receiver *Context) AK() string {
+	return receiver.volcCredentials.AccessKeyID
+}
+
+func (receiver *Context) SK() string {
+	return receiver.volcCredentials.SecretAccessKey
 }
 
 func (receiver *Context) Schema() string {
@@ -113,6 +137,10 @@ func (receiver *Context) Hosts() []string {
 
 func (receiver *Context) CustomerHeaders() map[string]string {
 	return receiver.customerHeaders
+}
+
+func (receiver *Context) UseAirAuth() bool {
+	return receiver.useAirAuth
 }
 
 func (receiver *Context) fillHosts(param *ContextParam) {
@@ -132,8 +160,12 @@ func (receiver *Context) fillHosts(param *ContextParam) {
 		receiver.hosts = usHosts
 		return
 	}
-	if param.Region == RegionAir {
-		receiver.hosts = airHosts
+	if param.Region == RegionAirCn {
+		receiver.hosts = airCnHosts
+		return
+	}
+	if param.Region == RegionAirSg {
+		receiver.hosts = airSgHosts
 		return
 	}
 }
@@ -142,4 +174,24 @@ func (receiver *Context) fillDefault() {
 	if receiver.schema == "" {
 		receiver.schema = "https"
 	}
+}
+
+func (receiver *Context) fillVolcCredentials(param *ContextParam) {
+	c := Credential{
+		AccessKeyID:     param.AK,
+		SecretAccessKey: param.SK,
+		Service:         volcAuthService,
+	}
+
+	// fill region
+	switch param.Region {
+	case RegionSg, RegionAirSg:
+		c.Region = "ap-singapore-1"
+	case RegionUs:
+		c.Region = "us-east-1"
+	default: //Region "CN" and "AIR_CN" belong to "cn-north-1"
+		c.Region = "cn-north-1"
+	}
+
+	receiver.volcCredentials = c
 }

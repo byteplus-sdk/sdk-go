@@ -18,6 +18,10 @@ const (
 	// The URL format of data uploading
 	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user?method=write
 	uploadURLFormat = "%s://%s/data/api/retail/v2/%s/%s?method=%s"
+
+	// The URL of mark certain days that data synchronization is complete
+	// Example: https://tob.sgsnssdk.com/data/api/retail_demo/done?topic=user
+	doneUrlFormat = "%s://%s/data/api/%s/done?topic={}"
 )
 
 type retailURL struct {
@@ -44,6 +48,10 @@ type retailURL struct {
 	// The URL of uploading real-time user event data
 	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user_event?method=write
 	writeUserEventsURL string
+
+	// The URL of mark certain days that data synchronization is complete
+	// Example: https://tob.sgsnssdk.com/data/api/retail_demo/done?topic=user
+	doneUrlFormat string
 }
 
 func (receiver *retailURL) Refresh(host string) {
@@ -53,6 +61,7 @@ func (receiver *retailURL) Refresh(host string) {
 	receiver.writeUsersURL = receiver.generateUploadURL(host, "user", "write")
 	receiver.writeProductsURL = receiver.generateUploadURL(host, "product", "write")
 	receiver.writeUserEventsURL = receiver.generateUploadURL(host, "user_event", "write")
+	receiver.doneUrlFormat = receiver.generateDoneUrl(host)
 }
 
 func (receiver *retailURL) generatePredictURLFormat(host string) string {
@@ -65,4 +74,8 @@ func (receiver *retailURL) generateAckURL(host string) string {
 
 func (receiver *retailURL) generateUploadURL(host string, topic string, method string) string {
 	return fmt.Sprintf(uploadURLFormat, receiver.schema, host, receiver.tenant, topic, method)
+}
+
+func (receiver *retailURL) generateDoneUrl(host string) string {
+	return fmt.Sprintf(doneUrlFormat, receiver.schema, host, receiver.tenant)
 }

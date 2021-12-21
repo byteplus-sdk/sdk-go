@@ -1,8 +1,6 @@
 package common
 
 import (
-	"strings"
-
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
@@ -25,7 +23,7 @@ func (c *clientImpl) GetOperation(request *GetOperationRequest,
 	opts ...option.Option) (*OperationResponse, error) {
 	url := c.cu.getOperationUrl
 	response := &OperationResponse{}
-	err := c.cli.DoPbRequest(url, request, response, opts...)
+	err := c.cli.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -37,21 +35,10 @@ func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 	opts ...option.Option) (*ListOperationsResponse, error) {
 	url := c.cu.listOperationsUrl
 	response := &ListOperationsResponse{}
-	err := c.cli.DoPbRequest(url, request, response, opts...)
+	err := c.cli.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
 	logs.Debug("[ListOperation] rsp:\n%s\n", response)
-	return response, nil
-}
-
-func (c *clientImpl) Done(request *DoneRequest, topic string, opts ...option.Option) (*Response, error) {
-	url := strings.ReplaceAll(c.cu.doneUrlFormat, "{}", topic)
-	response := &Response{}
-	err := c.cli.DoPbRequest(url, request, response, opts...)
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[Done] rsp:\n%s\n", response)
 	return response, nil
 }

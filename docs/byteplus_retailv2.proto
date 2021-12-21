@@ -153,7 +153,7 @@ message WriteUsersResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -420,7 +420,7 @@ message WriteProductsResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -673,7 +673,7 @@ message WriteUserEventsResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -769,7 +769,7 @@ message PredictResult {
 message PredictResponse {
   // Output only.
   // The status of the call.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This is same as the request id of request.
@@ -830,7 +830,7 @@ message AckServerImpressionsRequest {
 message AckServerImpressionsResponse {
   // Output only.
   // The status of this response.
-  Status status = 1;
+  common.Status status = 1;
 }
 
 // The Byteplus Retail service.

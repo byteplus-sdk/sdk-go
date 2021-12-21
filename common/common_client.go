@@ -15,10 +15,4 @@ type Client interface {
 	//
 	// Lists operations that match the specified filter in the request.
 	ListOperations(request *ListOperationsRequest, opts ...option.Option) (*ListOperationsResponse, error)
-
-	// Done
-	//
-	// Pass a date list to mark the completion of data synchronization for these days
-	// suitable for new API
-	Done(request *DoneRequest, topic string, opts ...option.Option) (*Response, error)
 }
