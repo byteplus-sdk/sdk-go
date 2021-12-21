@@ -1,10 +1,7 @@
 package retailv2
 
 import (
-	"time"
-
 	"github.com/byteplus-sdk/sdk-go/common"
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	. "github.com/byteplus-sdk/sdk-go/retailv2/protocol"
 )
@@ -41,14 +38,6 @@ type Client interface {
 	// the requests.
 	// Please make sure the requests are deduplicated before sending over.
 	WriteUserEvents(request *WriteUserEventsRequest, opts ...option.Option) (*WriteUserEventsResponse, error)
-
-	// Done
-	//
-	// When the data of a day is imported completely,
-	// you should notify bytedance through `done` method,
-	// then bytedance will start handling the data in this day
-	// @param dateList, optional, if dataList is empty, indicate target date is previous day
-	Done(dateList []time.Time, topic string, opts ...option.Option) (*Response, error)
 
 	// Predict
 	//

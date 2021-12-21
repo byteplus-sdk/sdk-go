@@ -59,11 +59,6 @@ func (receiver *ClientBuilder) SK(sk string) *ClientBuilder {
 	return receiver
 }
 
-func (receiver *ClientBuilder) UseAirAuth() *ClientBuilder {
-	receiver.param.UseAirAuth = true
-	return receiver
-}
-
 func (receiver *ClientBuilder) Build() (Client, error) {
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {
@@ -72,7 +67,7 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	gu := receiver.buildByteairURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
-		cCli:    common.NewClient(httpCaller, gu.cu),
+		Client:  common.NewClient(httpCaller, gu.cu),
 		hCaller: httpCaller,
 		gu:      gu,
 		hostAva: core.NewHostAvailabler(gu, context),

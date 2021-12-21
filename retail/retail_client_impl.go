@@ -22,7 +22,7 @@ var (
 )
 
 type clientImpl struct {
-	cCli    common.Client
+	common.Client
 	hCaller *HttpCaller
 	ru      *retailURL
 	hostAva *HostAvailabler
@@ -147,20 +147,4 @@ func (c *clientImpl) AckServerImpressions(request *AckServerImpressionsRequest,
 	}
 	logs.Debug("[AckImpressions] rsp:\n%s\n", response)
 	return response, nil
-}
-
-// GetOperation
-//
-// Gets the operation of a previous long running call.
-func (c *clientImpl) GetOperation(request *GetOperationRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	return c.cCli.GetOperation(request, opts...)
-}
-
-// ListOperations
-//
-// Lists operations that match the specified filter in the request.
-func (c *clientImpl) ListOperations(request *ListOperationsRequest,
-	opts ...option.Option) (*ListOperationsResponse, error) {
-	return c.cCli.ListOperations(request, opts...)
 }

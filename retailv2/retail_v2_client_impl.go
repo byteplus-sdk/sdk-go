@@ -4,10 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/byteplus-sdk/sdk-go/common"
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
@@ -20,7 +18,7 @@ var (
 )
 
 type clientImpl struct {
-	cCli    common.Client
+	common.Client
 	hCaller *HttpCaller
 	ru      *retailURL
 	hostAva *HostAvailabler
@@ -97,55 +95,4 @@ func (c *clientImpl) AckServerImpressions(request *AckServerImpressionsRequest,
 	}
 	logs.Debug("[AckImpressions] rsp:\n%s\n", response)
 	return response, nil
-}
-
-// GetOperation
-//
-// Gets the operation of a previous long running call.
-func (c *clientImpl) GetOperation(request *GetOperationRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	return c.cCli.GetOperation(request, opts...)
-}
-
-// ListOperations
-//
-// Lists operations that match the specified filter in the request.
-func (c *clientImpl) ListOperations(request *ListOperationsRequest,
-	opts ...option.Option) (*ListOperationsResponse, error) {
-	return c.cCli.ListOperations(request, opts...)
-}
-
-// Done
-// Pass a date list to mark the completion of data synchronization for these days
-// suitable for new API
-func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Option) (*Response, error) {
-	var dates []*Date
-	if len(dateList) == 0 {
-		previousDay := time.Now().Add(-24 * time.Hour)
-		dates = c.appendDoneDate(dates, previousDay)
-	} else {
-		for _, date := range dateList {
-			dates = c.appendDoneDate(dates, date)
-		}
-	}
-	url := strings.ReplaceAll(c.ru.doneUrlFormat, "{}", topic)
-	request := &DoneRequest{
-		DataDates: dates,
-	}
-	response := &Response{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[Done] rsp:\n%s\n", response)
-	return response, nil
-}
-
-func (c *clientImpl) appendDoneDate(dates []*Date,
-	date time.Time) []*Date {
-	return append(dates, &Date{
-		Year:  int32(date.Year()),
-		Month: int32(date.Month()),
-		Day:   int32(date.Day()),
-	})
 }

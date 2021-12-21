@@ -43,12 +43,6 @@ message ImportResponse {
   repeated DataError error_samples = 2;
 }
 
-message DoneResponse {
-  // Output only.
-  // The status of this response.
-  common.Status status = 1;
-}
-
 message PredictDevice {
   // Optional
   // Device id, such as 'imei'
@@ -439,7 +433,7 @@ service ByteplusGeneralService {
   // you should notify bytedance through `done` method,
   // then bytedance will start handling the data in this day.
   // If param is empty, indicate target date is previous day
-  rpc Done(google.protobuf.Any) returns (DoneResponse);
+  rpc Done(google.protobuf.Any) returns (common.DoneResponse);
 
   // Predict
   //

@@ -1,11 +1,8 @@
 package byteair
 
 import (
-	"time"
-
 	. "github.com/byteplus-sdk/sdk-go/byteair/protocol"
 	"github.com/byteplus-sdk/sdk-go/common"
-	commonprotocol "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 )
 
@@ -23,24 +20,6 @@ type Client interface {
 	// data (by providing all the fields, some data type not support update, e.g. user event).
 	WriteData(dataList []map[string]interface{}, topic string,
 		opts ...option.Option) (*WriteResponse, error)
-
-	// Done
-	//
-	// When the data of a day is imported completely,
-	// you should notify bytedance through `done` method,
-	// then bytedance will start handling the data in this day
-	// @param dateList, optional, if dataList is empty, indicate target date is previous day
-	Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error)
-
-	// GetOperation
-	//
-	// Gets the operation of a previous long running call.
-	GetOperation(request *commonprotocol.GetOperationRequest, opts ...option.Option) (*commonprotocol.OperationResponse, error)
-
-	// ListOperations
-	//
-	// Lists operations that match the specified filter in the request.
-	ListOperations(request *commonprotocol.ListOperationsRequest, opts ...option.Option) (*commonprotocol.ListOperationsResponse, error)
 
 	// Predict
 	//

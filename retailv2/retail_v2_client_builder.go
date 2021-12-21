@@ -57,7 +57,7 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	ru := receiver.buildRetailURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
-		cCli:    common.NewClient(httpCaller, ru.cu),
+		Client:  common.NewClient(httpCaller, ru.cu),
 		hCaller: httpCaller,
 		ru:      ru,
 		hostAva: core.NewHostAvailabler(ru, context),
