@@ -50,6 +50,7 @@ func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 }
 
 func (receiver *ClientBuilder) Build() (Client, error) {
+	receiver.param.UseAirAuth = true
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {
 		return nil, err

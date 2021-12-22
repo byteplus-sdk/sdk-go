@@ -14,7 +14,10 @@ import (
 	"github.com/byteplus-sdk/sdk-go/core/option"
 )
 
-const DefaultPredictScene = "default"
+const (
+	DefaultPredictScene  = "default"
+	DefaultCallbackScene = "default"
+)
 
 var (
 	errMsgFormat    = "Only can receive max to %d items in one request"
@@ -120,6 +123,10 @@ func (c *clientImpl) Callback(request *CallbackRequest,
 	opts ...option.Option) (*CallbackResponse, error) {
 	url := c.gu.callbackURL
 	response := &CallbackResponse{}
+	// If predict scene option is not filled, add default value
+	if request.Scene == "" {
+		request.Scene = DefaultCallbackScene
+	}
 	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
