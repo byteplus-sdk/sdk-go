@@ -17,6 +17,7 @@ type ContextParam struct {
 	Hosts      []string
 	Headers    map[string]string
 	Region     Region
+	UseAirAuth bool
 }
 
 func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
@@ -60,6 +61,7 @@ func NewContext(param *ContextParam) (*Context, error) {
 		hostHeader:      param.HostHeader,
 		hosts:           param.Hosts,
 		customerHeaders: param.Headers,
+		useAirAuth:      param.UseAirAuth,
 	}
 	result.fillHosts(param)
 	result.fillVolcCredentials(param)
@@ -102,6 +104,9 @@ type Context struct {
 
 	// fasthttp default client not support define host
 	httpCli *fasthttp.HostClient
+
+	// use air auth, otherwise use volc auth
+	useAirAuth bool
 }
 
 func (receiver *Context) Tenant() string {
@@ -134,6 +139,14 @@ func (receiver *Context) HostHeader() string {
 
 func (receiver *Context) Hosts() []string {
 	return receiver.hosts
+}
+
+func (receiver *Context) UseAirAuth() bool {
+	return receiver.useAirAuth
+}
+
+func (receiver *Context) UseVolcAuth() bool {
+	return !receiver.useAirAuth
 }
 
 func (receiver *Context) CustomerHeaders() map[string]string {

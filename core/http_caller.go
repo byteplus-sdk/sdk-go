@@ -121,8 +121,7 @@ func (c *HttpCaller) withOptionHeaders(headers map[string]string, options *optio
 }
 
 func (c *HttpCaller) withAuthHeaders(req *fasthttp.Request, reqBytes []byte) {
-	// use volc auth first
-	if c.context.volcCredentials.AccessKeyID != "" {
+	if c.context.UseVolcAuth() {
 		c.withVolcAuthHeaders(req)
 		return
 	}
