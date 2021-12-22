@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bytedance.byteplus;
+package bytedance.byteplus.common;
 option java_package = "byteplus.sdk.common.protocol";
 option go_package="github.com/byteplus-sdk/sdk-go/common/protocol";
 
@@ -63,6 +63,42 @@ message Metadata {
   // If the operation is done, this is also the finish time.
   // It's formatted according to 'rcf3339'
   string update_time = 6;
+}
+
+// Represents a whole or partial calendar date, such as a birthday. The time of
+// day and time zone are either specified elsewhere or are insignificant. The
+// date is relative to the Gregorian Calendar. This can represent one of the
+// following:
+//
+// * A full date, with non-zero year, month, and day values
+// * A month and day value, with a zero year, such as an anniversary
+// * A year on its own, with zero month and day values
+// * A year and month value, with a zero day, such as a credit card expiration
+// date
+message Date {
+  // Year of the date. Must be from 1 to 9999, or 0 to specify a date without
+  // a year.
+  int32 year = 1;
+
+  // Month of a year. Must be from 1 to 12, or 0 to specify a year without a
+  // month and day.
+  int32 month = 2;
+
+  // Day of a month. Must be from 1 to 31 and valid for the year and month, or 0
+  // to specify a year by itself or a year and month where the day isn't
+  // significant.
+  int32 day = 3;
+}
+
+// the request for Done, contains a date list
+message DoneRequest {
+  // The target data date list
+  repeated Date data_dates = 1;
+}
+
+message DoneResponse {
+  // 本次请求结果（与异步任务执行情况无关），status.code为0代表请求成功
+  Status status = 1;
 }
 
 // This resource represents a long-running operation that is the result of a
@@ -163,4 +199,13 @@ service ByteplusCommonService {
   //
   // Lists operations that match the specified filter in the request.
   rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
+
+
+  // Done
+  //
+  // When the data of a day is imported completely,
+  // you should notify bytedance through `done` method,
+  // then bytedance will start handling the data in this day.
+  // If param is empty, indicate target date is previous day
+  rpc Done(google.protobuf.Any) returns (DoneResponse);
 }

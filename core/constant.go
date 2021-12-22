@@ -29,6 +29,8 @@ var (
 const (
 	MaxWriteItemCount = 100
 
+	MaxImportWriteCount = 2000
+
 	MaxImportItemCount = 10000
 
 	// All requests will have a XXXResponse corresponding to them,

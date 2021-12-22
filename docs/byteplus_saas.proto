@@ -24,8 +24,6 @@ message Product {
 
       // Required.
       // The unique identifier of the category.
-      // Please refer to
-      // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
       string id_or_name = 1;
     }
 
@@ -54,9 +52,9 @@ message Product {
   // [
   //   {"category_depth":1,
   //    "category_nodes": [{"id_or_name":"Shoes"},
-  //                       {"id_or_name":"Men's shoes"}] },
+  //                       {"id_or_name":"Sports"}] },
   //   {"category_depth":2,
-  //    "category_nodes": [{"id_or_name":"Sports"},
+  //    "category_nodes": [{"id_or_name":"Men's shoes"},
   //                       {"id_or_name":"Basketball"}] },
   // ]
   repeated Category categories = 2;
@@ -101,8 +99,6 @@ message Product {
   // Required.
   // The product price info.
   // Please make sure the accuracy and recency.
-  // Please refer to
-  // [this](../docs/ways-to-improve-recommendation-performance#data-recency) for more details.
   Price price = 4;
 
   // Required.
@@ -129,9 +125,6 @@ message Product {
   // The tags given by the seller for this product.
   // This is used to lift the performance.
   // Sample values are: "New", "Summer", "Clearance", etc.
-
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   repeated string tags = 8;
 
   // The product display information.
@@ -140,17 +133,12 @@ message Product {
     // The tags visible to the users on the listing page.
     // Please fill as much as possible.
     // Sample values are: "best seller", "hot sales", etc.
-
-    // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
     repeated string listing_page_display_tags = 1;
 
     // Optional.
     // The tags visible in the details page.
     // Please fill as much as possible.
     // Sample values are: "free shipping", "1 year guarantee", etc
-    // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
     repeated string detail_page_display_tags = 2;
 
     // Optional.
@@ -210,8 +198,6 @@ message Product {
     // Optional.
     // The seller's level.
     // The sample values are "gold", "silver", etc.
-    // Please refer to
-    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
     string seller_level = 2;
 
     // Optional.
@@ -236,8 +222,6 @@ message Scene {
   // The unique identifier for the scene.
   // It can be Home page, Search page, Details page, etc.
   // It is strongly recommended that you split the scene if possible.
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string scene_name = 1;
 
   // Optional.
@@ -274,42 +258,30 @@ message Device {
   // Optional.
   // Your application version.
   // e.g. V9.0.8.
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string app_version = 3;
 
   // Optional.
   // The device model.
   // e.g. "iPhone10", "Pixel 4".
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string device_model = 4;
 
   // Optional.
   // The brand of the device.
   // e.g. "Samsung"
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string device_brand = 5;
 
   // Optional.
   // The operating system version.
   // e.g. "14.4.2"
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string os_version = 6;
 
   // Optional.
   // The type of the browser.
   // e.g. "chrome", "firefox", etc.
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string browser_type = 7;
 
   // Optional.
   // The UserAgent for the browser.
-  // Please refer to
-  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
   string user_agent = 8;
 
   // Optional.
@@ -331,7 +303,7 @@ message DataError {
 message WriteResponse {
   // Task execution result.
   // when status.code is 0, no exception occurred during execution, and all writing was successful
-  bytedance.byteplus.Status status = 1;
+  common.Status status = 1;
 
   // When status.code is 1206, errors has a value.
   // Some data may fail to be processed during the writing process, and all failure information will be returned through errors.
@@ -357,7 +329,7 @@ message WriteDataRequest{
   // Required
   // Array of json strings.
   // Each element of the array is a json serialized string of customer data.
-  repeated string datas = 10;
+  repeated string data = 10;
 
   // Optional.
   // This is a catch-all field to pass all the additional information.
@@ -440,8 +412,6 @@ message PredictResult {
 
     // Output only.
     // The strategy used for this particular recommendation result.
-    // Please refer to [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
-    /// 只用作返回值。base64编码的字符串，记录了该次推荐的一些模型和策略信息，建议将此字段携带到行为数据中，用来辅助提升推荐效果。如base64编码不能满足要求，可联系对接同学调整编码方式。
     string rec_info = 5;
 
     // Output only.
@@ -462,7 +432,7 @@ message PredictResult {
 message PredictResponse {
   // Output only.
   // The status of the call.
-  bytedance.byteplus.Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This is same as `PredictRequest.request_id`.
@@ -493,8 +463,6 @@ message AckServerImpressionsRequest {
 
   // Required.
   // This should be the traffic source.
-  // Please refer to
-  // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
   string traffic_source = 12;
 
   // Required.
@@ -518,7 +486,7 @@ message AckServerImpressionsRequest {
 
     // Required.
     // The final rank.
-    // If this is unset (or 0), we assume it is same as the value in the predict response.
+    // If this is unset (or 0), we assume it is filtered in actual impression.
     int32 rank = 3;
 
     // Internal
@@ -536,17 +504,19 @@ message AckServerImpressionsRequest {
 message AckServerImpressionsResponse {
   // Output only.
   // The status of this response.
-  bytedance.byteplus.Status status = 1;
+  common.Status status = 1;
 }
 
 // The BytePlus Saas service.
 service BytePlusSaasService {
   // Write
   //
-  // Writes at most 100 data at a time. Exceeding 100 in a request results in
+  // Writes at most 2000 data at a time. Exceeding 2000 in a request results in
   // a rejection. One can use this to upload new data, or update existing
   // data (by providing all the fields, some data type not support update, e.g. user event).
-  rpc WriteData(WriteDataRequest) returns (WriteResponse);
+  rpc WritUsers(WriteDataRequest) returns (WriteResponse);
+  rpc WritProducts(WriteDataRequest) returns (WriteResponse);
+  rpc WritUserEvents(WriteDataRequest) returns (WriteResponse);
 
   // Predict
   //

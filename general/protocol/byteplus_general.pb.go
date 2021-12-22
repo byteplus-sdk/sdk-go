@@ -255,868 +255,6 @@ func (x *DoneResponse) GetStatus() *protocol.Status {
 	return nil
 }
 
-// Represents a whole or partial calendar date, such as a birthday. The time of
-// day and time zone are either specified elsewhere or are insignificant. The
-// date is relative to the Gregorian Calendar. This can represent one of the
-// following:
-//
-// * A full date, with non-zero year, month, and day values
-// * A month and day value, with a zero year, such as an anniversary
-// * A year on its own, with zero month and day values
-// * A year and month value, with a zero day, such as a credit card expiration
-// date
-type Date struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Year of the date. Must be from 1 to 9999, or 0 to specify a date without
-	// a year.
-	Year int32 `protobuf:"varint,1,opt,name=year,proto3" json:"year,omitempty"`
-	// Month of a year. Must be from 1 to 12, or 0 to specify a year without a
-	// month and day.
-	Month int32 `protobuf:"varint,2,opt,name=month,proto3" json:"month,omitempty"`
-	// Day of a month. Must be from 1 to 31 and valid for the year and month, or 0
-	// to specify a year by itself or a year and month where the day isn't
-	// significant.
-	Day int32 `protobuf:"varint,3,opt,name=day,proto3" json:"day,omitempty"`
-}
-
-func (x *Date) Reset() {
-	*x = Date{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Date) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Date) ProtoMessage() {}
-
-func (x *Date) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Date.ProtoReflect.Descriptor instead.
-func (*Date) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *Date) GetYear() int32 {
-	if x != nil {
-		return x.Year
-	}
-	return 0
-}
-
-func (x *Date) GetMonth() int32 {
-	if x != nil {
-		return x.Month
-	}
-	return 0
-}
-
-func (x *Date) GetDay() int32 {
-	if x != nil {
-		return x.Day
-	}
-	return 0
-}
-
-// Configuration of destination for Import related errors.
-type ImportErrorsConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required.
-	// Errors destination. Currently only default to inline.
-	//
-	// Types that are assignable to Destination:
-	//	*ImportErrorsConfig_EmptyDestination
-	Destination isImportErrorsConfig_Destination `protobuf_oneof:"destination"`
-}
-
-func (x *ImportErrorsConfig) Reset() {
-	*x = ImportErrorsConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ImportErrorsConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ImportErrorsConfig) ProtoMessage() {}
-
-func (x *ImportErrorsConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ImportErrorsConfig.ProtoReflect.Descriptor instead.
-func (*ImportErrorsConfig) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{5}
-}
-
-func (m *ImportErrorsConfig) GetDestination() isImportErrorsConfig_Destination {
-	if m != nil {
-		return m.Destination
-	}
-	return nil
-}
-
-func (x *ImportErrorsConfig) GetEmptyDestination() string {
-	if x, ok := x.GetDestination().(*ImportErrorsConfig_EmptyDestination); ok {
-		return x.EmptyDestination
-	}
-	return ""
-}
-
-type isImportErrorsConfig_Destination interface {
-	isImportErrorsConfig_Destination()
-}
-
-type ImportErrorsConfig_EmptyDestination struct {
-	// This is just a placeholder.
-	EmptyDestination string `protobuf:"bytes,1,opt,name=empty_destination,json=emptyDestination,proto3,oneof"`
-}
-
-func (*ImportErrorsConfig_EmptyDestination) isImportErrorsConfig_Destination() {}
-
-type FTPConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required
-	// The ftp address.
-	// Sample value: "127.0.0.1:8080"
-	IpPort string `protobuf:"bytes,1,opt,name=ip_port,json=ipPort,proto3" json:"ip_port,omitempty"`
-	// Required
-	// The ftp username
-	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	// Required
-	// The ftp password
-	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-}
-
-func (x *FTPConfig) Reset() {
-	*x = FTPConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *FTPConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FTPConfig) ProtoMessage() {}
-
-func (x *FTPConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FTPConfig.ProtoReflect.Descriptor instead.
-func (*FTPConfig) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *FTPConfig) GetIpPort() string {
-	if x != nil {
-		return x.IpPort
-	}
-	return ""
-}
-
-func (x *FTPConfig) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *FTPConfig) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-type FTPSource struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required
-	// The ftp connection config
-	FtpConfig *FTPConfig `protobuf:"bytes,1,opt,name=ftp_config,json=ftpConfig,proto3" json:"ftp_config,omitempty"`
-	// Required
-	// The file path, not a directory.
-	// Example, "user/20130412.json"
-	Path string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	// Optional
-	// The compress type of target file.
-	// If the value is emtpy, we will read file without decompressing.
-	// The acceptable values are: "gzip"、"tar.gzip"
-	CompressType string `protobuf:"bytes,3,opt,name=compress_type,json=compressType,proto3" json:"compress_type,omitempty"`
-	// Required
-	// The content type of target file.
-	// The acceptable values are: "application/json"、 "text/csv"
-	ContentType string `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-}
-
-func (x *FTPSource) Reset() {
-	*x = FTPSource{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *FTPSource) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FTPSource) ProtoMessage() {}
-
-func (x *FTPSource) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FTPSource.ProtoReflect.Descriptor instead.
-func (*FTPSource) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *FTPSource) GetFtpConfig() *FTPConfig {
-	if x != nil {
-		return x.FtpConfig
-	}
-	return nil
-}
-
-func (x *FTPSource) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *FTPSource) GetCompressType() string {
-	if x != nil {
-		return x.CompressType
-	}
-	return ""
-}
-
-func (x *FTPSource) GetContentType() string {
-	if x != nil {
-		return x.ContentType
-	}
-	return ""
-}
-
-type BigquerySource struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// The id of target bigquery project
-	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	// The name of target bigquery dataset
-	Dataset string `protobuf:"bytes,2,opt,name=dataset,proto3" json:"dataset,omitempty"`
-	// The name of target bigquery table
-	Table string `protobuf:"bytes,3,opt,name=table,proto3" json:"table,omitempty"`
-	// Contains the string contents from a JSON credentials file
-	CredentialsJson string `protobuf:"bytes,4,opt,name=credentials_json,json=credentialsJson,proto3" json:"credentials_json,omitempty"`
-}
-
-func (x *BigquerySource) Reset() {
-	*x = BigquerySource{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *BigquerySource) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BigquerySource) ProtoMessage() {}
-
-func (x *BigquerySource) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BigquerySource.ProtoReflect.Descriptor instead.
-func (*BigquerySource) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *BigquerySource) GetProjectId() string {
-	if x != nil {
-		return x.ProjectId
-	}
-	return ""
-}
-
-func (x *BigquerySource) GetDataset() string {
-	if x != nil {
-		return x.Dataset
-	}
-	return ""
-}
-
-func (x *BigquerySource) GetTable() string {
-	if x != nil {
-		return x.Table
-	}
-	return ""
-}
-
-func (x *BigquerySource) GetCredentialsJson() string {
-	if x != nil {
-		return x.CredentialsJson
-	}
-	return ""
-}
-
-type GCSSource struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// File path to this resource in Cloud Storage.
-	// Only support file (not directory) path,
-	// for example, "gs://forbyteplus/user/user_20210617"
-	GcsUri string `protobuf:"bytes,1,opt,name=gcs_uri,json=gcsUri,proto3" json:"gcs_uri,omitempty"`
-	// The content type of target resource.
-	// The acceptable values are: "application/json"、 "text/csv"
-	ContentType string `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	// Contains the string contents from a JSON credentials file
-	CredentialsJson string `protobuf:"bytes,3,opt,name=credentials_json,json=credentialsJson,proto3" json:"credentials_json,omitempty"`
-}
-
-func (x *GCSSource) Reset() {
-	*x = GCSSource{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GCSSource) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GCSSource) ProtoMessage() {}
-
-func (x *GCSSource) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GCSSource.ProtoReflect.Descriptor instead.
-func (*GCSSource) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *GCSSource) GetGcsUri() string {
-	if x != nil {
-		return x.GcsUri
-	}
-	return ""
-}
-
-func (x *GCSSource) GetContentType() string {
-	if x != nil {
-		return x.ContentType
-	}
-	return ""
-}
-
-func (x *GCSSource) GetCredentialsJson() string {
-	if x != nil {
-		return x.CredentialsJson
-	}
-	return ""
-}
-
-type OSSConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required
-	// address, like "http://oss-cn-beijing.aliyuncs.com"
-	IpPort string `protobuf:"bytes,1,opt,name=ip_port,json=ipPort,proto3" json:"ip_port,omitempty"`
-	// Required
-	// access_key_id
-	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	// Required
-	// access_key_secret
-	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-}
-
-func (x *OSSConfig) Reset() {
-	*x = OSSConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OSSConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OSSConfig) ProtoMessage() {}
-
-func (x *OSSConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OSSConfig.ProtoReflect.Descriptor instead.
-func (*OSSConfig) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *OSSConfig) GetIpPort() string {
-	if x != nil {
-		return x.IpPort
-	}
-	return ""
-}
-
-func (x *OSSConfig) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *OSSConfig) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-type OSSSource struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required
-	// The oss connection config
-	OssConfig *OSSConfig `protobuf:"bytes,1,opt,name=oss_config,json=ossConfig,proto3" json:"oss_config,omitempty"`
-	// Required
-	// oss bucket name
-	BucketName string `protobuf:"bytes,2,opt,name=bucket_name,json=bucketName,proto3" json:"bucket_name,omitempty"`
-	// Required
-	// oss object name
-	ObjectName string `protobuf:"bytes,3,opt,name=object_name,json=objectName,proto3" json:"object_name,omitempty"`
-	// Required
-	// The content type of target file.
-	// The acceptable values are: "application/json"、 "text/csv"
-	ContentType string `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-}
-
-func (x *OSSSource) Reset() {
-	*x = OSSSource{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OSSSource) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OSSSource) ProtoMessage() {}
-
-func (x *OSSSource) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OSSSource.ProtoReflect.Descriptor instead.
-func (*OSSSource) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *OSSSource) GetOssConfig() *OSSConfig {
-	if x != nil {
-		return x.OssConfig
-	}
-	return nil
-}
-
-func (x *OSSSource) GetBucketName() string {
-	if x != nil {
-		return x.BucketName
-	}
-	return ""
-}
-
-func (x *OSSSource) GetObjectName() string {
-	if x != nil {
-		return x.ObjectName
-	}
-	return ""
-}
-
-func (x *OSSSource) GetContentType() string {
-	if x != nil {
-		return x.ContentType
-	}
-	return ""
-}
-
-type DataInputConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Types that are assignable to Source:
-	//	*DataInputConfig_FtpSource
-	//	*DataInputConfig_BigquerySource
-	//	*DataInputConfig_GcsSource
-	//	*DataInputConfig_OssSource
-	Source isDataInputConfig_Source `protobuf_oneof:"source"`
-}
-
-func (x *DataInputConfig) Reset() {
-	*x = DataInputConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *DataInputConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DataInputConfig) ProtoMessage() {}
-
-func (x *DataInputConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DataInputConfig.ProtoReflect.Descriptor instead.
-func (*DataInputConfig) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{12}
-}
-
-func (m *DataInputConfig) GetSource() isDataInputConfig_Source {
-	if m != nil {
-		return m.Source
-	}
-	return nil
-}
-
-func (x *DataInputConfig) GetFtpSource() *FTPSource {
-	if x, ok := x.GetSource().(*DataInputConfig_FtpSource); ok {
-		return x.FtpSource
-	}
-	return nil
-}
-
-func (x *DataInputConfig) GetBigquerySource() *BigquerySource {
-	if x, ok := x.GetSource().(*DataInputConfig_BigquerySource); ok {
-		return x.BigquerySource
-	}
-	return nil
-}
-
-func (x *DataInputConfig) GetGcsSource() *GCSSource {
-	if x, ok := x.GetSource().(*DataInputConfig_GcsSource); ok {
-		return x.GcsSource
-	}
-	return nil
-}
-
-func (x *DataInputConfig) GetOssSource() *OSSSource {
-	if x, ok := x.GetSource().(*DataInputConfig_OssSource); ok {
-		return x.OssSource
-	}
-	return nil
-}
-
-type isDataInputConfig_Source interface {
-	isDataInputConfig_Source()
-}
-
-type DataInputConfig_FtpSource struct {
-	// The ftp source for the input content.
-	FtpSource *FTPSource `protobuf:"bytes,1,opt,name=ftp_source,json=ftpSource,proto3,oneof"`
-}
-
-type DataInputConfig_BigquerySource struct {
-	// The bigquery source for the input content.
-	BigquerySource *BigquerySource `protobuf:"bytes,2,opt,name=bigquery_source,json=bigquerySource,proto3,oneof"`
-}
-
-type DataInputConfig_GcsSource struct {
-	// The gcs source for the input content.
-	GcsSource *GCSSource `protobuf:"bytes,3,opt,name=gcs_source,json=gcsSource,proto3,oneof"`
-}
-
-type DataInputConfig_OssSource struct {
-	// The oss source for the input content.
-	OssSource *OSSSource `protobuf:"bytes,4,opt,name=oss_source,json=ossSource,proto3,oneof"`
-}
-
-func (*DataInputConfig_FtpSource) isDataInputConfig_Source() {}
-
-func (*DataInputConfig_BigquerySource) isDataInputConfig_Source() {}
-
-func (*DataInputConfig_GcsSource) isDataInputConfig_Source() {}
-
-func (*DataInputConfig_OssSource) isDataInputConfig_Source() {}
-
-// Request proto for ImportData request.
-type ImportDataRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required
-	// The desired input config of the data.
-	InputConfig *DataInputConfig `protobuf:"bytes,1,opt,name=input_config,json=inputConfig,proto3" json:"input_config,omitempty"`
-	// Required
-	// The desired date of the data.
-	Date *Date `protobuf:"bytes,2,opt,name=date,proto3" json:"date,omitempty"`
-	// Optional.
-	// The desired location of errors incurred during the Import.
-	ErrorsConfig *ImportErrorsConfig `protobuf:"bytes,3,opt,name=errors_config,json=errorsConfig,proto3" json:"errors_config,omitempty"`
-	// Optional.
-	// This is a catch-all field to pass all the additional information.
-	// Please provide as much information as possible.
-	Extra map[string]string `protobuf:"bytes,100,rep,name=extra,proto3" json:"extra,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (x *ImportDataRequest) Reset() {
-	*x = ImportDataRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[13]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ImportDataRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ImportDataRequest) ProtoMessage() {}
-
-func (x *ImportDataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[13]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ImportDataRequest.ProtoReflect.Descriptor instead.
-func (*ImportDataRequest) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *ImportDataRequest) GetInputConfig() *DataInputConfig {
-	if x != nil {
-		return x.InputConfig
-	}
-	return nil
-}
-
-func (x *ImportDataRequest) GetDate() *Date {
-	if x != nil {
-		return x.Date
-	}
-	return nil
-}
-
-func (x *ImportDataRequest) GetErrorsConfig() *ImportErrorsConfig {
-	if x != nil {
-		return x.ErrorsConfig
-	}
-	return nil
-}
-
-func (x *ImportDataRequest) GetExtra() map[string]string {
-	if x != nil {
-		return x.Extra
-	}
-	return nil
-}
-
-// General write request,supported import realtime data
-type WriteDataRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Required
-	// Array of json strings.
-	// Each element of the array is a json serialized string of customer data.
-	Datas []string `protobuf:"bytes,1,rep,name=datas,proto3" json:"datas,omitempty"`
-	// Required
-	// The stage of importing data
-	Stage string `protobuf:"bytes,2,opt,name=stage,proto3" json:"stage,omitempty"`
-	// Optional.
-	// This is a catch-all field to pass all the additional information.
-	// Please provide as much information as possible.
-	Extra map[string]string `protobuf:"bytes,100,rep,name=extra,proto3" json:"extra,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (x *WriteDataRequest) Reset() {
-	*x = WriteDataRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[14]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *WriteDataRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*WriteDataRequest) ProtoMessage() {}
-
-func (x *WriteDataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[14]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use WriteDataRequest.ProtoReflect.Descriptor instead.
-func (*WriteDataRequest) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *WriteDataRequest) GetDatas() []string {
-	if x != nil {
-		return x.Datas
-	}
-	return nil
-}
-
-func (x *WriteDataRequest) GetStage() string {
-	if x != nil {
-		return x.Stage
-	}
-	return ""
-}
-
-func (x *WriteDataRequest) GetExtra() map[string]string {
-	if x != nil {
-		return x.Extra
-	}
-	return nil
-}
-
 type PredictDevice struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1161,7 +299,7 @@ type PredictDevice struct {
 func (x *PredictDevice) Reset() {
 	*x = PredictDevice{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[15]
+		mi := &file_byteplus_general_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1174,7 +312,7 @@ func (x *PredictDevice) String() string {
 func (*PredictDevice) ProtoMessage() {}
 
 func (x *PredictDevice) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[15]
+	mi := &file_byteplus_general_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1187,7 +325,7 @@ func (x *PredictDevice) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictDevice.ProtoReflect.Descriptor instead.
 func (*PredictDevice) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{15}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *PredictDevice) GetDeviceId() string {
@@ -1302,7 +440,7 @@ type PredictUser struct {
 func (x *PredictUser) Reset() {
 	*x = PredictUser{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[16]
+		mi := &file_byteplus_general_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1315,7 +453,7 @@ func (x *PredictUser) String() string {
 func (*PredictUser) ProtoMessage() {}
 
 func (x *PredictUser) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[16]
+	mi := &file_byteplus_general_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1328,7 +466,7 @@ func (x *PredictUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictUser.ProtoReflect.Descriptor instead.
 func (*PredictUser) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{16}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PredictUser) GetUid() string {
@@ -1426,7 +564,7 @@ type PredictContext struct {
 func (x *PredictContext) Reset() {
 	*x = PredictContext{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[17]
+		mi := &file_byteplus_general_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1439,7 +577,7 @@ func (x *PredictContext) String() string {
 func (*PredictContext) ProtoMessage() {}
 
 func (x *PredictContext) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[17]
+	mi := &file_byteplus_general_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1452,7 +590,7 @@ func (x *PredictContext) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictContext.ProtoReflect.Descriptor instead.
 func (*PredictContext) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{17}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *PredictContext) GetSpm() string {
@@ -1495,7 +633,7 @@ type PredictCandidateItem struct {
 func (x *PredictCandidateItem) Reset() {
 	*x = PredictCandidateItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[18]
+		mi := &file_byteplus_general_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1508,7 +646,7 @@ func (x *PredictCandidateItem) String() string {
 func (*PredictCandidateItem) ProtoMessage() {}
 
 func (x *PredictCandidateItem) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[18]
+	mi := &file_byteplus_general_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1521,7 +659,7 @@ func (x *PredictCandidateItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictCandidateItem.ProtoReflect.Descriptor instead.
 func (*PredictCandidateItem) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{18}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *PredictCandidateItem) GetId() string {
@@ -1573,7 +711,7 @@ type PredictExtra struct {
 func (x *PredictExtra) Reset() {
 	*x = PredictExtra{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[19]
+		mi := &file_byteplus_general_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1586,7 +724,7 @@ func (x *PredictExtra) String() string {
 func (*PredictExtra) ProtoMessage() {}
 
 func (x *PredictExtra) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[19]
+	mi := &file_byteplus_general_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1599,7 +737,7 @@ func (x *PredictExtra) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictExtra.ProtoReflect.Descriptor instead.
 func (*PredictExtra) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{19}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *PredictExtra) GetExtra() map[string]string {
@@ -1626,7 +764,7 @@ type PredictRelatedItem struct {
 func (x *PredictRelatedItem) Reset() {
 	*x = PredictRelatedItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[20]
+		mi := &file_byteplus_general_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1639,7 +777,7 @@ func (x *PredictRelatedItem) String() string {
 func (*PredictRelatedItem) ProtoMessage() {}
 
 func (x *PredictRelatedItem) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[20]
+	mi := &file_byteplus_general_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1652,7 +790,7 @@ func (x *PredictRelatedItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictRelatedItem.ProtoReflect.Descriptor instead.
 func (*PredictRelatedItem) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{20}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PredictRelatedItem) GetId() string {
@@ -1688,7 +826,7 @@ type SearchItems struct {
 func (x *SearchItems) Reset() {
 	*x = SearchItems{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[21]
+		mi := &file_byteplus_general_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1701,7 +839,7 @@ func (x *SearchItems) String() string {
 func (*SearchItems) ProtoMessage() {}
 
 func (x *SearchItems) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[21]
+	mi := &file_byteplus_general_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1714,7 +852,7 @@ func (x *SearchItems) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchItems.ProtoReflect.Descriptor instead.
 func (*SearchItems) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{21}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SearchItems) GetGoodsId() string {
@@ -1751,7 +889,7 @@ type StringArray struct {
 func (x *StringArray) Reset() {
 	*x = StringArray{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[22]
+		mi := &file_byteplus_general_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1764,7 +902,7 @@ func (x *StringArray) String() string {
 func (*StringArray) ProtoMessage() {}
 
 func (x *StringArray) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[22]
+	mi := &file_byteplus_general_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1777,7 +915,7 @@ func (x *StringArray) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StringArray.ProtoReflect.Descriptor instead.
 func (*StringArray) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{22}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *StringArray) GetValues() []string {
@@ -1837,7 +975,7 @@ type SearchCondition struct {
 func (x *SearchCondition) Reset() {
 	*x = SearchCondition{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[23]
+		mi := &file_byteplus_general_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1850,7 +988,7 @@ func (x *SearchCondition) String() string {
 func (*SearchCondition) ProtoMessage() {}
 
 func (x *SearchCondition) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[23]
+	mi := &file_byteplus_general_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1863,7 +1001,7 @@ func (x *SearchCondition) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchCondition.ProtoReflect.Descriptor instead.
 func (*SearchCondition) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{23}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SearchCondition) GetStart() int32 {
@@ -1963,7 +1101,7 @@ type PredictRequest struct {
 func (x *PredictRequest) Reset() {
 	*x = PredictRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[24]
+		mi := &file_byteplus_general_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1976,7 +1114,7 @@ func (x *PredictRequest) String() string {
 func (*PredictRequest) ProtoMessage() {}
 
 func (x *PredictRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[24]
+	mi := &file_byteplus_general_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1989,7 +1127,7 @@ func (x *PredictRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictRequest.ProtoReflect.Descriptor instead.
 func (*PredictRequest) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{24}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *PredictRequest) GetUser() *PredictUser {
@@ -2063,7 +1201,7 @@ type PredictResultItem struct {
 func (x *PredictResultItem) Reset() {
 	*x = PredictResultItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[25]
+		mi := &file_byteplus_general_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2076,7 +1214,7 @@ func (x *PredictResultItem) String() string {
 func (*PredictResultItem) ProtoMessage() {}
 
 func (x *PredictResultItem) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[25]
+	mi := &file_byteplus_general_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2089,7 +1227,7 @@ func (x *PredictResultItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictResultItem.ProtoReflect.Descriptor instead.
 func (*PredictResultItem) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{25}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *PredictResultItem) GetId() string {
@@ -2141,7 +1279,7 @@ type PredictResult struct {
 func (x *PredictResult) Reset() {
 	*x = PredictResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[26]
+		mi := &file_byteplus_general_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2154,7 +1292,7 @@ func (x *PredictResult) String() string {
 func (*PredictResult) ProtoMessage() {}
 
 func (x *PredictResult) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[26]
+	mi := &file_byteplus_general_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2167,7 +1305,7 @@ func (x *PredictResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictResult.ProtoReflect.Descriptor instead.
 func (*PredictResult) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{26}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *PredictResult) GetItems() []*PredictResultItem {
@@ -2215,7 +1353,7 @@ type PredictResponse struct {
 func (x *PredictResponse) Reset() {
 	*x = PredictResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[27]
+		mi := &file_byteplus_general_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2228,7 +1366,7 @@ func (x *PredictResponse) String() string {
 func (*PredictResponse) ProtoMessage() {}
 
 func (x *PredictResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[27]
+	mi := &file_byteplus_general_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2241,7 +1379,7 @@ func (x *PredictResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PredictResponse.ProtoReflect.Descriptor instead.
 func (*PredictResponse) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{27}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *PredictResponse) GetCode() int32 {
@@ -2297,7 +1435,7 @@ type CallbackItem struct {
 func (x *CallbackItem) Reset() {
 	*x = CallbackItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[28]
+		mi := &file_byteplus_general_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2310,7 +1448,7 @@ func (x *CallbackItem) String() string {
 func (*CallbackItem) ProtoMessage() {}
 
 func (x *CallbackItem) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[28]
+	mi := &file_byteplus_general_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2323,7 +1461,7 @@ func (x *CallbackItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CallbackItem.ProtoReflect.Descriptor instead.
 func (*CallbackItem) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{28}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CallbackItem) GetId() string {
@@ -2370,7 +1508,7 @@ type CallbackRequest struct {
 func (x *CallbackRequest) Reset() {
 	*x = CallbackRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[29]
+		mi := &file_byteplus_general_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2383,7 +1521,7 @@ func (x *CallbackRequest) String() string {
 func (*CallbackRequest) ProtoMessage() {}
 
 func (x *CallbackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[29]
+	mi := &file_byteplus_general_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2396,7 +1534,7 @@ func (x *CallbackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CallbackRequest.ProtoReflect.Descriptor instead.
 func (*CallbackRequest) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{29}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CallbackRequest) GetUid() string {
@@ -2446,7 +1584,7 @@ type CallbackResponse struct {
 func (x *CallbackResponse) Reset() {
 	*x = CallbackResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_byteplus_general_proto_msgTypes[30]
+		mi := &file_byteplus_general_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2459,7 +1597,7 @@ func (x *CallbackResponse) String() string {
 func (*CallbackResponse) ProtoMessage() {}
 
 func (x *CallbackResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_byteplus_general_proto_msgTypes[30]
+	mi := &file_byteplus_general_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2472,7 +1610,7 @@ func (x *CallbackResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CallbackResponse.ProtoReflect.Descriptor instead.
 func (*CallbackResponse) Descriptor() ([]byte, []int) {
-	return file_byteplus_general_proto_rawDescGZIP(), []int{30}
+	return file_byteplus_general_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CallbackResponse) GetCode() int32 {
@@ -2523,124 +1661,7 @@ var file_byteplus_general_proto_rawDesc = []byte{
 	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x06, 0x73, 0x74, 0x61,
 	0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x62, 0x79, 0x74, 0x65,
 	0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x53,
-	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0x42, 0x0a,
-	0x04, 0x44, 0x61, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x79, 0x65, 0x61, 0x72, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x05, 0x52, 0x04, 0x79, 0x65, 0x61, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x6d, 0x6f, 0x6e,
-	0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6d, 0x6f, 0x6e, 0x74, 0x68, 0x12,
-	0x10, 0x0a, 0x03, 0x64, 0x61, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x64, 0x61,
-	0x79, 0x22, 0x52, 0x0a, 0x12, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x45, 0x72, 0x72, 0x6f, 0x72,
-	0x73, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x2d, 0x0a, 0x11, 0x65, 0x6d, 0x70, 0x74, 0x79,
-	0x5f, 0x64, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x48, 0x00, 0x52, 0x10, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x44, 0x65, 0x73, 0x74, 0x69,
-	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x0d, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x74, 0x69, 0x6e,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x5c, 0x0a, 0x09, 0x46, 0x54, 0x50, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x12, 0x17, 0x0a, 0x07, 0x69, 0x70, 0x5f, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x69, 0x70, 0x50, 0x6f, 0x72, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x75,
-	0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75,
-	0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77,
-	0x6f, 0x72, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77,
-	0x6f, 0x72, 0x64, 0x22, 0xad, 0x01, 0x0a, 0x09, 0x46, 0x54, 0x50, 0x53, 0x6f, 0x75, 0x72, 0x63,
-	0x65, 0x12, 0x44, 0x0a, 0x0a, 0x66, 0x74, 0x70, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63,
-	0x65, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72,
-	0x61, 0x6c, 0x2e, 0x46, 0x54, 0x50, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x09, 0x66, 0x74,
-	0x70, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x23, 0x0a, 0x0d, 0x63,
-	0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0c, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x54, 0x79, 0x70, 0x65,
-	0x12, 0x21, 0x0a, 0x0c, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x54,
-	0x79, 0x70, 0x65, 0x22, 0x8a, 0x01, 0x0a, 0x0e, 0x42, 0x69, 0x67, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63,
-	0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x6a,
-	0x65, 0x63, 0x74, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x64, 0x61, 0x74, 0x61, 0x73, 0x65, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x64, 0x61, 0x74, 0x61, 0x73, 0x65, 0x74, 0x12,
-	0x14, 0x0a, 0x05, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x74, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74,
-	0x69, 0x61, 0x6c, 0x73, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x4a, 0x73, 0x6f, 0x6e,
-	0x22, 0x72, 0x0a, 0x09, 0x47, 0x43, 0x53, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x17, 0x0a,
-	0x07, 0x67, 0x63, 0x73, 0x5f, 0x75, 0x72, 0x69, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x67, 0x63, 0x73, 0x55, 0x72, 0x69, 0x12, 0x21, 0x0a, 0x0c, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
-	0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x6f,
-	0x6e, 0x74, 0x65, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x72, 0x65,
-	0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73,
-	0x4a, 0x73, 0x6f, 0x6e, 0x22, 0x5c, 0x0a, 0x09, 0x4f, 0x53, 0x53, 0x43, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x12, 0x17, 0x0a, 0x07, 0x69, 0x70, 0x5f, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x69, 0x70, 0x50, 0x6f, 0x72, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x75, 0x73,
-	0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75, 0x73,
-	0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f,
-	0x72, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f,
-	0x72, 0x64, 0x22, 0xb6, 0x01, 0x0a, 0x09, 0x4f, 0x53, 0x53, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65,
-	0x12, 0x44, 0x0a, 0x0a, 0x6f, 0x73, 0x73, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65,
-	0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61,
-	0x6c, 0x2e, 0x4f, 0x53, 0x53, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x09, 0x6f, 0x73, 0x73,
-	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x1f, 0x0a, 0x0b, 0x62, 0x75, 0x63, 0x6b, 0x65, 0x74,
-	0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x62, 0x75, 0x63,
-	0x6b, 0x65, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x6f, 0x62, 0x6a, 0x65, 0x63,
-	0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6f, 0x62,
-	0x6a, 0x65, 0x63, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x63, 0x6f, 0x6e, 0x74,
-	0x65, 0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
-	0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x22, 0xca, 0x02, 0x0a, 0x0f,
-	0x44, 0x61, 0x74, 0x61, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
-	0x46, 0x0a, 0x0a, 0x66, 0x74, 0x70, 0x5f, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e,
-	0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c,
-	0x2e, 0x46, 0x54, 0x50, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x48, 0x00, 0x52, 0x09, 0x66, 0x74,
-	0x70, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x55, 0x0a, 0x0f, 0x62, 0x69, 0x67, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x5f, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x2a, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62, 0x79, 0x74,
-	0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c, 0x2e, 0x42, 0x69,
-	0x67, 0x71, 0x75, 0x65, 0x72, 0x79, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x48, 0x00, 0x52, 0x0e,
-	0x62, 0x69, 0x67, 0x71, 0x75, 0x65, 0x72, 0x79, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x46,
-	0x0a, 0x0a, 0x67, 0x63, 0x73, 0x5f, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62,
-	0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c, 0x2e,
-	0x47, 0x43, 0x53, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x48, 0x00, 0x52, 0x09, 0x67, 0x63, 0x73,
-	0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x46, 0x0a, 0x0a, 0x6f, 0x73, 0x73, 0x5f, 0x73, 0x6f,
-	0x75, 0x72, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x79, 0x74,
-	0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e,
-	0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c, 0x2e, 0x4f, 0x53, 0x53, 0x53, 0x6f, 0x75, 0x72, 0x63,
-	0x65, 0x48, 0x00, 0x52, 0x09, 0x6f, 0x73, 0x73, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x42, 0x08,
-	0x0a, 0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x22, 0xf8, 0x02, 0x0a, 0x11, 0x49, 0x6d, 0x70,
-	0x6f, 0x72, 0x74, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x4e,
-	0x0a, 0x0c, 0x69, 0x6e, 0x70, 0x75, 0x74, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65,
-	0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61,
-	0x6c, 0x2e, 0x44, 0x61, 0x74, 0x61, 0x49, 0x6e, 0x70, 0x75, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x52, 0x0b, 0x69, 0x6e, 0x70, 0x75, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x34,
-	0x0a, 0x04, 0x64, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x62,
-	0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75,
-	0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c, 0x2e, 0x44, 0x61, 0x74, 0x65, 0x52, 0x04,
-	0x64, 0x61, 0x74, 0x65, 0x12, 0x53, 0x0a, 0x0d, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x73, 0x5f, 0x63,
-	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x62, 0x79,
-	0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73,
-	0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c, 0x2e, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x45,
-	0x72, 0x72, 0x6f, 0x72, 0x73, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x0c, 0x65, 0x72, 0x72,
-	0x6f, 0x72, 0x73, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x4e, 0x0a, 0x05, 0x65, 0x78, 0x74,
-	0x72, 0x61, 0x18, 0x64, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x38, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64,
-	0x61, 0x6e, 0x63, 0x65, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65,
-	0x6e, 0x65, 0x72, 0x61, 0x6c, 0x2e, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x44, 0x61, 0x74, 0x61,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x45, 0x78, 0x74, 0x72, 0x61, 0x45, 0x6e, 0x74,
-	0x72, 0x79, 0x52, 0x05, 0x65, 0x78, 0x74, 0x72, 0x61, 0x1a, 0x38, 0x0a, 0x0a, 0x45, 0x78, 0x74,
-	0x72, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a,
-	0x02, 0x38, 0x01, 0x22, 0xc7, 0x01, 0x0a, 0x10, 0x57, 0x72, 0x69, 0x74, 0x65, 0x44, 0x61, 0x74,
-	0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x61, 0x74, 0x61,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x64, 0x61, 0x74, 0x61, 0x73, 0x12, 0x14,
-	0x0a, 0x05, 0x73, 0x74, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x73,
-	0x74, 0x61, 0x67, 0x65, 0x12, 0x4d, 0x0a, 0x05, 0x65, 0x78, 0x74, 0x72, 0x61, 0x18, 0x64, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x37, 0x2e, 0x62, 0x79, 0x74, 0x65, 0x64, 0x61, 0x6e, 0x63, 0x65, 0x2e,
-	0x62, 0x79, 0x74, 0x65, 0x70, 0x6c, 0x75, 0x73, 0x2e, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c,
-	0x2e, 0x57, 0x72, 0x69, 0x74, 0x65, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x2e, 0x45, 0x78, 0x74, 0x72, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x05, 0x65, 0x78,
-	0x74, 0x72, 0x61, 0x1a, 0x38, 0x0a, 0x0a, 0x45, 0x78, 0x74, 0x72, 0x61, 0x45, 0x6e, 0x74, 0x72,
-	0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
-	0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xc0, 0x02,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0xc0, 0x02,
 	0x0a, 0x0d, 0x50, 0x72, 0x65, 0x64, 0x69, 0x63, 0x74, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x12,
 	0x1b, 0x0a, 0x09, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x08, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08,
@@ -2922,108 +1943,84 @@ func file_byteplus_general_proto_rawDescGZIP() []byte {
 	return file_byteplus_general_proto_rawDescData
 }
 
-var file_byteplus_general_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
+var file_byteplus_general_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_byteplus_general_proto_goTypes = []interface{}{
 	(*DataError)(nil),                  // 0: bytedance.byteplus.general.DataError
 	(*WriteResponse)(nil),              // 1: bytedance.byteplus.general.WriteResponse
 	(*ImportResponse)(nil),             // 2: bytedance.byteplus.general.ImportResponse
 	(*DoneResponse)(nil),               // 3: bytedance.byteplus.general.DoneResponse
-	(*Date)(nil),                       // 4: bytedance.byteplus.general.Date
-	(*ImportErrorsConfig)(nil),         // 5: bytedance.byteplus.general.ImportErrorsConfig
-	(*FTPConfig)(nil),                  // 6: bytedance.byteplus.general.FTPConfig
-	(*FTPSource)(nil),                  // 7: bytedance.byteplus.general.FTPSource
-	(*BigquerySource)(nil),             // 8: bytedance.byteplus.general.BigquerySource
-	(*GCSSource)(nil),                  // 9: bytedance.byteplus.general.GCSSource
-	(*OSSConfig)(nil),                  // 10: bytedance.byteplus.general.OSSConfig
-	(*OSSSource)(nil),                  // 11: bytedance.byteplus.general.OSSSource
-	(*DataInputConfig)(nil),            // 12: bytedance.byteplus.general.DataInputConfig
-	(*ImportDataRequest)(nil),          // 13: bytedance.byteplus.general.ImportDataRequest
-	(*WriteDataRequest)(nil),           // 14: bytedance.byteplus.general.WriteDataRequest
-	(*PredictDevice)(nil),              // 15: bytedance.byteplus.general.PredictDevice
-	(*PredictUser)(nil),                // 16: bytedance.byteplus.general.PredictUser
-	(*PredictContext)(nil),             // 17: bytedance.byteplus.general.PredictContext
-	(*PredictCandidateItem)(nil),       // 18: bytedance.byteplus.general.PredictCandidateItem
-	(*PredictExtra)(nil),               // 19: bytedance.byteplus.general.PredictExtra
-	(*PredictRelatedItem)(nil),         // 20: bytedance.byteplus.general.PredictRelatedItem
-	(*SearchItems)(nil),                // 21: bytedance.byteplus.general.SearchItems
-	(*StringArray)(nil),                // 22: bytedance.byteplus.general.StringArray
-	(*SearchCondition)(nil),            // 23: bytedance.byteplus.general.SearchCondition
-	(*PredictRequest)(nil),             // 24: bytedance.byteplus.general.PredictRequest
-	(*PredictResultItem)(nil),          // 25: bytedance.byteplus.general.PredictResultItem
-	(*PredictResult)(nil),              // 26: bytedance.byteplus.general.PredictResult
-	(*PredictResponse)(nil),            // 27: bytedance.byteplus.general.PredictResponse
-	(*CallbackItem)(nil),               // 28: bytedance.byteplus.general.CallbackItem
-	(*CallbackRequest)(nil),            // 29: bytedance.byteplus.general.CallbackRequest
-	(*CallbackResponse)(nil),           // 30: bytedance.byteplus.general.CallbackResponse
-	nil,                                // 31: bytedance.byteplus.general.ImportDataRequest.ExtraEntry
-	nil,                                // 32: bytedance.byteplus.general.WriteDataRequest.ExtraEntry
-	nil,                                // 33: bytedance.byteplus.general.PredictUser.ExtraEntry
-	nil,                                // 34: bytedance.byteplus.general.PredictContext.ExtraEntry
-	nil,                                // 35: bytedance.byteplus.general.PredictCandidateItem.ExtraEntry
-	nil,                                // 36: bytedance.byteplus.general.PredictExtra.ExtraEntry
-	nil,                                // 37: bytedance.byteplus.general.PredictRelatedItem.ExtraEntry
-	nil,                                // 38: bytedance.byteplus.general.SearchCondition.FiltersEntry
-	nil,                                // 39: bytedance.byteplus.general.SearchCondition.FilterOutEntry
-	nil,                                // 40: bytedance.byteplus.general.PredictResultItem.ExtraEntry
-	nil,                                // 41: bytedance.byteplus.general.PredictResult.ExtraEntry
-	(*protocol.Status)(nil),            // 42: bytedance.byteplus.Status
-	(*anypb.Any)(nil),                  // 43: google.protobuf.Any
-	(*protocol.OperationResponse)(nil), // 44: bytedance.byteplus.OperationResponse
+	(*PredictDevice)(nil),              // 4: bytedance.byteplus.general.PredictDevice
+	(*PredictUser)(nil),                // 5: bytedance.byteplus.general.PredictUser
+	(*PredictContext)(nil),             // 6: bytedance.byteplus.general.PredictContext
+	(*PredictCandidateItem)(nil),       // 7: bytedance.byteplus.general.PredictCandidateItem
+	(*PredictExtra)(nil),               // 8: bytedance.byteplus.general.PredictExtra
+	(*PredictRelatedItem)(nil),         // 9: bytedance.byteplus.general.PredictRelatedItem
+	(*SearchItems)(nil),                // 10: bytedance.byteplus.general.SearchItems
+	(*StringArray)(nil),                // 11: bytedance.byteplus.general.StringArray
+	(*SearchCondition)(nil),            // 12: bytedance.byteplus.general.SearchCondition
+	(*PredictRequest)(nil),             // 13: bytedance.byteplus.general.PredictRequest
+	(*PredictResultItem)(nil),          // 14: bytedance.byteplus.general.PredictResultItem
+	(*PredictResult)(nil),              // 15: bytedance.byteplus.general.PredictResult
+	(*PredictResponse)(nil),            // 16: bytedance.byteplus.general.PredictResponse
+	(*CallbackItem)(nil),               // 17: bytedance.byteplus.general.CallbackItem
+	(*CallbackRequest)(nil),            // 18: bytedance.byteplus.general.CallbackRequest
+	(*CallbackResponse)(nil),           // 19: bytedance.byteplus.general.CallbackResponse
+	nil,                                // 20: bytedance.byteplus.general.PredictUser.ExtraEntry
+	nil,                                // 21: bytedance.byteplus.general.PredictContext.ExtraEntry
+	nil,                                // 22: bytedance.byteplus.general.PredictCandidateItem.ExtraEntry
+	nil,                                // 23: bytedance.byteplus.general.PredictExtra.ExtraEntry
+	nil,                                // 24: bytedance.byteplus.general.PredictRelatedItem.ExtraEntry
+	nil,                                // 25: bytedance.byteplus.general.SearchCondition.FiltersEntry
+	nil,                                // 26: bytedance.byteplus.general.SearchCondition.FilterOutEntry
+	nil,                                // 27: bytedance.byteplus.general.PredictResultItem.ExtraEntry
+	nil,                                // 28: bytedance.byteplus.general.PredictResult.ExtraEntry
+	(*protocol.Status)(nil),            // 29: bytedance.byteplus.Status
+	(*anypb.Any)(nil),                  // 30: google.protobuf.Any
+	(*protocol.OperationResponse)(nil), // 31: bytedance.byteplus.OperationResponse
 }
 var file_byteplus_general_proto_depIdxs = []int32{
-	42, // 0: bytedance.byteplus.general.WriteResponse.status:type_name -> bytedance.byteplus.Status
+	29, // 0: bytedance.byteplus.general.WriteResponse.status:type_name -> bytedance.byteplus.Status
 	0,  // 1: bytedance.byteplus.general.WriteResponse.errors:type_name -> bytedance.byteplus.general.DataError
-	42, // 2: bytedance.byteplus.general.ImportResponse.status:type_name -> bytedance.byteplus.Status
+	29, // 2: bytedance.byteplus.general.ImportResponse.status:type_name -> bytedance.byteplus.Status
 	0,  // 3: bytedance.byteplus.general.ImportResponse.error_samples:type_name -> bytedance.byteplus.general.DataError
-	42, // 4: bytedance.byteplus.general.DoneResponse.status:type_name -> bytedance.byteplus.Status
-	6,  // 5: bytedance.byteplus.general.FTPSource.ftp_config:type_name -> bytedance.byteplus.general.FTPConfig
-	10, // 6: bytedance.byteplus.general.OSSSource.oss_config:type_name -> bytedance.byteplus.general.OSSConfig
-	7,  // 7: bytedance.byteplus.general.DataInputConfig.ftp_source:type_name -> bytedance.byteplus.general.FTPSource
-	8,  // 8: bytedance.byteplus.general.DataInputConfig.bigquery_source:type_name -> bytedance.byteplus.general.BigquerySource
-	9,  // 9: bytedance.byteplus.general.DataInputConfig.gcs_source:type_name -> bytedance.byteplus.general.GCSSource
-	11, // 10: bytedance.byteplus.general.DataInputConfig.oss_source:type_name -> bytedance.byteplus.general.OSSSource
-	12, // 11: bytedance.byteplus.general.ImportDataRequest.input_config:type_name -> bytedance.byteplus.general.DataInputConfig
-	4,  // 12: bytedance.byteplus.general.ImportDataRequest.date:type_name -> bytedance.byteplus.general.Date
-	5,  // 13: bytedance.byteplus.general.ImportDataRequest.errors_config:type_name -> bytedance.byteplus.general.ImportErrorsConfig
-	31, // 14: bytedance.byteplus.general.ImportDataRequest.extra:type_name -> bytedance.byteplus.general.ImportDataRequest.ExtraEntry
-	32, // 15: bytedance.byteplus.general.WriteDataRequest.extra:type_name -> bytedance.byteplus.general.WriteDataRequest.ExtraEntry
-	15, // 16: bytedance.byteplus.general.PredictUser.device:type_name -> bytedance.byteplus.general.PredictDevice
-	33, // 17: bytedance.byteplus.general.PredictUser.extra:type_name -> bytedance.byteplus.general.PredictUser.ExtraEntry
-	34, // 18: bytedance.byteplus.general.PredictContext.extra:type_name -> bytedance.byteplus.general.PredictContext.ExtraEntry
-	35, // 19: bytedance.byteplus.general.PredictCandidateItem.extra:type_name -> bytedance.byteplus.general.PredictCandidateItem.ExtraEntry
-	36, // 20: bytedance.byteplus.general.PredictExtra.extra:type_name -> bytedance.byteplus.general.PredictExtra.ExtraEntry
-	37, // 21: bytedance.byteplus.general.PredictRelatedItem.extra:type_name -> bytedance.byteplus.general.PredictRelatedItem.ExtraEntry
-	38, // 22: bytedance.byteplus.general.SearchCondition.filters:type_name -> bytedance.byteplus.general.SearchCondition.FiltersEntry
-	39, // 23: bytedance.byteplus.general.SearchCondition.filter_out:type_name -> bytedance.byteplus.general.SearchCondition.FilterOutEntry
-	21, // 24: bytedance.byteplus.general.SearchCondition.items:type_name -> bytedance.byteplus.general.SearchItems
-	16, // 25: bytedance.byteplus.general.PredictRequest.user:type_name -> bytedance.byteplus.general.PredictUser
-	17, // 26: bytedance.byteplus.general.PredictRequest.context:type_name -> bytedance.byteplus.general.PredictContext
-	18, // 27: bytedance.byteplus.general.PredictRequest.candidate_items:type_name -> bytedance.byteplus.general.PredictCandidateItem
-	19, // 28: bytedance.byteplus.general.PredictRequest.extra:type_name -> bytedance.byteplus.general.PredictExtra
-	20, // 29: bytedance.byteplus.general.PredictRequest.related_item:type_name -> bytedance.byteplus.general.PredictRelatedItem
-	23, // 30: bytedance.byteplus.general.PredictRequest.search_condition:type_name -> bytedance.byteplus.general.SearchCondition
-	40, // 31: bytedance.byteplus.general.PredictResultItem.extra:type_name -> bytedance.byteplus.general.PredictResultItem.ExtraEntry
-	25, // 32: bytedance.byteplus.general.PredictResult.items:type_name -> bytedance.byteplus.general.PredictResultItem
-	41, // 33: bytedance.byteplus.general.PredictResult.extra:type_name -> bytedance.byteplus.general.PredictResult.ExtraEntry
-	26, // 34: bytedance.byteplus.general.PredictResponse.value:type_name -> bytedance.byteplus.general.PredictResult
-	28, // 35: bytedance.byteplus.general.CallbackRequest.items:type_name -> bytedance.byteplus.general.CallbackItem
-	22, // 36: bytedance.byteplus.general.SearchCondition.FiltersEntry.value:type_name -> bytedance.byteplus.general.StringArray
-	22, // 37: bytedance.byteplus.general.SearchCondition.FilterOutEntry.value:type_name -> bytedance.byteplus.general.StringArray
-	43, // 38: bytedance.byteplus.general.ByteplusGeneralService.WriteData:input_type -> google.protobuf.Any
-	43, // 39: bytedance.byteplus.general.ByteplusGeneralService.ImportData:input_type -> google.protobuf.Any
-	43, // 40: bytedance.byteplus.general.ByteplusGeneralService.Done:input_type -> google.protobuf.Any
-	24, // 41: bytedance.byteplus.general.ByteplusGeneralService.Predict:input_type -> bytedance.byteplus.general.PredictRequest
-	29, // 42: bytedance.byteplus.general.ByteplusGeneralService.Callback:input_type -> bytedance.byteplus.general.CallbackRequest
-	1,  // 43: bytedance.byteplus.general.ByteplusGeneralService.WriteData:output_type -> bytedance.byteplus.general.WriteResponse
-	44, // 44: bytedance.byteplus.general.ByteplusGeneralService.ImportData:output_type -> bytedance.byteplus.OperationResponse
-	3,  // 45: bytedance.byteplus.general.ByteplusGeneralService.Done:output_type -> bytedance.byteplus.general.DoneResponse
-	27, // 46: bytedance.byteplus.general.ByteplusGeneralService.Predict:output_type -> bytedance.byteplus.general.PredictResponse
-	30, // 47: bytedance.byteplus.general.ByteplusGeneralService.Callback:output_type -> bytedance.byteplus.general.CallbackResponse
-	43, // [43:48] is the sub-list for method output_type
-	38, // [38:43] is the sub-list for method input_type
-	38, // [38:38] is the sub-list for extension type_name
-	38, // [38:38] is the sub-list for extension extendee
-	0,  // [0:38] is the sub-list for field type_name
+	29, // 4: bytedance.byteplus.general.DoneResponse.status:type_name -> bytedance.byteplus.Status
+	4,  // 5: bytedance.byteplus.general.PredictUser.device:type_name -> bytedance.byteplus.general.PredictDevice
+	20, // 6: bytedance.byteplus.general.PredictUser.extra:type_name -> bytedance.byteplus.general.PredictUser.ExtraEntry
+	21, // 7: bytedance.byteplus.general.PredictContext.extra:type_name -> bytedance.byteplus.general.PredictContext.ExtraEntry
+	22, // 8: bytedance.byteplus.general.PredictCandidateItem.extra:type_name -> bytedance.byteplus.general.PredictCandidateItem.ExtraEntry
+	23, // 9: bytedance.byteplus.general.PredictExtra.extra:type_name -> bytedance.byteplus.general.PredictExtra.ExtraEntry
+	24, // 10: bytedance.byteplus.general.PredictRelatedItem.extra:type_name -> bytedance.byteplus.general.PredictRelatedItem.ExtraEntry
+	25, // 11: bytedance.byteplus.general.SearchCondition.filters:type_name -> bytedance.byteplus.general.SearchCondition.FiltersEntry
+	26, // 12: bytedance.byteplus.general.SearchCondition.filter_out:type_name -> bytedance.byteplus.general.SearchCondition.FilterOutEntry
+	10, // 13: bytedance.byteplus.general.SearchCondition.items:type_name -> bytedance.byteplus.general.SearchItems
+	5,  // 14: bytedance.byteplus.general.PredictRequest.user:type_name -> bytedance.byteplus.general.PredictUser
+	6,  // 15: bytedance.byteplus.general.PredictRequest.context:type_name -> bytedance.byteplus.general.PredictContext
+	7,  // 16: bytedance.byteplus.general.PredictRequest.candidate_items:type_name -> bytedance.byteplus.general.PredictCandidateItem
+	8,  // 17: bytedance.byteplus.general.PredictRequest.extra:type_name -> bytedance.byteplus.general.PredictExtra
+	9,  // 18: bytedance.byteplus.general.PredictRequest.related_item:type_name -> bytedance.byteplus.general.PredictRelatedItem
+	12, // 19: bytedance.byteplus.general.PredictRequest.search_condition:type_name -> bytedance.byteplus.general.SearchCondition
+	27, // 20: bytedance.byteplus.general.PredictResultItem.extra:type_name -> bytedance.byteplus.general.PredictResultItem.ExtraEntry
+	14, // 21: bytedance.byteplus.general.PredictResult.items:type_name -> bytedance.byteplus.general.PredictResultItem
+	28, // 22: bytedance.byteplus.general.PredictResult.extra:type_name -> bytedance.byteplus.general.PredictResult.ExtraEntry
+	15, // 23: bytedance.byteplus.general.PredictResponse.value:type_name -> bytedance.byteplus.general.PredictResult
+	17, // 24: bytedance.byteplus.general.CallbackRequest.items:type_name -> bytedance.byteplus.general.CallbackItem
+	11, // 25: bytedance.byteplus.general.SearchCondition.FiltersEntry.value:type_name -> bytedance.byteplus.general.StringArray
+	11, // 26: bytedance.byteplus.general.SearchCondition.FilterOutEntry.value:type_name -> bytedance.byteplus.general.StringArray
+	30, // 27: bytedance.byteplus.general.ByteplusGeneralService.WriteData:input_type -> google.protobuf.Any
+	30, // 28: bytedance.byteplus.general.ByteplusGeneralService.ImportData:input_type -> google.protobuf.Any
+	30, // 29: bytedance.byteplus.general.ByteplusGeneralService.Done:input_type -> google.protobuf.Any
+	13, // 30: bytedance.byteplus.general.ByteplusGeneralService.Predict:input_type -> bytedance.byteplus.general.PredictRequest
+	18, // 31: bytedance.byteplus.general.ByteplusGeneralService.Callback:input_type -> bytedance.byteplus.general.CallbackRequest
+	1,  // 32: bytedance.byteplus.general.ByteplusGeneralService.WriteData:output_type -> bytedance.byteplus.general.WriteResponse
+	31, // 33: bytedance.byteplus.general.ByteplusGeneralService.ImportData:output_type -> bytedance.byteplus.OperationResponse
+	3,  // 34: bytedance.byteplus.general.ByteplusGeneralService.Done:output_type -> bytedance.byteplus.general.DoneResponse
+	16, // 35: bytedance.byteplus.general.ByteplusGeneralService.Predict:output_type -> bytedance.byteplus.general.PredictResponse
+	19, // 36: bytedance.byteplus.general.ByteplusGeneralService.Callback:output_type -> bytedance.byteplus.general.CallbackResponse
+	32, // [32:37] is the sub-list for method output_type
+	27, // [27:32] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_byteplus_general_proto_init() }
@@ -3081,138 +2078,6 @@ func file_byteplus_general_proto_init() {
 			}
 		}
 		file_byteplus_general_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Date); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ImportErrorsConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FTPConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FTPSource); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BigquerySource); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GCSSource); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OSSConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OSSSource); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DataInputConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ImportDataRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*WriteDataRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_byteplus_general_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictDevice); i {
 			case 0:
 				return &v.state
@@ -3224,7 +2089,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictUser); i {
 			case 0:
 				return &v.state
@@ -3236,7 +2101,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictContext); i {
 			case 0:
 				return &v.state
@@ -3248,7 +2113,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictCandidateItem); i {
 			case 0:
 				return &v.state
@@ -3260,7 +2125,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictExtra); i {
 			case 0:
 				return &v.state
@@ -3272,7 +2137,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictRelatedItem); i {
 			case 0:
 				return &v.state
@@ -3284,7 +2149,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SearchItems); i {
 			case 0:
 				return &v.state
@@ -3296,7 +2161,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StringArray); i {
 			case 0:
 				return &v.state
@@ -3308,7 +2173,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SearchCondition); i {
 			case 0:
 				return &v.state
@@ -3320,7 +2185,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictRequest); i {
 			case 0:
 				return &v.state
@@ -3332,7 +2197,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictResultItem); i {
 			case 0:
 				return &v.state
@@ -3344,7 +2209,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictResult); i {
 			case 0:
 				return &v.state
@@ -3356,7 +2221,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PredictResponse); i {
 			case 0:
 				return &v.state
@@ -3368,7 +2233,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CallbackItem); i {
 			case 0:
 				return &v.state
@@ -3380,7 +2245,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CallbackRequest); i {
 			case 0:
 				return &v.state
@@ -3392,7 +2257,7 @@ func file_byteplus_general_proto_init() {
 				return nil
 			}
 		}
-		file_byteplus_general_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+		file_byteplus_general_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CallbackResponse); i {
 			case 0:
 				return &v.state
@@ -3405,22 +2270,13 @@ func file_byteplus_general_proto_init() {
 			}
 		}
 	}
-	file_byteplus_general_proto_msgTypes[5].OneofWrappers = []interface{}{
-		(*ImportErrorsConfig_EmptyDestination)(nil),
-	}
-	file_byteplus_general_proto_msgTypes[12].OneofWrappers = []interface{}{
-		(*DataInputConfig_FtpSource)(nil),
-		(*DataInputConfig_BigquerySource)(nil),
-		(*DataInputConfig_GcsSource)(nil),
-		(*DataInputConfig_OssSource)(nil),
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_byteplus_general_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   42,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

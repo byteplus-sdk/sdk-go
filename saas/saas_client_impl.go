@@ -10,11 +10,12 @@ import (
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	"github.com/byteplus-sdk/sdk-go/saas/protocol"
 	"strings"
+	"time"
 )
 
 var (
 	writeMsgFormat  = "Only can receive max to %d items in one write request"
-	writeTooManyErr = errors.New(fmt.Sprintf(writeMsgFormat, MaxWriteItemCount))
+	writeTooManyErr = errors.New(fmt.Sprintf(writeMsgFormat, MaxImportWriteCount))
 )
 
 const (
@@ -93,11 +94,8 @@ func (c *clientImpl) doWrite(request *protocol.WriteDataRequest, url string, opt
 	if err := checkProjectIdAndStage(request.ProjectId, request.Stage); err != nil {
 		return nil, err
 	}
-	if len(request.GetDatas()) > MaxWriteItemCount {
-		logs.Warn("[ByteplusSDK][WriteData] item count more than '{}'", MaxWriteItemCount)
-		if len(request.GetDatas()) > MaxImportItemCount {
-			return nil, writeTooManyErr
-		}
+	if len(request.GetData()) > MaxImportWriteCount {
+		return nil, writeTooManyErr
 	}
 	if len(opts) == 0 {
 		opts = make([]option.Option, 0, dataInitOptionCount)
@@ -113,15 +111,15 @@ func (c *clientImpl) doWrite(request *protocol.WriteDataRequest, url string, opt
 	return response, nil
 }
 
-func (c *clientImpl) WriteUsersData(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
+func (c *clientImpl) WriteUsers(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
 	return c.doWrite(writeRequest, c.su.writeUsersDataURL, opts...)
 }
 
-func (c *clientImpl) WriteProductsData(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
+func (c *clientImpl) WriteProducts(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
 	return c.doWrite(writeRequest, c.su.writeProductsDataURL, opts...)
 }
 
-func (c *clientImpl) WriteUserEventsData(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
+func (c *clientImpl) WriteUserEvents(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
 	return c.doWrite(writeRequest, c.su.writeUserEventsDataURL, opts...)
 }
 
@@ -174,4 +172,11 @@ func (c *clientImpl) GetOperation(request *GetOperationRequest,
 func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 	opts ...option.Option) (*ListOperationsResponse, error) {
 	return c.cCli.ListOperations(request, opts...)
+}
+
+// Done
+// Pass a date list to mark the completion of data synchronization for these days
+// suitable for new API
+func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error) {
+	return c.cCli.Done(dateList, topic, opts...)
 }

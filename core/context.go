@@ -186,7 +186,7 @@ func (receiver *Context) fillVolcCredentials(param *ContextParam) {
 
 	// fill region
 	switch param.Region {
-	case RegionSg, RegionAirSg:
+	case RegionSg, RegionAirSg, RegionSaas:
 		c.Region = "ap-singapore-1"
 	case RegionUs:
 		c.Region = "us-east-1"

@@ -5,6 +5,8 @@ import (
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
+	"strings"
+	"time"
 )
 
 func NewClient(cli *HttpCaller, cu *URL) Client {
@@ -41,4 +43,36 @@ func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 	}
 	logs.Debug("[ListOperation] rsp:\n%s\n", response)
 	return response, nil
+}
+
+func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error) {
+	var dates []*Date
+	if len(dateList) == 0 {
+		previousDay := time.Now().Add(-24 * time.Hour)
+		dates = c.appendDoneDate(dates, previousDay)
+	} else {
+		for _, date := range dateList {
+			dates = c.appendDoneDate(dates, date)
+		}
+	}
+	url := strings.ReplaceAll(c.cu.doneUrlFormat, "{}", topic)
+	request := &DoneRequest{
+		DataDates: dates,
+	}
+	response := &DoneResponse{}
+	err := c.cli.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	if err != nil {
+		return nil, err
+	}
+	logs.Debug("[Done] rsp:\n%s\n", response)
+	return response, nil
+}
+
+func (c *clientImpl) appendDoneDate(dates []*Date,
+	date time.Time) []*Date {
+	return append(dates, &Date{
+		Year:  int32(date.Year()),
+		Month: int32(date.Month()),
+		Day:   int32(date.Day()),
+	})
 }
