@@ -1,4 +1,4 @@
-package retail
+package retailv2
 
 import (
 	"errors"
@@ -6,19 +6,15 @@ import (
 	"strings"
 
 	"github.com/byteplus-sdk/sdk-go/common"
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
-	. "github.com/byteplus-sdk/sdk-go/retail/protocol"
+	. "github.com/byteplus-sdk/sdk-go/retailv2/protocol"
 )
 
 var (
 	writeMsgFormat  = "Only can receive max to %d items in one write request"
 	writeTooManyErr = errors.New(fmt.Sprintf(writeMsgFormat, MaxWriteItemCount))
-
-	importMsgFormat  = "Only can receive max to %d items in one import request"
-	importTooManyErr = errors.New(fmt.Sprintf(importMsgFormat, MaxImportItemCount))
 )
 
 type clientImpl struct {
@@ -47,22 +43,6 @@ func (c *clientImpl) WriteUsers(request *WriteUsersRequest,
 	return response, nil
 }
 
-func (c *clientImpl) ImportUsers(request *ImportUsersRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	users := request.GetInputConfig().GetUsersInlineSource().GetUsers()
-	if len(users) > MaxImportItemCount {
-		return nil, importTooManyErr
-	}
-	url := c.ru.importUsersURL
-	response := &OperationResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[ImportUsers] rsp:\n%s\n", response)
-	return response, nil
-}
-
 func (c *clientImpl) WriteProducts(request *WriteProductsRequest,
 	opts ...option.Option) (*WriteProductsResponse, error) {
 	if len(request.Products) > MaxWriteItemCount {
@@ -78,22 +58,6 @@ func (c *clientImpl) WriteProducts(request *WriteProductsRequest,
 	return response, nil
 }
 
-func (c *clientImpl) ImportProducts(request *ImportProductsRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	products := request.GetInputConfig().GetProductsInlineSource().GetProducts()
-	if len(products) > MaxImportItemCount {
-		return nil, importTooManyErr
-	}
-	url := c.ru.importProductsURL
-	response := &OperationResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[ImportProducts] rsp:\n%s\n", response)
-	return response, nil
-}
-
 func (c *clientImpl) WriteUserEvents(request *WriteUserEventsRequest,
 	opts ...option.Option) (*WriteUserEventsResponse, error) {
 	if len(request.UserEvents) > MaxWriteItemCount {
@@ -106,22 +70,6 @@ func (c *clientImpl) WriteUserEvents(request *WriteUserEventsRequest,
 		return nil, err
 	}
 	logs.Debug("[WriteUserEvents] rsp:\n%s\n", response)
-	return response, nil
-}
-
-func (c *clientImpl) ImportUserEvents(request *ImportUserEventsRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	userEvents := request.GetInputConfig().GetUserEventsInlineSource().GetUserEvents()
-	if len(userEvents) > MaxImportItemCount {
-		return nil, importTooManyErr
-	}
-	url := c.ru.importUserEventsURL
-	response := &OperationResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[ImportUserEvents] rsp:\n%s\n", response)
 	return response, nil
 }
 

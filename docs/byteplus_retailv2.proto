@@ -1,7 +1,7 @@
 syntax = "proto3";
-package bytedance.byteplus.retail;
-option java_package = "byteplus.sdk.retail.protocol";
-option go_package="github.com/byteplus-sdk/sdk-go/retail/protocol";
+package bytedance.byteplus.retailv2;
+option java_package = "byteplus.sdk.retailv2.protocol";
+option go_package="github.com/byteplus-sdk/sdk-go/retailv2/protocol";
 
 //// This is the raw proto file which will not be shown to end customer.
 //// This file will be compiled to Chinese version and English version to
@@ -11,6 +11,7 @@ option go_package="github.com/byteplus-sdk/sdk-go/retail/protocol";
 ////   All comments start with "////" will be filtered
 
 import "byteplus_common.proto";
+import "google/protobuf/any.proto";
 
 // The user proto.
 message User {
@@ -159,90 +160,6 @@ message WriteUsersResponse {
   // This field is populated when `status.code` is 1001.
   // When populated, this field contains the errors.
   repeated UserError errors = 2;
-}
-
-// The inline source for the input config for ImportUsers method.
-message UsersInlineSource {
-  // Optional.
-  // A list of users to import. The max # of items supported is 2k.
-  repeated User users = 1;
-}
-
-// The input config for the source data.
-message UsersInputConfig {
-  // Required.
-  // The source of the input.
-  oneof source {
-    // The Inline source for the input content for users.
-    UsersInlineSource users_inline_source = 1;
-  }
-}
-
-// The config proto for the date.
-message DateConfig {
-  // Required.
-  // This should be the same as all dates from `XXXInputConfig`
-  // Any violation will result in a standard 400 error.
-  // The value of date should to be formatted like this:
-  // " yyyy-mm-dd ", for example, "2021-06-10"
-  string date = 2;
-
-  // Optional.
-  // If true, this means the transmission of the data on `date` is 100% done.
-  // If not called or delayed, an email alert is fired.
-  // Note: This has a significant impact on the performance, so please make sure
-  // you call this correctly (timely and accurately).
-  // Once a `date` is finalized, any new data with this `date` will be rejected.
-  // There, please make sure `is_end` is sent when all the data of the `date`
-  // is done transmitting. You could do this by sending the last request as an
-  // empty request with only `is_end` being true after all the previous requests
-  // done transmitting.
-  bool is_end = 3;
-}
-
-// Configuration of destination for Import related errors.
-message ImportErrorsConfig {
-  // Required.
-  // Errors destination. Currently only default to inline.
-  oneof destination {
-    // This is just a placeholder.
-    string empty_destination = 1;
-  }
-}
-
-// Request proto for the ImportUsers request.
-message ImportUsersRequest {
-  // Required.
-  // The desired input config of the data.
-  UsersInputConfig input_config = 1;
-
-  // Required.
-  // The desired date config of the data.
-  DateConfig date_config = 2;
-
-  // Optional.
-  // The desired location of errors incurred during the Import.
-  ImportErrorsConfig errors_config = 3;
-
-  // Optional.
-  // This is a catch-all field to pass all the additional information.
-  // Please provide as much information as possible.
-  map<string, string> extra = 100;
-}
-
-// The response proto for ImportUsers call.
-message ImportUsersResponse {
-  // Output only.
-  // The status of the import call.
-  // When `status.code` is 0, all payload are successfully imported.
-  // If `status.code` is 1001, `error_samples` is populated.
-  // Other non-zero values indicate all payload failed.
-  common.Status status = 1;
-
-  // Output only.
-  // This field is populated when `status.code` is 1001.
-  // When populated, this field contains the error samples.
-  repeated UserError error_samples = 2;
 }
 
 // The product proto.
@@ -512,59 +429,6 @@ message WriteProductsResponse {
   repeated ProductError errors = 2;
 }
 
-// The inline source for the input config for ImportProducts method.
-message ProductsInlineSource {
-  // Optional.
-  // A list of products to import.
-  // The max # of items allowed is 2k.
-  repeated Product products = 1;
-}
-
-// The input config source.
-message ProductsInputConfig {
-  // Required.
-  // The source of the input.
-  oneof source {
-    // The Inline source for the input content for products.
-    ProductsInlineSource products_inline_source = 1;
-  }
-}
-
-// Request proto for the ImportProducts request.
-message ImportProductsRequest {
-  // Required.
-  // The desired input config of the data.
-  ProductsInputConfig input_config = 1;
-
-  // Required.
-  // The desired date config of the data.
-  DateConfig date_config = 2;
-
-  // Optional.
-  // The desired config of errors incurred during the Import.
-  ImportErrorsConfig errors_config = 3;
-
-  // Optional.
-  // This is a catch-all field to pass all the additional information.
-  // Please provide as much information as possible.
-  map<string, string> extra = 100;
-}
-
-// The response proto for ImportProducts call.
-message ImportProductsResponse {
-  // Output only.
-  // The status of the import call.
-  // When `status.code` is 0, all payload are successfully imported.
-  // If `status.code` is 1001, `error_samples` is populated.
-  // Other non-zero values indicate all payload failed.
-  common.Status status = 1;
-
-  // Output only.
-  // This field is populated when `status.code` is 1001.
-  // When populated, this field contains the error samples.
-  repeated ProductError error_samples = 2;
-}
-
 // The proto that represents an user event.
 message UserEvent {
   // Required.
@@ -818,58 +682,6 @@ message WriteUserEventsResponse {
   repeated UserEventError errors = 2;
 }
 
-// The inline source for the input config for ImportUserEvents method.
-message UserEventsInlineSource {
-  // Optional.
-  // A list of user events to import.
-  // The max # of items allowed is 2k.
-  repeated UserEvent user_events = 1;
-}
-
-// The input config source.
-message UserEventsInputConfig {
-  // Required.
-  // The source of the input.
-  oneof source {
-    // The Inline source for the input content for UserEvents.
-    UserEventsInlineSource user_events_inline_source = 1;
-  }
-}
-
-// Request proto for the ImportUserEvents request.
-message ImportUserEventsRequest {
-  // Required.
-  // The desired input location of the data.
-  UserEventsInputConfig input_config = 1;
-
-  // Required.
-  // The desired date config of the data.
-  DateConfig date_config = 2;
-
-  // Optional.
-  // The desired location of errors incurred during the Import.
-  ImportErrorsConfig errors_config = 3;
-
-  // Optional.
-  // This is a catch-all field to pass all the additional information.
-  // Please provide as much information as possible.
-  map<string, string> extra = 100;
-}
-
-// The response for the ImportUserEvents call.
-message ImportUserEventsResponse {
-  // Output only.
-  // When `status.code` is 0, all payload are successfully written.
-  // If `status.code` is 1001, `error_samples` is populated.
-  // Other non-zero values indicate all payload failed.
-  common.Status status = 1;
-
-  // Output only.
-  // This field is populated when `status.code` is 1001.
-  // When populated, this field contains the error samples.
-  repeated UserEventError error_samples = 2;
-}
-
 // The request proto for `Predict` call.
 message PredictRequest {
   // Required.
@@ -1032,22 +844,6 @@ service ByteplusRetailService {
   // Refer to [this](../docs/rpcs) for how to use RPCs.
   rpc WriteUsers(WriteUsersRequest) returns (WriteUsersResponse);
 
-  // ImportUsers
-  //
-  // Bulk import of Users.
-  //
-  // `Operation.response` is of type ImportUsersResponse. Note that it is
-  // possible for a subset of the items to be successfully inserted.
-  // Operation.metadata is of type Metadata.
-  // This call returns immediately after the server finishes the
-  // preliminary validations and persists the request. The caller should
-  // keep polling `OperationResponse.operation.name` using `GetOperation`
-  // call below to check the status.
-  // Note: This can also be used to update the existing data by providing the
-  // existing ids. In this case, please make sure you provide all fields.
-  // Refer to [this](../docs/rpcs) for how to use RPCs.
-  rpc ImportUsers(ImportUsersRequest) returns (common.OperationResponse);
-
   // WriteProducts
   //
   // Writes at most 100 products at a time. Exceeding 100 in a request results
@@ -1059,22 +855,6 @@ service ByteplusRetailService {
   // Refer to [this](../docs/rpcs) for how to use RPCs.
   rpc WriteProducts(WriteProductsRequest) returns (WriteProductsResponse);
 
-  // ImportProducts
-  //
-  // Bulk import of Products.
-  //
-  // `Operation.response` is of type ImportUsersResponse. Note that it is
-  // possible for a subset of the items to be successfully inserted.
-  // Operation.metadata is of type Metadata.
-  // This call returns immediately after the server finishes the preliminary
-  // validations and persists the request.  The caller should keep polling
-  // `OperationResponse.operation.name` using `GetOperation` call below to
-  // check the status.
-  // Note: This can also be used to update the existing data by providing the
-  // existing ids. In this case, please make sure you provide all fields.
-  // Refer to [this](../docs/rpcs) for how to use RPCs.
-  rpc ImportProducts(ImportProductsRequest) returns (common.OperationResponse);
-
   // WriteUserEvents
   //
   // Writes at most 100 UserEvents at a time. Exceeding 100 in a request
@@ -1085,20 +865,12 @@ service ByteplusRetailService {
   // Refer to [this](../docs/rpcs) for how to use RPCs.
   rpc WriteUserEvents(WriteUserEventsRequest) returns (WriteUserEventsResponse);
 
-  //ImportUserEvents
+  // Done
   //
-  // Bulk import of User events.
-  //
-  // `Operation.response` is of type ImportUsersResponse. Note that it is
-  // possible for a subset of the items to be successfully inserted.
-  // Operation.metadata is of type Metadata.
-  // This call returns immediately after the server finishes the preliminary
-  // validations and persists the request.  The caller should keep polling
-  // `OperationResponse.operation.name` using `GetOperation` call below to
-  // check the status.
-  // Please make sure the requests are deduplicated before sending over.
-  // Refer to [this](../docs/rpcs) for how to use RPCs.
-  rpc ImportUserEvents(ImportUserEventsRequest) returns (common.OperationResponse);
+  // Pass a date list to mark the completion of data synchronization for these days.
+  // Pass a date list to mark the completion of data synchronization for these days.
+  // Suitable for new data API
+  rpc Done(google.protobuf.Any) returns (common.DoneResponse);
 
   // Predict
   //

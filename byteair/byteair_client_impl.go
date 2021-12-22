@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	. "github.com/byteplus-sdk/sdk-go/byteair/protocol"
 	"github.com/byteplus-sdk/sdk-go/common"
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
@@ -25,7 +23,7 @@ var (
 )
 
 type clientImpl struct {
-	cCli    common.Client
+	common.Client
 	hCaller *HttpCaller
 	gu      *byteairURL
 	hostAva *HostAvailabler
@@ -33,16 +31,6 @@ type clientImpl struct {
 
 func (c *clientImpl) Release() {
 	c.hostAva.Shutdown()
-}
-
-func (c *clientImpl) GetOperation(request *GetOperationRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	return c.cCli.GetOperation(request, opts...)
-}
-
-func (c *clientImpl) ListOperations(request *ListOperationsRequest,
-	opts ...option.Option) (*ListOperationsResponse, error) {
-	return c.cCli.ListOperations(request, opts...)
 }
 
 func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
@@ -62,40 +50,6 @@ func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
 	}
 	logs.Debug("[WriteData] rsp:\n%s\n", response)
 	return response, nil
-}
-
-func (c *clientImpl) Done(dateList []time.Time,
-	topic string, opts ...option.Option) (*DoneResponse, error) {
-	var dates []*Date
-	if len(dateList) == 0 {
-		previousDay := time.Now().Add(-24 * time.Hour)
-		dates = c.appendDoneDate(dates, previousDay)
-	} else {
-		for _, date := range dateList {
-			dates = c.appendDoneDate(dates, date)
-		}
-	}
-	urlFormat := c.gu.doneURLFormat
-	url := strings.ReplaceAll(urlFormat, "{}", topic)
-	request := &DoneRequest{
-		DataDates: dates,
-	}
-	response := &DoneResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
-	if err != nil {
-		return nil, err
-	}
-	logs.Debug("[Done] rsp:\n%s\n", response)
-	return response, nil
-}
-
-func (c *clientImpl) appendDoneDate(dates []*Date,
-	date time.Time) []*Date {
-	return append(dates, &Date{
-		Year:  int32(date.Year()),
-		Month: int32(date.Month()),
-		Day:   int32(date.Day()),
-	})
 }
 
 func (c *clientImpl) Predict(request *PredictRequest,

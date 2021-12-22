@@ -1,4 +1,4 @@
-package general
+package retailv2
 
 import (
 	"github.com/byteplus-sdk/sdk-go/common"
@@ -55,23 +55,23 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	gu := receiver.buildGeneralURL(context)
+	ru := receiver.buildRetailURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
-		Client:  common.NewClient(httpCaller, gu.cu),
+		Client:  common.NewClient(httpCaller, ru.cu),
 		hCaller: httpCaller,
-		gu:      gu,
-		hostAva: core.NewHostAvailabler(gu, context),
+		ru:      ru,
+		hostAva: core.NewHostAvailabler(ru, context),
 	}
 	return client, nil
 }
 
-func (receiver *ClientBuilder) buildGeneralURL(context *core.Context) *generalURL {
-	gu := &generalURL{
+func (receiver *ClientBuilder) buildRetailURL(context *core.Context) *retailURL {
+	ru := &retailURL{
 		schema: context.Schema(),
 		tenant: context.Tenant(),
 		cu:     common.NewURL(context),
 	}
-	gu.Refresh(context.Hosts()[0])
-	return gu
+	ru.Refresh(context.Hosts()[0])
+	return ru
 }

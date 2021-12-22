@@ -2,10 +2,10 @@ package general
 
 import (
 	"github.com/byteplus-sdk/sdk-go/common"
+
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	. "github.com/byteplus-sdk/sdk-go/general/protocol"
-	"time"
 )
 
 type Client interface {
@@ -38,14 +38,6 @@ type Client interface {
 	// In this case, please make sure you provide all fields.
 	ImportData(dataList []map[string]interface{}, topic string,
 		opts ...option.Option) (*OperationResponse, error)
-
-	// Done
-	//
-	// When the data of a day is imported completely,
-	// you should notify bytedance through `done` method,
-	// then bytedance will start handling the data in this day
-	// @param dateList, optional, if dataList is empty, indicate target date is previous day
-	Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error)
 
 	// Predict
 	//

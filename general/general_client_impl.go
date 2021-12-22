@@ -3,14 +3,15 @@ package general
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/byteplus-sdk/sdk-go/common"
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	. "github.com/byteplus-sdk/sdk-go/general/protocol"
-	"strings"
-	"time"
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 )
 
 type clientImpl struct {
-	cCli    common.Client
+	common.Client
 	hCaller *HttpCaller
 	gu      *generalURL
 	hostAva *HostAvailabler
@@ -27,16 +28,6 @@ type clientImpl struct {
 
 func (c *clientImpl) Release() {
 	c.hostAva.Shutdown()
-}
-
-func (c *clientImpl) GetOperation(request *GetOperationRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	return c.cCli.GetOperation(request, opts...)
-}
-
-func (c *clientImpl) ListOperations(request *ListOperationsRequest,
-	opts ...option.Option) (*ListOperationsResponse, error) {
-	return c.cCli.ListOperations(request, opts...)
 }
 
 func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
@@ -77,13 +68,8 @@ func (c *clientImpl) ImportData(dataList []map[string]interface{},
 func (c *clientImpl) Done(dateList []time.Time,
 	topic string, opts ...option.Option) (*DoneResponse, error) {
 	var dateMaps []map[string]string
-	if len(dateList) == 0 {
-		previousDay := time.Now().Add(-24 * time.Hour)
-		dateMaps = c.appendDoneDate(dateMaps, previousDay)
-	} else {
-		for _, date := range dateList {
-			dateMaps = c.appendDoneDate(dateMaps, date)
-		}
+	for _, date := range dateList {
+		dateMaps = c.appendDoneDate(dateMaps, date)
 	}
 	urlFormat := c.gu.doneURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)

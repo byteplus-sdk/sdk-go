@@ -21,7 +21,7 @@ message WriteResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -35,48 +35,12 @@ message ImportResponse {
   // When `status.code` is 0, all payload are successfully imported.
   // If `status.code` is 1001, `error_samples` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
   // When populated, this field contains the error samples.
   repeated DataError error_samples = 2;
-}
-
-// Represents a whole or partial calendar date, such as a birthday. The time of
-// day and time zone are either specified elsewhere or are insignificant. The
-// date is relative to the Gregorian Calendar. This can represent one of the
-// following:
-//
-// * A full date, with non-zero year, month, and day values
-// * A month and day value, with a zero year, such as an anniversary
-// * A year on its own, with zero month and day values
-// * A year and month value, with a zero day, such as a credit card expiration
-// date
-message Date {
-  // Year of the date. Must be from 1 to 9999, or 0 to specify a date without
-  // a year.
-  int32 year = 1;
-
-  // Month of a year. Must be from 1 to 12, or 0 to specify a year without a
-  // month and day.
-  int32 month = 2;
-
-  // Day of a month. Must be from 1 to 31 and valid for the year and month, or 0
-  // to specify a year by itself or a year and month where the day isn't
-  // significant.
-  int32 day = 3;
-}
-
-message DoneRequest {
-  // The target data date list
-  repeated Date data_dates = 1;
-}
-
-message DoneResponse {
-  // Output only.
-  // The status of this response.
-  Status status = 1;
 }
 
 message PredictDevice {
@@ -461,7 +425,7 @@ service ByteplusGeneralService {
   // call below to check the status.
   // Note: This can also be used to update the existing data(some data type not support).
   // In this case, please make sure you provide all fields.
-  rpc ImportData(google.protobuf.Any) returns (OperationResponse);
+  rpc ImportData(google.protobuf.Any) returns (common.OperationResponse);
 
   // Done
   //
@@ -469,7 +433,7 @@ service ByteplusGeneralService {
   // you should notify bytedance through `done` method,
   // then bytedance will start handling the data in this day.
   // If param is empty, indicate target date is previous day
-  rpc Done(google.protobuf.Any) returns (DoneResponse);
+  rpc Done(google.protobuf.Any) returns (common.DoneResponse);
 
   // Predict
   //

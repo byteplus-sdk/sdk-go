@@ -72,7 +72,7 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	gu := receiver.buildByteairURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
-		cCli:    common.NewClient(httpCaller, gu.cu),
+		Client:  common.NewClient(httpCaller, gu.cu),
 		hCaller: httpCaller,
 		gu:      gu,
 		hostAva: core.NewHostAvailabler(gu, context),
