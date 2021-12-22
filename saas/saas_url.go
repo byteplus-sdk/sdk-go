@@ -34,24 +34,24 @@ type saasURL struct {
 
 	// The URL of uploading real-time user data
 	// Example: https://rec-api-sg1.recplusapi.com/RetailSaaS/WriteUsers
-	writeUsersDataURL string
+	writeUsersURL string
 
 	// The URL of uploading real-time product data
 	// Example: https://rec-api-sg1.recplusapi.com/RetailSaaS/WriteProducts
-	writeProductsDataURL string
+	writeProductsURL string
 
 	// The URL of uploading real-time user event data
 	// Example: https://rec-api-sg1.recplusapi.com/RetailSaaS/WriteUserEvents
-	writeUserEventsDataURL string
+	writeUserEventsURL string
 }
 
 func (receiver *saasURL) Refresh(host string) {
 	receiver.su.Refresh(host)
 	receiver.predictURL = receiver.generatePredictURLFormat(host)
 	receiver.ackImpressionURL = receiver.generateAckURL(host)
-	receiver.writeUsersDataURL = receiver.generateUploadURL(host, "WriteUsers")
-	receiver.writeProductsDataURL = receiver.generateUploadURL(host, "WriteProducts")
-	receiver.writeUserEventsDataURL = receiver.generateUploadURL(host, "WriteUserEvents")
+	receiver.writeUsersURL = receiver.generateUploadURL(host, "WriteUsers")
+	receiver.writeProductsURL = receiver.generateUploadURL(host, "WriteProducts")
+	receiver.writeUserEventsURL = receiver.generateUploadURL(host, "WriteUserEvents")
 }
 
 func (receiver *saasURL) generatePredictURLFormat(host string) string {

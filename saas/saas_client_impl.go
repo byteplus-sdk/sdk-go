@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/byteplus-sdk/sdk-go/common"
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	"github.com/byteplus-sdk/sdk-go/saas/protocol"
 	"strings"
-	"time"
 )
 
 var (
@@ -19,12 +17,12 @@ var (
 )
 
 const (
-	dataInitOptionCount    = 2
+	dataInitOptionCount    = 1
 	predictInitOptionCount = 1
 )
 
 type clientImpl struct {
-	cCli    common.Client
+	common.Client
 	hCaller *HttpCaller
 	su      *saasURL
 	hostAva *HostAvailabler
@@ -101,7 +99,6 @@ func (c *clientImpl) doWrite(request *protocol.WriteDataRequest, url string, opt
 		opts = make([]option.Option, 0, dataInitOptionCount)
 	}
 	response := &protocol.WriteResponse{}
-	opts = append(opts, option.WithStage(request.Stage))
 	opts = addSaasFlag(opts)
 	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
@@ -112,15 +109,15 @@ func (c *clientImpl) doWrite(request *protocol.WriteDataRequest, url string, opt
 }
 
 func (c *clientImpl) WriteUsers(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
-	return c.doWrite(writeRequest, c.su.writeUsersDataURL, opts...)
+	return c.doWrite(writeRequest, c.su.writeUsersURL, opts...)
 }
 
 func (c *clientImpl) WriteProducts(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
-	return c.doWrite(writeRequest, c.su.writeProductsDataURL, opts...)
+	return c.doWrite(writeRequest, c.su.writeProductsURL, opts...)
 }
 
 func (c *clientImpl) WriteUserEvents(writeRequest *protocol.WriteDataRequest, opts ...option.Option) (*protocol.WriteResponse, error) {
-	return c.doWrite(writeRequest, c.su.writeUserEventsDataURL, opts...)
+	return c.doWrite(writeRequest, c.su.writeUserEventsURL, opts...)
 }
 
 func (c *clientImpl) Predict(request *protocol.PredictRequest, opts ...option.Option) (*protocol.PredictResponse, error) {
@@ -156,27 +153,4 @@ func (c *clientImpl) AckServerImpressions(request *protocol.AckServerImpressions
 	}
 	logs.Debug("[AckImpressions] rsp:\n%s\n", response)
 	return response, nil
-}
-
-// GetOperation
-//
-// Gets the operation of a previous long running call.
-func (c *clientImpl) GetOperation(request *GetOperationRequest,
-	opts ...option.Option) (*OperationResponse, error) {
-	return c.cCli.GetOperation(request, opts...)
-}
-
-// ListOperations
-//
-// Lists operations that match the specified filter in the request.
-func (c *clientImpl) ListOperations(request *ListOperationsRequest,
-	opts ...option.Option) (*ListOperationsResponse, error) {
-	return c.cCli.ListOperations(request, opts...)
-}
-
-// Done
-// Pass a date list to mark the completion of data synchronization for these days
-// suitable for new API
-func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error) {
-	return c.cCli.Done(dateList, topic, opts...)
 }

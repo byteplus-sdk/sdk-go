@@ -21,7 +21,7 @@ message WriteResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -35,18 +35,12 @@ message ImportResponse {
   // When `status.code` is 0, all payload are successfully imported.
   // If `status.code` is 1001, `error_samples` is populated.
   // Other non-zero values indicate all payload failed.
-  Status status = 1;
+  common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
   // When populated, this field contains the error samples.
   repeated DataError error_samples = 2;
-}
-
-message DoneResponse {
-  // Output only.
-  // The status of this response.
-  Status status = 1;
 }
 
 message PredictDevice {
@@ -431,7 +425,7 @@ service ByteplusGeneralService {
   // call below to check the status.
   // Note: This can also be used to update the existing data(some data type not support).
   // In this case, please make sure you provide all fields.
-  rpc ImportData(google.protobuf.Any) returns (OperationResponse);
+  rpc ImportData(google.protobuf.Any) returns (common.OperationResponse);
 
   // Done
   //
@@ -439,7 +433,7 @@ service ByteplusGeneralService {
   // you should notify bytedance through `done` method,
   // then bytedance will start handling the data in this day.
   // If param is empty, indicate target date is previous day
-  rpc Done(google.protobuf.Any) returns (DoneResponse);
+  rpc Done(google.protobuf.Any) returns (common.DoneResponse);
 
   // Predict
   //

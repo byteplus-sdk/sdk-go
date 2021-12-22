@@ -200,7 +200,6 @@ service ByteplusCommonService {
   // Lists operations that match the specified filter in the request.
   rpc ListOperations(ListOperationsRequest) returns (ListOperationsResponse);
 
-
   // Done
   //
   // When the data of a day is imported completely,

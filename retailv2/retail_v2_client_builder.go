@@ -1,4 +1,4 @@
-package saas
+package retailv2
 
 import (
 	"github.com/byteplus-sdk/sdk-go/common"
@@ -9,13 +9,8 @@ type ClientBuilder struct {
 	param core.ContextParam
 }
 
-func (receiver *ClientBuilder) AK(ak string) *ClientBuilder {
-	receiver.param.AK = ak
-	return receiver
-}
-
-func (receiver *ClientBuilder) SK(sk string) *ClientBuilder {
-	receiver.param.SK = sk
+func (receiver *ClientBuilder) Tenant(tenant string) *ClientBuilder {
+	receiver.param.Tenant = tenant
 	return receiver
 }
 
@@ -54,31 +49,29 @@ func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 	return receiver
 }
 
-const saasTenant = "saas"
-
 func (receiver *ClientBuilder) Build() (Client, error) {
-	receiver.param.Tenant = saasTenant
+	receiver.param.UseAirAuth = true
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {
 		return nil, err
 	}
-	su := receiver.buildSaasURL(context)
+	ru := receiver.buildRetailURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
-		Client:  common.NewClient(httpCaller, su.su),
+		Client:  common.NewClient(httpCaller, ru.cu),
 		hCaller: httpCaller,
-		su:      su,
-		hostAva: core.NewHostAvailabler(su, context),
+		ru:      ru,
+		hostAva: core.NewHostAvailabler(ru, context),
 	}
 	return client, nil
 }
 
-func (receiver *ClientBuilder) buildSaasURL(context *core.Context) *saasURL {
-	su := &saasURL{
-		schema:    context.Schema(),
-		projectId: context.Tenant(),
-		su:        common.NewURL(context),
+func (receiver *ClientBuilder) buildRetailURL(context *core.Context) *retailURL {
+	ru := &retailURL{
+		schema: context.Schema(),
+		tenant: context.Tenant(),
+		cu:     common.NewURL(context),
 	}
-	su.Refresh(context.Hosts()[0])
-	return su
+	ru.Refresh(context.Hosts()[0])
+	return ru
 }

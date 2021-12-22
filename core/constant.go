@@ -9,7 +9,7 @@ const (
 	RegionUs
 	RegionAirCn
 	RegionAirSg
-	RegionSaas
+	RegionSaasSg
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 
 	airSgHosts = []string{"byteair-api-sg1.byteintlapi.com"}
 
-	saasHosts = []string{"rec-api-sg1.recplusapi.com"}
+	saasSgHosts = []string{"rec-api-sg1.recplusapi.com"}
 )
 
 const (

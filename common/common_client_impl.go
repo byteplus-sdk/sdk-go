@@ -1,12 +1,13 @@
 package common
 
 import (
+	"strings"
+	"time"
+
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	. "github.com/byteplus-sdk/sdk-go/core"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
-	"strings"
-	"time"
 )
 
 func NewClient(cli *HttpCaller, cu *URL) Client {
@@ -47,13 +48,8 @@ func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 
 func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Option) (*DoneResponse, error) {
 	var dates []*Date
-	if len(dateList) == 0 {
-		previousDay := time.Now().Add(-24 * time.Hour)
-		dates = c.appendDoneDate(dates, previousDay)
-	} else {
-		for _, date := range dateList {
-			dates = c.appendDoneDate(dates, date)
-		}
+	for _, date := range dateList {
+		dates = c.appendDoneDate(dates, date)
 	}
 	url := strings.ReplaceAll(c.cu.doneUrlFormat, "{}", topic)
 	request := &DoneRequest{

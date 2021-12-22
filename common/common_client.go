@@ -1,9 +1,10 @@
 package common
 
 import (
+	"time"
+
 	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
-	"time"
 )
 
 type Client interface {

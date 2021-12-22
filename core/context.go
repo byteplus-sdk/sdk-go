@@ -17,6 +17,7 @@ type ContextParam struct {
 	Hosts      []string
 	Headers    map[string]string
 	Region     Region
+	UseAirAuth bool
 }
 
 func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
@@ -60,6 +61,7 @@ func NewContext(param *ContextParam) (*Context, error) {
 		hostHeader:      param.HostHeader,
 		hosts:           param.Hosts,
 		customerHeaders: param.Headers,
+		useAirAuth:      param.UseAirAuth,
 	}
 	result.fillHosts(param)
 	result.fillVolcCredentials(param)
@@ -101,7 +103,11 @@ type Context struct {
 	customerHeaders map[string]string
 
 	// fasthttp default client not support define host
+	// TODO need fix redirect difference protocol issue
 	httpCli *fasthttp.HostClient
+
+	// use air auth, otherwise use volc auth
+	useAirAuth bool
 }
 
 func (receiver *Context) Tenant() string {
@@ -136,6 +142,14 @@ func (receiver *Context) Hosts() []string {
 	return receiver.hosts
 }
 
+func (receiver *Context) UseAirAuth() bool {
+	return receiver.useAirAuth
+}
+
+func (receiver *Context) UseVolcAuth() bool {
+	return !receiver.useAirAuth
+}
+
 func (receiver *Context) CustomerHeaders() map[string]string {
 	return receiver.customerHeaders
 }
@@ -165,8 +179,8 @@ func (receiver *Context) fillHosts(param *ContextParam) {
 		receiver.hosts = airSgHosts
 		return
 	}
-	if param.Region == RegionSaas {
-		receiver.hosts = saasHosts
+	if param.Region == RegionSaasSg {
+		receiver.hosts = saasSgHosts
 		return
 	}
 }
@@ -186,7 +200,7 @@ func (receiver *Context) fillVolcCredentials(param *ContextParam) {
 
 	// fill region
 	switch param.Region {
-	case RegionSg, RegionAirSg, RegionSaas:
+	case RegionSg, RegionAirSg, RegionSaasSg:
 		c.Region = "ap-singapore-1"
 	case RegionUs:
 		c.Region = "us-east-1"

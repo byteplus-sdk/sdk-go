@@ -50,6 +50,7 @@ func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 }
 
 func (receiver *ClientBuilder) Build() (Client, error) {
+	receiver.param.UseAirAuth = true
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	gu := receiver.buildGeneralURL(context)
 	httpCaller := core.NewHttpCaller(context)
 	client := &clientImpl{
-		cCli:    common.NewClient(httpCaller, gu.cu),
+		Client:  common.NewClient(httpCaller, gu.cu),
 		hCaller: httpCaller,
 		gu:      gu,
 		hostAva: core.NewHostAvailabler(gu, context),
