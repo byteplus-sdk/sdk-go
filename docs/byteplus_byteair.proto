@@ -427,14 +427,6 @@ service ByteplusGeneralService {
   // In this case, please make sure you provide all fields.
   rpc ImportData(google.protobuf.Any) returns (common.OperationResponse);
 
-  // Done
-  //
-  // When the data of a day is imported completely,
-  // you should notify bytedance through `done` method,
-  // then bytedance will start handling the data in this day.
-  // If param is empty, indicate target date is previous day
-  rpc Done(google.protobuf.Any) returns (common.DoneResponse);
-
   // Predict
   //
   // Gets the list of products (ranked).

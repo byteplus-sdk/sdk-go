@@ -11,7 +11,6 @@ option go_package="github.com/byteplus-sdk/sdk-go/retailv2/protocol";
 ////   All comments start with "////" will be filtered
 
 import "byteplus_common.proto";
-import "google/protobuf/any.proto";
 
 // The user proto.
 message User {
@@ -864,13 +863,6 @@ service ByteplusRetailService {
   // Please make sure the requests are deduplicated before sending over.
   // Refer to [this](../docs/rpcs) for how to use RPCs.
   rpc WriteUserEvents(WriteUserEventsRequest) returns (WriteUserEventsResponse);
-
-  // Done
-  //
-  // Pass a date list to mark the completion of data synchronization for these days.
-  // Pass a date list to mark the completion of data synchronization for these days.
-  // Suitable for new data API
-  rpc Done(google.protobuf.Any) returns (common.DoneResponse);
 
   // Predict
   //
