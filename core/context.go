@@ -65,7 +65,11 @@ func NewContext(param *ContextParam) (*Context, error) {
 	}
 	result.fillHosts(param)
 	result.fillVolcCredentials(param)
-	result.httpCli = &fasthttp.HostClient{Addr: result.hosts[0]}
+	if param.HostHeader != "" {
+		result.hostHTTPCli = &fasthttp.HostClient{Addr: result.hosts[0]}
+	} else {
+		result.defaultHTTPCli = &fasthttp.Client{}
+	}
 	result.fillDefault()
 	return result, nil
 }
@@ -103,8 +107,9 @@ type Context struct {
 	customerHeaders map[string]string
 
 	// fasthttp default client not support define host
-	// TODO need fix redirect difference protocol issue
-	httpCli *fasthttp.HostClient
+	hostHTTPCli *fasthttp.HostClient
+
+	defaultHTTPCli *fasthttp.Client
 
 	// use air auth, otherwise use volc auth
 	useAirAuth bool

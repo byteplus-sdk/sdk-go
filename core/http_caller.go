@@ -202,13 +202,7 @@ func (c *HttpCaller) doHttpRequest(url string, headers map[string]string,
 		logs.Debug("http url:%s, cost:%s", url, time.Now().Sub(start))
 	}()
 	logs.Trace("http request header:\n%s", string(request.Header.Header()))
-	var err error
-	var httpCli = c.context.httpCli
-	if timeout > 0 {
-		err = httpCli.DoTimeout(request, response, timeout)
-	} else {
-		err = httpCli.Do(request, response)
-	}
+	err := c.smartDoRequest(timeout, request, response)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "timeout") {
 			logs.Error("do http request timeout, msg:%s url:%s", err.Error(), url)
@@ -248,6 +242,27 @@ func (c *HttpCaller) acquireRequest(url string,
 		request.SetHost(c.context.hostHeader)
 	}
 	return request
+}
+
+func (c *HttpCaller) smartDoRequest(timeout time.Duration,
+	request *fasthttp.Request, response *fasthttp.Response) error {
+	var err error
+	if c.context.hostHeader != "" {
+		var httpCli = c.context.hostHTTPCli
+		if timeout > 0 {
+			err = httpCli.DoTimeout(request, response, timeout)
+		} else {
+			err = httpCli.Do(request, response)
+		}
+	} else {
+		var httpCli = c.context.defaultHTTPCli
+		if timeout > 0 {
+			err = httpCli.DoTimeout(request, response, timeout)
+		} else {
+			err = httpCli.Do(request, response)
+		}
+	}
+	return err
 }
 
 func (c *HttpCaller) logHttpResponse(url string, response *fasthttp.Response) {

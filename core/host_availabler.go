@@ -2,11 +2,12 @@ package core
 
 import (
 	"fmt"
-	"github.com/byteplus-sdk/sdk-go/core/logs"
-	"github.com/valyala/fasthttp"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/byteplus-sdk/sdk-go/core/logs"
+	"github.com/valyala/fasthttp"
 )
 
 const (
@@ -131,7 +132,9 @@ func (receiver *HostAvailabler) switchHost() {
 			newHost, receiver.currentHost)
 		receiver.currentHost = newHost
 		receiver.urlCenter.Refresh(newHost)
-		receiver.context.httpCli = &fasthttp.HostClient{Addr: newHost}
+		if receiver.context.hostHeader != "" {
+			receiver.context.hostHTTPCli = &fasthttp.HostClient{Addr: newHost}
+		}
 	}
 }
 
