@@ -266,7 +266,7 @@ message Product {
       // The unique identifier of the category.
       // Please refer to
       // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
-      /// 该字段是取值无关的 link guide 2.5.2 取值无关
+
       string id_or_name = 1;
     }
 
@@ -295,9 +295,9 @@ message Product {
   // [
   //   {"category_depth":1,
   //    "category_nodes": [{"id_or_name":"Shoes"},
-  //                       {"id_or_name":"Men's shoes"}] },
+  //                       {"id_or_name":"Sports"}] },
   //   {"category_depth":2,
-  //    "category_nodes": [{"id_or_name":"Sports"},
+  //    "category_nodes": [{"id_or_name":"Men's shoes"},
   //                       {"id_or_name":"Basketball"}] },
   // ]
   repeated Category categories = 2;
@@ -1006,7 +1006,7 @@ message AckServerImpressionsRequest {
 
     // Required.
     // The final rank.
-    // If this is unset (or 0), we assume it is same as the value in the predict response.
+    // If this is unset (or 0), we assume it is filtered in actual impression.
     int32 rank = 3;
   }
 

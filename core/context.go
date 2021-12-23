@@ -103,6 +103,7 @@ type Context struct {
 	customerHeaders map[string]string
 
 	// fasthttp default client not support define host
+	// TODO need fix redirect difference protocol issue
 	httpCli *fasthttp.HostClient
 
 	// use air auth, otherwise use volc auth
@@ -178,6 +179,10 @@ func (receiver *Context) fillHosts(param *ContextParam) {
 		receiver.hosts = airSgHosts
 		return
 	}
+	if param.Region == RegionSaasSg {
+		receiver.hosts = saasSgHosts
+		return
+	}
 }
 
 func (receiver *Context) fillDefault() {
@@ -195,7 +200,7 @@ func (receiver *Context) fillVolcCredentials(param *ContextParam) {
 
 	// fill region
 	switch param.Region {
-	case RegionSg, RegionAirSg:
+	case RegionSg, RegionAirSg, RegionSaasSg:
 		c.Region = "ap-singapore-1"
 	case RegionUs:
 		c.Region = "us-east-1"

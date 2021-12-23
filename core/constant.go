@@ -9,6 +9,7 @@ const (
 	RegionUs
 	RegionAirCn
 	RegionAirSg
+	RegionSaasSg
 )
 
 var (
@@ -21,10 +22,14 @@ var (
 	airCnHosts = []string{"byteair-api-cn1.snssdk.com"}
 
 	airSgHosts = []string{"byteair-api-sg1.byteintlapi.com"}
+
+	saasSgHosts = []string{"rec-api-sg1.recplusapi.com"}
 )
 
 const (
 	MaxWriteItemCount = 100
+
+	MaxImportWriteCount = 2000
 
 	MaxImportItemCount = 10000
 
