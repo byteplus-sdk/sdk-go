@@ -37,12 +37,12 @@ func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
 }
 
 func (receiver *ContextParam) checkAuthRequiredField(param *ContextParam) error {
-	if param.Token == "" && param.AK == "" {
-		return errors.New("token and ak are null")
+	if param.UseAirAuth && param.Token == "" {
+		return errors.New("token is null")
 	}
 
-	if param.AK != "" && param.SK == "" {
-		return errors.New("sk is null")
+	if !param.UseAirAuth && (param.AK == "" || param.SK == "") {
+		return errors.New("ak or sk is null")
 	}
 
 	return nil
