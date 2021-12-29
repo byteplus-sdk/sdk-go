@@ -69,7 +69,7 @@ func TestTimerReport(t *testing.T) {
 func TestReportAll(t *testing.T) {
 	metricsInit()
 	wg := &sync.WaitGroup{}
-	goNum := 5
+	goNum := 10
 	for i := 0; i < goNum; i++ {
 		wg.Add(3)
 		go func() {

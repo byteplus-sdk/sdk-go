@@ -6,8 +6,8 @@ const (
 	defaultMetricsDomain = "bot.snssdk.com"
 	defaultMetricsPrefix = "byteplus.rec.sdk"
 
-	counterUrlFormat = "http://%s/api/counter"
-	otherUrlFormat   = "http://%s/api/put"
+	counterUrlFormat = "https://%s/api/counter"
+	otherUrlFormat   = "https://%s/api/put"
 
 	defaultFlushInterval = 10 * time.Second
 	reservoirSize        = 65536
