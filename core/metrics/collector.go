@@ -19,7 +19,7 @@ var (
 	metricsCollector *collector
 	onceLock         = &sync.Once{}
 	// timer stat names to be reported
-	timerStatMetrics = []string{"qps", "max", "min", "avg", "pct75", "pct90", "pct95", "pct99", "pct999"}
+	timerStatMetrics = []string{"max", "min", "avg", "pct75", "pct90", "pct95", "pct99", "pct999"}
 )
 
 type collector struct {
@@ -342,42 +342,40 @@ func buildStatMetrics(sample Sample, name string, tagKvs map[string]string) []*M
 	timestamp := uint64(time.Now().Unix())
 	metricsRequests := make([]*Metric, 0, len(timerStatMetrics))
 	for _, statName := range timerStatMetrics {
+		value, ok := getStatValue(statName, sample)
+		if !ok {
+			continue
+		}
 		metricsRequests = append(metricsRequests, &Metric{
 			Metric:    metricsCfg.prefix + "." + name + "." + statName,
 			Tags:      tagKvs,
-			Value:     getStatValue(statName, sample),
+			Value:     value,
 			Timestamp: timestamp,
 		})
 	}
 	return metricsRequests
 }
 
-func getStatValue(statName string, sample Sample) float64 {
+func getStatValue(statName string, sample Sample) (float64, bool) {
 	switch statName {
-	//qps
-	//The timerValue data will be transmitted to metrics_proxy and reported as store metric,
-	//so the qps here must also be store metric, which need to be divided by flushInterval,
-	//and the qps metric should be showed as store in grafana.
-	case "qps":
-		return float64(sample.Count()) / metricsCfg.flushInterval.Seconds()
 	case "max":
-		return float64(sample.Max())
+		return float64(sample.Max()), true
 	case "min":
-		return float64(sample.Min())
+		return float64(sample.Min()), true
 	case "avg":
-		return sample.Mean()
+		return sample.Mean(), true
 	case "pct75":
-		return sample.Percentile(0.75)
+		return sample.Percentile(0.75), true
 	case "pct90":
-		return sample.Percentile(0.90)
+		return sample.Percentile(0.90), true
 	case "pct95":
-		return sample.Percentile(0.95)
+		return sample.Percentile(0.95), true
 	case "pct99":
-		return sample.Percentile(0.99)
+		return sample.Percentile(0.99), true
 	case "pct999":
-		return sample.Percentile(0.999)
+		return sample.Percentile(0.999), true
 	}
-	return 0
+	return 0, false
 }
 
 // send httpRequest to metrics server
