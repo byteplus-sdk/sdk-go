@@ -121,7 +121,8 @@ func isEnablePrintLog() bool {
 	return metricsCfg.printLog
 }
 
-// 更新(name,tags)对应的value为最新值，每次上报完无需清空
+// Update the value corresponding to (name, tags) to the latest value,
+// and there is no need to clear it after each report.
 func emitStore(name string, value float64, tagKvs ...string) {
 	if !isEnableMetrics() {
 		return
@@ -130,7 +131,9 @@ func emitStore(name string, value float64, tagKvs ...string) {
 	updateMetric(metricsTypeStore, collectKey, value)
 }
 
-// 统计本次上报期间（flushInterval）内(name,tags)对应value的累加值，每次上报完需清空
+// Count the accumulated value of (name, tags) corresponding to the
+// value during this reporting period (flushInterval), and it needs
+// to be cleared after each reporting period
 func emitCounter(name string, value float64, tagKvs ...string) {
 	if !isEnableMetrics() {
 		return
@@ -148,39 +151,33 @@ func emitTimer(name string, value float64, tagKvs ...string) {
 }
 
 func updateMetric(metricType metricsType, collectKey string, value float64) {
-	setDefaultMetricIfNotExist(metricType, collectKey)
-	metricsCollector.locks[metricType].RLock()
-	defer metricsCollector.locks[metricType].RUnlock()
-	oldValue := metricsCollector.collectors[metricType][collectKey]
+	metric := getOrCreateMetric(metricType, collectKey)
 	switch metricType {
 	case metricsTypeStore:
-		oldValue.value = value
+		metric.value = value
 	case metricsTypeCounter:
-		oldValue.value.(*atomic.Float64).Add(value)
+		metric.value.(*atomic.Float64).Add(value)
 	case metricsTypeTimer:
-		oldValue.value.(Sample).Update(int64(value))
+		metric.value.(Sample).Update(int64(value))
 	}
-	oldValue.updated = true
+	metric.updated = true
 }
 
-func setDefaultMetricIfNotExist(metricType metricsType, collectKey string) {
-	if isMetricExist(metricType, collectKey) {
-		return
+func getOrCreateMetric(metricType metricsType, collectKey string) *metricValue {
+	metricsCollector.locks[metricType].RLock()
+	if metricsCollector.collectors[metricType][collectKey] != nil {
+		metricsCollector.locks[metricType].RUnlock()
+		return metricsCollector.collectors[metricType][collectKey]
 	}
+	metricsCollector.locks[metricType].RUnlock()
+
+	// set default metric
 	metricsCollector.locks[metricType].Lock()
 	defer metricsCollector.locks[metricType].Unlock()
 	if metricsCollector.collectors[metricType][collectKey] == nil {
 		metricsCollector.collectors[metricType][collectKey] = buildDefaultMetric(metricType)
 	}
-}
-
-func isMetricExist(metricType metricsType, collectKey string) bool {
-	metricsCollector.locks[metricType].RLock()
-	defer metricsCollector.locks[metricType].RUnlock()
-	if metricsCollector.collectors[metricType][collectKey] != nil {
-		return true
-	}
-	return false
+	return metricsCollector.collectors[metricType][collectKey]
 }
 
 func buildDefaultMetric(metricType metricsType) *metricValue {
@@ -316,11 +313,11 @@ func flushTimer() {
 				return
 			}
 			snapshot := metric.value.(Sample).Snapshot()
+			// clear sample every sample period
+			metric.value.(Sample).Clear()
 			metricsRequests = append(metricsRequests, buildStatMetrics(snapshot, name, tagKvs)...)
 			// reset updated tag after report
 			metric.updated = false
-			// clear sample every sample period
-			metric.value.(Sample).Clear()
 		}
 	}
 	metricsCollector.locks[metricsTypeTimer].RUnlock()
