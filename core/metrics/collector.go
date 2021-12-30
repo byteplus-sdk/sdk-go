@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/byteplus-sdk/sdk-go/core/logs"
-	gm "github.com/rcrowley/go-metrics"
 	"github.com/valyala/fasthttp"
+	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
+	"math"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -29,19 +30,19 @@ type config struct {
 	enableMetrics bool
 	domain        string
 	prefix        string
-	printLog      bool //whether print logs during collecting metrics
+	printLog      bool // whether print logs during collecting metrics
 	flushInterval time.Duration
 }
 
 type metricValue struct {
-	value   interface{}
-	updated bool // When there is a new report, updated is true, otherwise it is false
-	lock    *sync.RWMutex
+	value        interface{}
+	flushedValue interface{}
+	updated      bool // When there is a new report, updated is true, otherwise it is false
 }
 
 type timerValue struct {
-	sample gm.Sample
-	count  int64
+	sample Sample
+	count  *atomic.Int64
 }
 
 // Init As long as the Init function is called, the metrics are enabled
@@ -176,17 +177,16 @@ func buildDefaultMetric(metricType metricsType) *metricValue {
 	if metricType == metricsTypeTimer {
 		return &metricValue{
 			value: &timerValue{
-				sample: gm.NewExpDecaySample(reservoirSize, decayAlpha),
-				count:  0,
+				sample: NewExpDecaySample(reservoirSize, decayAlpha),
+				count:  atomic.NewInt64(0),
 			},
 			updated: false,
-			lock:    &sync.RWMutex{},
 		}
 	}
 	return &metricValue{
-		value:   float64(0),
-		updated: false,
-		lock:    &sync.RWMutex{},
+		value:        atomic.NewFloat64(0),
+		flushedValue: atomic.NewFloat64(0),
+		updated:      false,
 	}
 }
 
@@ -194,18 +194,16 @@ func updateMetric(metricType metricsType, collectKey string, value float64) {
 	metricsCollector.locks[metricType].RLock()
 	defer metricsCollector.locks[metricType].RUnlock()
 	oldValue := metricsCollector.collectors[metricType][collectKey]
-	oldValue.lock.Lock()
-	defer oldValue.lock.Unlock()
-	oldValue.updated = true
 	switch metricType {
 	case metricsTypeStore:
-		oldValue.value = value
+		oldValue.value.(*atomic.Float64).Store(value)
 	case metricsTypeCounter:
-		oldValue.value = oldValue.value.(float64) + value
+		oldValue.value.(*atomic.Float64).Add(value)
 	case metricsTypeTimer:
 		oldValue.value.(*timerValue).sample.Update(int64(value))
-		oldValue.value.(*timerValue).count++
+		oldValue.value.(*timerValue).count.Inc()
 	}
+	oldValue.updated = true
 }
 
 func startReport() {
@@ -237,20 +235,18 @@ func flushStore() {
 		if !ok {
 			continue
 		}
-		metric.lock.Lock()
 		if metric.updated { // if updated is false, means no metric emit
 			metricsRequest := &Metric{
 				Metric:    metricsCfg.prefix + "." + name,
 				Tags:      tagKvs,
-				Value:     metric.value.(float64),
+				Value:     metric.value.(*atomic.Float64).Load(),
 				Timestamp: uint64(time.Now().Unix()),
 			}
 			metricsRequests = append(metricsRequests, metricsRequest)
 			// reset updated tag after report
 			metric.updated = false
-			metric.value = float64(0)
+			metric.value.(*atomic.Float64).Store(0)
 		}
-		metric.lock.Unlock()
 	}
 	metricsCollector.locks[metricsTypeStore].RUnlock()
 	if len(metricsRequests) > 0 {
@@ -275,21 +271,25 @@ func flushCounter() {
 		if !ok {
 			continue
 		}
-		metric.lock.Lock()
 		if metric.updated {
+			valueCopy := metric.value.(*atomic.Float64).Load()
 			metricsRequest := &Metric{
 				Metric:    metricsCfg.prefix + "." + name,
 				Tags:      tagKvs,
-				Value:     metric.value.(float64),
+				Value:     valueCopy - metric.flushedValue.(*atomic.Float64).Load(),
 				Timestamp: uint64(time.Now().Unix()),
 			}
 			metricsRequests = append(metricsRequests, metricsRequest)
 			// reset updated tag after report
 			metric.updated = false
-			// After each flushInterval of the counter is reported, the accumulated metric needs to be cleared
-			metric.value = float64(0)
+			// after each flushInterval of the counter is reported, the accumulated metric needs to be cleared
+			metric.flushedValue.(*atomic.Float64).Store(valueCopy)
+			// if the value is too large, reset it
+			if valueCopy >= math.MaxFloat64/2 {
+				metric.value.(*atomic.Float64).Store(0)
+				metric.flushedValue.(*atomic.Float64).Store(0)
+			}
 		}
-		metric.lock.Unlock()
 	}
 	metricsCollector.locks[metricsTypeCounter].RUnlock()
 
@@ -315,11 +315,10 @@ func flushTimer() {
 		if !ok {
 			return
 		}
-		metric.lock.Lock()
 		if metric.updated {
 			timestamp := time.Now().Unix()
 			snapshot := metric.value.(*timerValue).sample.Snapshot()
-			count := metric.value.(*timerValue).count
+			count := metric.value.(*timerValue).count.Load()
 
 			//qps
 			//The timerValue data will be transmitted to metrics_proxy and reported as store metric,
@@ -391,9 +390,8 @@ func flushTimer() {
 			// reset updated tag after report
 			metric.updated = false
 			//count is the counter metric and needs to be cleared after each report
-			metric.value.(*timerValue).count = 0
+			metric.value.(*timerValue).count.Store(0)
 		}
-		metric.lock.Unlock()
 	}
 	metricsCollector.locks[metricsTypeTimer].RUnlock()
 	if len(metricsRequests) > 0 {
