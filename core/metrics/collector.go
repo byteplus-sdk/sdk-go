@@ -18,6 +18,8 @@ var (
 	metricsCfg       *config
 	metricsCollector *collector
 	onceLock         = &sync.Once{}
+	// timer stat names to be reported
+	timerStatMetrics = []string{"qps", "max", "min", "avg", "pct75", "pct90", "pct95", "pct99", "pct999"}
 )
 
 type collector struct {
@@ -38,11 +40,6 @@ type metricValue struct {
 	value        interface{}
 	flushedValue interface{}
 	updated      bool // When there is a new report, updated is true, otherwise it is false
-}
-
-type timerValue struct {
-	sample Sample
-	count  *atomic.Int64
 }
 
 // Init As long as the Init function is called, the metrics are enabled
@@ -130,7 +127,6 @@ func emitStore(name string, value float64, tagKvs ...string) {
 		return
 	}
 	collectKey := buildCollectKey(name, tagKvs)
-	getOrStoreDefaultMetric(metricsTypeStore, collectKey)
 	updateMetric(metricsTypeStore, collectKey, value)
 }
 
@@ -140,7 +136,6 @@ func emitCounter(name string, value float64, tagKvs ...string) {
 		return
 	}
 	collectKey := buildCollectKey(name, tagKvs)
-	getOrStoreDefaultMetric(metricsTypeCounter, collectKey)
 	updateMetric(metricsTypeCounter, collectKey, value)
 }
 
@@ -149,11 +144,26 @@ func emitTimer(name string, value float64, tagKvs ...string) {
 		return
 	}
 	collectKey := buildCollectKey(name, tagKvs)
-	getOrStoreDefaultMetric(metricsTypeTimer, collectKey)
 	updateMetric(metricsTypeTimer, collectKey, value)
 }
 
-func getOrStoreDefaultMetric(metricType metricsType, collectKey string) {
+func updateMetric(metricType metricsType, collectKey string, value float64) {
+	setDefaultMetricIfNotExist(metricType, collectKey)
+	metricsCollector.locks[metricType].RLock()
+	defer metricsCollector.locks[metricType].RUnlock()
+	oldValue := metricsCollector.collectors[metricType][collectKey]
+	switch metricType {
+	case metricsTypeStore:
+		oldValue.value = value
+	case metricsTypeCounter:
+		oldValue.value.(*atomic.Float64).Add(value)
+	case metricsTypeTimer:
+		oldValue.value.(Sample).Update(int64(value))
+	}
+	oldValue.updated = true
+}
+
+func setDefaultMetricIfNotExist(metricType metricsType, collectKey string) {
 	if isMetricExist(metricType, collectKey) {
 		return
 	}
@@ -174,36 +184,26 @@ func isMetricExist(metricType metricsType, collectKey string) bool {
 }
 
 func buildDefaultMetric(metricType metricsType) *metricValue {
-	if metricType == metricsTypeTimer {
+	switch metricType {
+	//timer
+	case metricsTypeTimer:
 		return &metricValue{
-			value: &timerValue{
-				sample: NewExpDecaySample(reservoirSize, decayAlpha),
-				count:  atomic.NewInt64(0),
-			},
+			value:   NewUniformSample(reservoirSize),
 			updated: false,
 		}
-	}
-	return &metricValue{
-		value:        atomic.NewFloat64(0),
-		flushedValue: atomic.NewFloat64(0),
-		updated:      false,
-	}
-}
-
-func updateMetric(metricType metricsType, collectKey string, value float64) {
-	metricsCollector.locks[metricType].RLock()
-	defer metricsCollector.locks[metricType].RUnlock()
-	oldValue := metricsCollector.collectors[metricType][collectKey]
-	switch metricType {
-	case metricsTypeStore:
-		oldValue.value.(*atomic.Float64).Store(value)
+	//counter
 	case metricsTypeCounter:
-		oldValue.value.(*atomic.Float64).Add(value)
-	case metricsTypeTimer:
-		oldValue.value.(*timerValue).sample.Update(int64(value))
-		oldValue.value.(*timerValue).count.Inc()
+		return &metricValue{
+			value:        atomic.NewFloat64(0),
+			flushedValue: atomic.NewFloat64(0),
+			updated:      false,
+		}
 	}
-	oldValue.updated = true
+	//store
+	return &metricValue{
+		value:   float64(0),
+		updated: false,
+	}
 }
 
 func startReport() {
@@ -228,24 +228,23 @@ func startReport() {
 }
 
 func flushStore() {
-	metricsRequests := make([]*Metric, 0)
+	metricsRequests := make([]*Metric, 0, len(metricsCollector.collectors[metricsTypeStore]))
 	metricsCollector.locks[metricsTypeStore].RLock()
 	for key, metric := range metricsCollector.collectors[metricsTypeStore] {
-		name, tagKvs, ok := parseNameAndTags(key)
-		if !ok {
-			continue
-		}
 		if metric.updated { // if updated is false, means no metric emit
+			name, tagKvs, ok := parseNameAndTags(key)
+			if !ok {
+				continue
+			}
 			metricsRequest := &Metric{
 				Metric:    metricsCfg.prefix + "." + name,
 				Tags:      tagKvs,
-				Value:     metric.value.(*atomic.Float64).Load(),
+				Value:     metric.value.(float64),
 				Timestamp: uint64(time.Now().Unix()),
 			}
 			metricsRequests = append(metricsRequests, metricsRequest)
 			// reset updated tag after report
 			metric.updated = false
-			metric.value.(*atomic.Float64).Store(0)
 		}
 	}
 	metricsCollector.locks[metricsTypeStore].RUnlock()
@@ -264,14 +263,14 @@ func flushStore() {
 }
 
 func flushCounter() {
-	metricsRequests := make([]*Metric, 0)
+	metricsRequests := make([]*Metric, 0, len(metricsCollector.collectors[metricsTypeCounter]))
 	metricsCollector.locks[metricsTypeCounter].RLock()
 	for key, metric := range metricsCollector.collectors[metricsTypeCounter] {
-		name, tagKvs, ok := parseNameAndTags(key)
-		if !ok {
-			continue
-		}
 		if metric.updated {
+			name, tagKvs, ok := parseNameAndTags(key)
+			if !ok {
+				continue
+			}
 			valueCopy := metric.value.(*atomic.Float64).Load()
 			metricsRequest := &Metric{
 				Metric:    metricsCfg.prefix + "." + name,
@@ -308,89 +307,20 @@ func flushCounter() {
 }
 
 func flushTimer() {
-	metricsRequests := make([]*Metric, 0)
+	metricsRequests := make([]*Metric, 0, len(metricsCollector.collectors[metricsTypeTimer])*len(timerStatMetrics))
 	metricsCollector.locks[metricsTypeTimer].RLock()
 	for key, metric := range metricsCollector.collectors[metricsTypeTimer] {
-		name, tagKvs, ok := parseNameAndTags(key)
-		if !ok {
-			return
-		}
 		if metric.updated {
-			timestamp := time.Now().Unix()
-			snapshot := metric.value.(*timerValue).sample.Snapshot()
-			count := metric.value.(*timerValue).count.Load()
-
-			//qps
-			//The timerValue data will be transmitted to metrics_proxy and reported as store metric,
-			//so the qps here must also be store metric, which need to be divided by flushInterval,
-			//and the qps metric should be showed as store in grafana.
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "qps",
-				Tags:      tagKvs,
-				Value:     float64(count) / metricsCfg.flushInterval.Seconds(),
-				Timestamp: uint64(timestamp),
-			})
-			//max
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "max",
-				Tags:      tagKvs,
-				Value:     float64(snapshot.Max()),
-				Timestamp: uint64(timestamp),
-			})
-			//min
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "min",
-				Tags:      tagKvs,
-				Value:     float64(snapshot.Min()),
-				Timestamp: uint64(timestamp),
-			})
-			//avg
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "avg",
-				Tags:      tagKvs,
-				Value:     snapshot.Mean(),
-				Timestamp: uint64(timestamp),
-			})
-			//pc75
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "pct75",
-				Tags:      tagKvs,
-				Value:     snapshot.Percentile(0.75),
-				Timestamp: uint64(timestamp),
-			})
-			//pc90
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "pct90",
-				Tags:      tagKvs,
-				Value:     snapshot.Percentile(0.90),
-				Timestamp: uint64(timestamp),
-			})
-			//pc95
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "pct95",
-				Tags:      tagKvs,
-				Value:     snapshot.Percentile(0.95),
-				Timestamp: uint64(timestamp),
-			})
-			//pc99
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "pct99",
-				Tags:      tagKvs,
-				Value:     snapshot.Percentile(0.99),
-				Timestamp: uint64(timestamp),
-			})
-			//pc999
-			metricsRequests = append(metricsRequests, &Metric{
-				Metric:    metricsCfg.prefix + "." + name + "." + "pct999",
-				Tags:      tagKvs,
-				Value:     snapshot.Percentile(0.999),
-				Timestamp: uint64(timestamp),
-			})
-
+			name, tagKvs, ok := parseNameAndTags(key)
+			if !ok {
+				return
+			}
+			snapshot := metric.value.(Sample).Snapshot()
+			metricsRequests = append(metricsRequests, buildStatMetrics(snapshot, name, tagKvs)...)
 			// reset updated tag after report
 			metric.updated = false
-			//count is the counter metric and needs to be cleared after each report
-			metric.value.(*timerValue).count.Store(0)
+			// clear sample every sample period
+			metric.value.(Sample).Clear()
 		}
 	}
 	metricsCollector.locks[metricsTypeTimer].RUnlock()
@@ -406,6 +336,48 @@ func flushTimer() {
 			logs.Debug("[Metrics] exec timer success, url:%s, metricsRequests:%+v", url, metricsRequests)
 		}
 	}
+}
+
+func buildStatMetrics(sample Sample, name string, tagKvs map[string]string) []*Metric {
+	timestamp := uint64(time.Now().Unix())
+	metricsRequests := make([]*Metric, 0, len(timerStatMetrics))
+	for _, statName := range timerStatMetrics {
+		metricsRequests = append(metricsRequests, &Metric{
+			Metric:    metricsCfg.prefix + "." + name + "." + statName,
+			Tags:      tagKvs,
+			Value:     getStatValue(statName, sample),
+			Timestamp: timestamp,
+		})
+	}
+	return metricsRequests
+}
+
+func getStatValue(statName string, sample Sample) float64 {
+	switch statName {
+	//qps
+	//The timerValue data will be transmitted to metrics_proxy and reported as store metric,
+	//so the qps here must also be store metric, which need to be divided by flushInterval,
+	//and the qps metric should be showed as store in grafana.
+	case "qps":
+		return float64(sample.Count()) / metricsCfg.flushInterval.Seconds()
+	case "max":
+		return float64(sample.Max())
+	case "min":
+		return float64(sample.Min())
+	case "avg":
+		return sample.Mean()
+	case "pct75":
+		return sample.Percentile(0.75)
+	case "pct90":
+		return sample.Percentile(0.90)
+	case "pct95":
+		return sample.Percentile(0.95)
+	case "pct99":
+		return sample.Percentile(0.99)
+	case "pct999":
+		return sample.Percentile(0.999)
+	}
+	return 0
 }
 
 // send httpRequest to metrics server
@@ -433,19 +405,6 @@ func send(metricRequests *MetricMessage, url string) error {
 	return err
 }
 
-func doSend(request *fasthttp.Request) error {
-	response := fasthttp.AcquireResponse()
-	defer func() {
-		fasthttp.ReleaseRequest(request)
-		fasthttp.ReleaseResponse(response)
-	}()
-	err := metricsCollector.httpCli.DoTimeout(request, response, defaultHttpTimeout)
-	if err == nil && response.StatusCode() == fasthttp.StatusOK {
-		return nil
-	}
-	return err
-}
-
 func buildMetricsRequest(metricRequests *MetricMessage, url string) (*fasthttp.Request, error) {
 	request := fasthttp.AcquireRequest()
 	request.Header.SetMethod(fasthttp.MethodPost)
@@ -461,4 +420,17 @@ func buildMetricsRequest(metricRequests *MetricMessage, url string) (*fasthttp.R
 	}
 	request.SetBodyRaw(body)
 	return request, nil
+}
+
+func doSend(request *fasthttp.Request) error {
+	response := fasthttp.AcquireResponse()
+	defer func() {
+		fasthttp.ReleaseRequest(request)
+		fasthttp.ReleaseResponse(response)
+	}()
+	err := metricsCollector.httpCli.DoTimeout(request, response, defaultHttpTimeout)
+	if err == nil && response.StatusCode() == fasthttp.StatusOK {
+		return nil
+	}
+	return err
 }
