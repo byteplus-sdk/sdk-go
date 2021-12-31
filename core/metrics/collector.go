@@ -229,6 +229,8 @@ func flushStore() {
 	metricsCollector.locks[metricsTypeStore].RLock()
 	for key, metric := range metricsCollector.collectors[metricsTypeStore] {
 		if metric.updated { // if updated is false, means no metric emit
+			// reset updated tag after report
+			metric.updated = false
 			name, tagKvs, ok := parseNameAndTags(key)
 			if !ok {
 				continue
@@ -240,8 +242,6 @@ func flushStore() {
 				Timestamp: uint64(time.Now().Unix()),
 			}
 			metricsRequests = append(metricsRequests, metricsRequest)
-			// reset updated tag after report
-			metric.updated = false
 		}
 	}
 	metricsCollector.locks[metricsTypeStore].RUnlock()
@@ -264,6 +264,8 @@ func flushCounter() {
 	metricsCollector.locks[metricsTypeCounter].RLock()
 	for key, metric := range metricsCollector.collectors[metricsTypeCounter] {
 		if metric.updated {
+			// reset updated tag after report
+			metric.updated = false
 			name, tagKvs, ok := parseNameAndTags(key)
 			if !ok {
 				continue
@@ -276,8 +278,6 @@ func flushCounter() {
 				Timestamp: uint64(time.Now().Unix()),
 			}
 			metricsRequests = append(metricsRequests, metricsRequest)
-			// reset updated tag after report
-			metric.updated = false
 			// after each flushInterval of the counter is reported, the accumulated metric needs to be cleared
 			metric.flushedValue.(*atomic.Float64).Store(valueCopy)
 			// if the value is too large, reset it
@@ -308,6 +308,8 @@ func flushTimer() {
 	metricsCollector.locks[metricsTypeTimer].RLock()
 	for key, metric := range metricsCollector.collectors[metricsTypeTimer] {
 		if metric.updated {
+			// reset updated tag after report
+			metric.updated = false
 			name, tagKvs, ok := parseNameAndTags(key)
 			if !ok {
 				return
@@ -316,8 +318,6 @@ func flushTimer() {
 			// clear sample every sample period
 			metric.value.(Sample).Clear()
 			metricsRequests = append(metricsRequests, buildStatMetrics(snapshot, name, tagKvs)...)
-			// reset updated tag after report
-			metric.updated = false
 		}
 	}
 	metricsCollector.locks[metricsTypeTimer].RUnlock()
