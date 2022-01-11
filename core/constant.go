@@ -27,9 +27,7 @@ var (
 )
 
 const (
-	MaxWriteItemCount = 100
-
-	MaxImportWriteCount = 2000
+	MaxWriteItemCount = 2000
 
 	MaxImportItemCount = 10000
 
