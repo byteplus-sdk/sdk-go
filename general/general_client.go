@@ -3,7 +3,6 @@ package general
 import (
 	"github.com/byteplus-sdk/sdk-go/common"
 
-	. "github.com/byteplus-sdk/sdk-go/common/protocol"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	. "github.com/byteplus-sdk/sdk-go/general/protocol"
 )
@@ -22,22 +21,6 @@ type Client interface {
 	// data (by providing all the fields, some data type not support update, e.g. user event).
 	WriteData(dataList []map[string]interface{}, topic string,
 		opts ...option.Option) (*WriteResponse, error)
-
-	// ImportData
-	//
-	// Bulk import of data.
-	//
-	// `Operation.response` is of type ImportResponse. Note that it is
-	// possible for a subset of the items to be successfully inserted.
-	// Operation.metadata is of type Metadata.
-	// This call returns immediately after the server finishes the
-	// preliminary validations and persists the request. The caller should
-	// keep polling `OperationResponse.operation.name` using `GetOperation`
-	// call below to check the status.
-	// Note: This can also be used to update the existing data(some data type not support).
-	// In this case, please make sure you provide all fields.
-	ImportData(dataList []map[string]interface{}, topic string,
-		opts ...option.Option) (*OperationResponse, error)
 
 	// Predict
 	//
