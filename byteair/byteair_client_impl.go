@@ -35,11 +35,8 @@ func (c *clientImpl) Release() {
 
 func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
 	opts ...option.Option) (*WriteResponse, error) {
-	if len(dataList) > MaxWriteItemCount {
-		logs.Warn("[ByteplusSDK][WriteData] item count more than '{}'", MaxWriteItemCount)
-		if len(dataList) > MaxImportItemCount {
-			return nil, TooManyItemsErr
-		}
+	if len(dataList) > MaxImportItemCount {
+		return nil, TooManyItemsErr
 	}
 	urlFormat := c.gu.writeDataURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
