@@ -388,6 +388,10 @@ message CallbackRequest {
   // Required.
   // This should be same as `PredictResponse.request_id`.
   string predict_request_id = 4;
+
+  // optional.
+  // All the callback extra info here.
+  map<string, string> extra = 100;
 }
 
 message CallbackResponse {
