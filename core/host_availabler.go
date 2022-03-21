@@ -36,7 +36,7 @@ func NewHostAvailabler(urlCenter URLCenter, context *Context) *HostAvailabler {
 		hostHttpCliMap[host] = &fasthttp.HostClient{Addr: host}
 	}
 	availabler.hostWindowMap = hostWindowMap
-	availabler.hostHttpCliMap = hostHttpCliMap
+	availabler.hostHTTPCliMap = hostHttpCliMap
 	AsyncExecute(availabler.scheduleFunc())
 	return availabler
 }
@@ -48,7 +48,7 @@ type HostAvailabler struct {
 	currentHost    string
 	availableHosts []string
 	hostWindowMap  map[string]*window
-	hostHttpCliMap map[string]*fasthttp.HostClient
+	hostHTTPCliMap map[string]*fasthttp.HostClient
 	pingUrlFormat  string
 }
 
@@ -108,7 +108,7 @@ func (receiver *HostAvailabler) ping(host string) bool {
 	if len(receiver.context.hostHeader) > 0 {
 		request.SetHost(receiver.context.hostHeader)
 	}
-	httpCli := receiver.hostHttpCliMap[host]
+	httpCli := receiver.hostHTTPCliMap[host]
 	err := httpCli.DoTimeout(request, response, pingTimeout)
 	cost := time.Now().Sub(start)
 	if err == nil && response.StatusCode() == fasthttp.StatusOK {

@@ -93,7 +93,7 @@ func TestHttpCaller_withOptionQueries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &HttpCaller{
+			c := &HTTPCaller{
 				context: tt.fields.context,
 			}
 			if got := c.withOptionQueries(tt.args.options, tt.args.url); got != tt.want {

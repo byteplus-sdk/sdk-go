@@ -1,4 +1,4 @@
-package byteair
+package media
 
 import (
 	"github.com/byteplus-sdk/sdk-go/common"
@@ -9,8 +9,8 @@ type ClientBuilder struct {
 	param core.ContextParam
 }
 
-func (receiver *ClientBuilder) ProjectId(projectId string) *ClientBuilder {
-	receiver.param.Tenant = projectId
+func (receiver *ClientBuilder) Tenant(tenant string) *ClientBuilder {
+	receiver.param.Tenant = tenant
 	return receiver
 }
 
@@ -49,43 +49,29 @@ func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 	return receiver
 }
 
-func (receiver *ClientBuilder) AK(ak string) *ClientBuilder {
-	receiver.param.AK = ak
-	return receiver
-}
-
-func (receiver *ClientBuilder) SK(sk string) *ClientBuilder {
-	receiver.param.SK = sk
-	return receiver
-}
-
-func (receiver *ClientBuilder) UseAirAuth() *ClientBuilder {
-	receiver.param.UseAirAuth = true
-	return receiver
-}
-
 func (receiver *ClientBuilder) Build() (Client, error) {
+	receiver.param.UseAirAuth = true
 	context, err := core.NewContext(&receiver.param)
 	if err != nil {
 		return nil, err
 	}
-	gu := receiver.buildByteairURL(context)
+	mu := receiver.buildMediaURL(context)
 	httpCaller := core.NewHTTPCaller(context)
 	client := &clientImpl{
-		Client:  common.NewClient(httpCaller, gu.cu),
+		Client:  common.NewClient(httpCaller, mu.cu),
 		hCaller: httpCaller,
-		gu:      gu,
-		hostAva: core.NewHostAvailabler(gu, context),
+		mu:      mu,
+		hostAva: core.NewHostAvailabler(mu, context),
 	}
 	return client, nil
 }
 
-func (receiver *ClientBuilder) buildByteairURL(context *core.Context) *byteairURL {
-	gu := &byteairURL{
+func (receiver *ClientBuilder) buildMediaURL(context *core.Context) *mediaURL {
+	mu := &mediaURL{
 		schema: context.Schema(),
 		tenant: context.Tenant(),
 		cu:     common.NewURL(context),
 	}
-	gu.Refresh(context.Hosts()[0])
-	return gu
+	mu.Refresh(context.Hosts()[0])
+	return mu
 }

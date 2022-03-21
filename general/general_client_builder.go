@@ -29,8 +29,8 @@ func (receiver *ClientBuilder) Schema(schema string) *ClientBuilder {
 	return receiver
 }
 
-func (receiver *ClientBuilder) HostHeader(host string) *ClientBuilder {
-	receiver.param.HostHeader = host
+func (receiver *ClientBuilder) HostHeader(hostHeader string) *ClientBuilder {
+	receiver.param.HostHeader = hostHeader
 	return receiver
 }
 
@@ -56,7 +56,7 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 		return nil, err
 	}
 	gu := receiver.buildGeneralURL(context)
-	httpCaller := core.NewHttpCaller(context)
+	httpCaller := core.NewHTTPCaller(context)
 	client := &clientImpl{
 		Client:  common.NewClient(httpCaller, gu.cu),
 		hCaller: httpCaller,

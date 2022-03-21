@@ -126,7 +126,7 @@ message User {
 message WriteUsersRequest {
   // Required.
   // A list of users to write.
-  // The max # of users allowed is 100, otherwise a standard 400 error is
+  // The max # of users allowed is 2000, otherwise a standard 400 error is
   // returned.
   repeated User users = 1;
 
@@ -478,7 +478,7 @@ message Product {
 // Request proto for WriteProduct method.
 message WriteProductsRequest {
   // Required.
-  // A list of product to write. The max is 100 items.
+  // A list of product to write. The max is 2000 items.
   repeated Product products = 1;
 
   // Optional.
@@ -784,7 +784,7 @@ message UserEvent {
 // Request proto for WriteUserEvent method.
 message WriteUserEventsRequest {
   // Required. A list of user events to write.
-  // The max # of events allowed is 100.
+  // The max # of events allowed is 2000.
   repeated UserEvent user_events = 1;
 
   // Optional.
@@ -1026,7 +1026,7 @@ message AckServerImpressionsResponse {
 service ByteplusRetailService {
   // WriteUsers
   //
-  // Writes at most 100 users at a time. Exceeding 100 in a request results in
+  // Writes at most 2000 users at a time. Exceeding 2000 in a request results in
   // a rejection. One can use this to upload new users, or update existing
   // users (by providing all the fields).
   // Refer to [this](../docs/rpcs) for how to use RPCs.
@@ -1050,7 +1050,7 @@ service ByteplusRetailService {
 
   // WriteProducts
   //
-  // Writes at most 100 products at a time. Exceeding 100 in a request results
+  // Writes at most 2000 products at a time. Exceeding 2000 in a request results
   // in a rejection.
   // One can use this to upload new products, or update existing products (by
   // providing all the fields).  Deleting a product is unsupported. One can
@@ -1077,7 +1077,7 @@ service ByteplusRetailService {
 
   // WriteUserEvents
   //
-  // Writes at most 100 UserEvents at a time. Exceeding 100 in a request
+  // Writes at most 2000 UserEvents at a time. Exceeding 2000 in a request
   // results in a rejection. One should use this to upload new realtime
   // UserEvents.  Note: This is processing realtime data, so we won't dedupe
   // the requests.

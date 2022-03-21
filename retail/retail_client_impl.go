@@ -23,7 +23,7 @@ var (
 
 type clientImpl struct {
 	common.Client
-	hCaller *HttpCaller
+	hCaller *HTTPCaller
 	ru      *retailURL
 	hostAva *HostAvailabler
 }
@@ -39,7 +39,7 @@ func (c *clientImpl) WriteUsers(request *WriteUsersRequest,
 	}
 	url := c.ru.writeUsersURL
 	response := &WriteUsersResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (c *clientImpl) ImportUsers(request *ImportUsersRequest,
 	}
 	url := c.ru.importUsersURL
 	response := &OperationResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (c *clientImpl) WriteProducts(request *WriteProductsRequest,
 	}
 	url := c.ru.writeProductsURL
 	response := &WriteProductsResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *clientImpl) ImportProducts(request *ImportProductsRequest,
 	}
 	url := c.ru.importProductsURL
 	response := &OperationResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (c *clientImpl) WriteUserEvents(request *WriteUserEventsRequest,
 	}
 	url := c.ru.writeUserEventsURL
 	response := &WriteUserEventsResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (c *clientImpl) ImportUserEvents(request *ImportUserEventsRequest,
 	}
 	url := c.ru.importUserEventsURL
 	response := &OperationResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (c *clientImpl) Predict(request *PredictRequest, scene string,
 	opts ...option.Option) (*PredictResponse, error) {
 	url := strings.ReplaceAll(c.ru.predictURLFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (c *clientImpl) AckServerImpressions(request *AckServerImpressionsRequest,
 	opts ...option.Option) (*AckServerImpressionsResponse, error) {
 	url := c.ru.ackImpressionURL
 	response := &AckServerImpressionsResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}

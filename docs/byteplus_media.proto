@@ -1,0 +1,727 @@
+syntax = "proto3";
+
+package bytedance.byteplus.media;
+option java_package = "byteplus.sdk.media.protocol";
+option go_package="github.com/byteplus-sdk/sdk-go/media/protocol";
+
+import "byteplus_common.proto";
+
+// The user proto.
+message User {
+  // Required.
+  // The unique user identifier.
+  // The consistency is required (for the same user) among different
+  // UserEvents, PredictRequest, or any other places.
+  // Device ID or member ID is often used as user_id here.
+  //
+  // Note: If you want to encrypt the id and used the hashed value here,
+  // please do the consistent encryption for all its appearances,
+  // including UserEvents and Predict Requests.
+  //
+  // Note: If your users often switch between login/logout status
+  // (In web or mobile application), you might get inconsistent IDs
+  // (member v.s. visitor) for the same user.
+  // To avoid this, we suggested that you can use consistent ID like device ID.
+  // Sample values are "1234567", "359938082141597",
+  // "665DEA957EBFB34D41B1F1D80E4B5F89"
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#stable-user-identifier) for more details.
+  string user_id = 1;
+
+  // Optional.
+  // The gender of the given user.
+  // The accepted values are: "male", "female", and "other".
+  string gender = 2;
+
+  // Optional.
+  // The age of the given user.
+  // It can be the an (estimate) single value, or a range.
+  // e.g. "23", "18-25", "0-15", "50-100", etc.
+  string age = 3;
+
+  // Optional.
+  // The tags for the given user.
+  // Please send as many tags as possible here, even it might be a bit
+  // inaccurate or has low coverage.
+  // Some sample values are ["new users", "high buying power"], etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  repeated string tags = 4;
+
+  // Optional.
+  // The id of this user's most used device.
+  // Some sample values are "abc123", "1", etc.
+  string device_id = 5;
+
+  // Optional.
+  // Type of this user's most used device.
+  // Acceptable values are "app", "desktop-web", "mobile-web", "other".
+  string device_type = 6;
+
+  // Optional.
+  // Which subscription plan is this user on.
+  // Accepted values are "free", "paid", "other"
+  string subscriber_type = 7;
+
+  // Optional.
+  // The primary language used by this user.
+  string language = 8;
+
+  // Optional.
+  // List of content_ids consumed by this user.
+  // Some sample values are ["123","124"], etc.
+  repeated string history = 9;
+
+  // Optional.
+  // The channel where the given user is acquired.
+  // Some sample values are "AppStore", "GoogleAds", "FacebookAds", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  string activation_channel = 10;
+
+  // Optional.
+  // The level of the membership.
+  // Some sample values are "silver", "elite", "4", "5", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  string membership_level = 11;
+
+  // Optional.
+  // The timestamp when the given user activated or registered.
+  int64 registration_timestamp = 12;
+
+  // Optional.
+    // Country name.
+    // Some sample values are "USA", "UK", etc.
+    // Please refer to
+    // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  string country = 13;
+
+  // Optional.
+  // City name.
+  // Some sample values are "San Jose", "Chicago", "NYC", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  string city = 14;
+
+  // Optional.
+  // The more fine grained district or area.
+  // Some sample values are "king county", "santa monica county", etc.
+  // Please refer to
+  // [this](../docs/effective-and-efficient-data-synchronization#requirements-for-free-format-string-fields) for more details.
+  string district_or_area = 15;
+
+  // Optional.
+  // Postal code of the address. Not all countries use or require postal codes
+  // to be present.
+  string postcode = 16;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// Request proto for WriteUsers method.
+message WriteUsersRequest {
+  // Required.
+  // A list of users to write.
+  // The max # of users allowed is 2000, otherwise a standard 400 error is
+  // returned.
+  repeated User users = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The error proto for a single user.
+message UserError {
+  // Output only.
+  // The detailed error message.
+  string message = 1;
+
+  // Output only.
+  // This is the exact same user proto that was passed in the request.
+  User user = 2;
+}
+
+// The response proto for WriteUsers call.
+message WriteUsersResponse {
+  // Output only.
+  // When `status.code` is 0, all payload are successfully written.
+  // If `status.code` is 1001, `errors` is populated.
+  // Other non-zero values indicate all payload failed.
+  common.Status status = 1;
+
+  // Output only.
+  // This field is populated when `status.code` is 1001.
+  // When populated, this field contains the errors.
+  repeated UserError errors = 2;
+}
+
+// The content proto.
+message Content {
+  // Required.
+  // The unique identifier for the content.
+  // It can be series_id/entity_id/video_id/other unique identifier
+  string content_id = 1;
+
+  // Required.
+  // 1 if the content is recommendable (result in `Predict` call).
+  // 0 if the content isn't recommendable.
+  // Note: Any change of this takes up to 1 hour to take effect.
+  // Note: Even if a content isn't recommendable, please still send this to us.
+  // This is because that users might interact with such contents historically,
+  // therefore it provides reasonably strong signals.
+  int32 is_recommendable = 2;
+
+  // Required.
+  // The categories this content belongs to.
+  // The categories is a json serialized string.
+  // For example in origin json object, if a content has "Movie -> Comedy"
+  // This should be:
+  // [
+  //   {"category_depth":1,
+  //    "category_nodes": [{"id_or_name":"Movie"}] },
+  //   {"category_depth":2,
+  //    "category_nodes": [{"id_or_name":"Comedy"}] }
+  // ]
+  // If a content belongs to 2 different categories,
+  // "Movie -> Comedy" and "Movie -> Action"
+  // then
+  //
+  // [
+  //   {"category_depth":1,
+  //    "category_nodes": [{"id_or_name":"Movie"}] },
+  //   {"category_depth":2,
+  //    "category_nodes": [{"id_or_name":"Comedy"},
+  //                       {"id_or_name":"Action"}] }
+  // ]
+  // then you should serialize the json object to string, for example in python:
+  // categories = json.dumps( [
+  //     {"category_depth":1,
+  //      "category_nodes": [{"id_or_name":"Movie"}] },
+  //     {"category_depth":2,
+  //      "category_nodes": [{"id_or_name":"Comedy"}] }
+  //   ])
+  string categories = 3;
+
+  // Required.
+  // The content title.
+  string content_title = 4;
+
+  // Required.
+  // Type of the content.
+  // The acceptable values are "picture", "gif", "video", "text", "other".
+  // Note: if the content_type is video, video_duration must be non-zero.
+  string content_type = 5;
+
+  // Optional.
+  // The content description.
+  string description = 6;
+
+  // Optional.
+  // The account who created the content (i.e. the user_id) or the publisher of the video (e.g. HBO)
+  string content_owner = 7;
+
+  // Optional.
+  // The language associated with this content.
+  string language = 8;
+
+  // Optional.
+  // Internal label of this content.
+  // Some sample values are ["New", "Trending"], etc.
+  repeated string tags = 9;
+
+  // Optional.
+  // The actual tags (e.g. hashtag) displayed to user on listing page (e.g. homepage, category landing page)
+  // Sample values are: ["popular", "recommend"], etc.
+  repeated string listing_page_display_tags = 10;
+
+  // Optional.
+  // The actual tags (e.g. hashtag) displayed to user on content detail page.
+  // Sample values are: ["popular", "recommend"], etc.
+  repeated string detail_page_display_tags = 11;
+
+  // Optional.
+  // If there's an image/video/other multi-media displayed on listing page for a content.
+  // The only acceptable values are ["image", "video", "other"].
+  string listing_page_display_type = 12;
+
+  // Optional.
+  // When `listing_page_display_type` is one of the multi-media types, put the url to the media file here.
+  string cover_multimedia_url = 13;
+
+  // Optional.
+  // The rating given by the users. The value is normalized to [0.0, 5.0].
+  double user_rating = 14;
+
+  // Optional.
+  // The number of views for this content.
+  int32 views_count = 15;
+
+  // Optional.
+  // The number of comments for this content.
+  int32 comments_count = 16;
+
+  // Optional.
+  // The number of likes for this content.
+  int32 likes_count = 17;
+
+  // Optional.
+  // The number of shares for this content.
+  int32 shares_count = 18;
+
+  // Optional.
+  // Whether users need to pay (e.g. subscribe to the platform) to view this content.
+  // Note: 1 if this content need to pay
+  //       0 no need to pay for this content.
+  int32 is_paid_content = 19;
+
+  // Optional.
+  // If this is paid_content, send the original price in cents.
+  // e.g. $100.12 should be 10012 here.
+  int64 origin_price = 20;
+
+  // Optional.
+  // If this is paid_content, send the current price (after discount) in cents.
+  // e.g. $100.12 should be 10012 here.
+  int64 current_price = 21;
+
+  // Optional.
+  // The region where this content is published.
+  string publish_region = 22;
+
+  // Optional.
+  // The regions where this content can be viewed.
+  // Sample values are: ["Singapore", "India"], etc.
+  repeated string available_region = 23;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, id of the TV show.
+  // Note: if this content record is about a entity, no need to send its series and video information
+  string entity_id = 24;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, name of the TV show.
+  string entity_name = 25;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, id of the season.
+  // Note: if this content record is about a series,
+  // send the series data and corresponding entity data ( entity_id and entity_name),
+  // no need to send video related info.
+  string series_id = 26;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, which season is this.
+  int32 series_index = 27;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, name of this season.
+  string series_name = 28;
+
+  // Optional.
+  // (For OTT platform) Total number of seasons for this TV show.
+  int32 series_count = 29;
+
+  // Optional.
+  // (For OTT platform) Id of the video in a series.
+  string video_id = 30;
+
+  // Optional.
+  // (For OTT platform) Which episode is this video in this season.
+  int32 video_index = 31;
+
+  // Optional.
+  // (For OTT platform) Name of this episode.
+  string video_name = 32;
+
+  // Optional.
+  // (For OTT platform) Total number of episodes in this season.
+  int32 video_count = 33;
+
+  // Optional.
+  // (For OTT platform) The type of video e.g. movie, series, reality show etc.
+  string video_type = 34;
+
+  // Base.
+  // if content_type is video, this field is required, provide the length this video, in milliseconds.
+  int64 video_duration = 35;
+
+  // Optional.
+  // The timestamp that the content is published.
+  int64 publish_timestamp = 36;
+
+  // Optional.
+  // (For OTT platform) The timestamp when this content can be shown to users.
+  int64 copyright_start_timestamp = 37;
+
+  // Optional.
+  // (For OTT platform) The timestamp when this content stop being available to users.
+  int64 copyright_end_timestamp = 38;
+
+  // Optional.
+  // (For OTT platform) The actors starring a movie/TV show.
+  // Sample values are: ["Rachel Green", "Ross Geller"], etc.
+  repeated string actors = 39;
+
+  // Optional.
+  // (For OTT platform) The source of the content.
+  // The accepted values are ["self", "thirdparty", "other"].
+  string source = 40;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// Request proto for WriteContents method.
+message WriteContentsRequest {
+  // Required.
+  // A list of content to write. The max is 2000 items.
+  repeated Content contents = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The content error.
+message ContentError {
+  // Output only.
+  // The detailed error message.
+  string message = 1;
+
+  // Output only.
+  // The content that failed.
+  Content content = 2;
+}
+
+// The response for the WriteContents call.
+message WriteContentsResponse {
+  // Output only.
+  // When `status.code` is 0, all payload are successfully written.
+  // If `status.code` is 1001, `errors` is populated.
+  // Other non-zero values indicate all payload failed.
+  common.Status status = 1;
+
+  // Output only.
+  // This field is populated when `status.code` is 1001.
+  // When populated, this field contains the errors.
+  repeated ContentError errors = 2;
+}
+
+// The proto that represents an user event.
+message UserEvent {
+  // Required.
+  // The unique user identifier.
+  // Please refer to `User.user_id` for the details.
+  string user_id = 1;
+
+  // Required.
+  // The user event type.
+  // The acceptable values are:
+  // "impression", "click", "play", "playover", "like", "comment",
+  // "purchase", "add-to-cart", "remove-from-cart", "add-to-favorites",
+  // "remove-from-favorites", "search", "stay-detail-page".
+  //
+  // Some of these event_types are required.
+  // Here are the definitions:
+  //
+  // impression: Required. When a content is seen by a user.
+  //             It can be client side (preferred) or server side.
+  //             Note:
+  //                * content_id must be non-empty.
+  //                * scene_name must be non-empty.
+  //                * if multiple contents are seen by a user together, send them in separate user events.
+  //
+  // click:      Required. When a content is clicked by a user.
+  //             Note:
+  //                * content_id must be non-empty.
+  //                * scene_name must be non-empty.
+  //
+  // play:       Optional. If content_type is video, when a user plays a video.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // playover:   Optional. If content_type is video, when a user completes playing this video.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // like:       Optional. When a content is liked by a user.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // comment:    Optional. If content_type is video, when a user plays a video.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // purchase:   Required. When a user completed a purchase.
+  //             Note:
+  //                * content_id must be non-empty.
+  //                * If one order contains multiple contents, send them in separate user events.
+  //
+  // add-to-cart:  Optional. When user adds a content to the shopping cart.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // remove-from-cart: Optional. When user removes a content to the shopping cart.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // add-to-favorites: Optional. When user adds a content to favorite list.
+  //             Note:
+  //                * content_id must be non-empty.
+  //                *  if "favorite list" is not a feature for your platform you can report the "like" event directly,
+  //                   no need to report the "add-to-favorites" event.
+  //
+  // remove-from-favorites: Optional. When user removes a content from favorite list.
+  //             Note:
+  //                * content_id must be non-empty.
+  //
+  // search:     Optional. The user search event.
+  //             Note:
+  //                * content_id must be non-empty.
+  //                * query must be non-empty.
+  //
+  // stay-detail-page: Optional. When a user stays on a content detail page, report the user stay
+  //             time on content details page.
+  //             Note:
+  //                * content_id must be non-empty.
+  //                * detail_stay_time must be not-zero.
+  //
+  // Note: This field is only for the event type, the actual scene is kept
+  // separately.
+  string event_type = 2;
+
+  // Required.
+  // The timestamp when the event happened.
+  int64 event_timestamp = 3;
+
+  // Depends on event_type.
+  // When event_type is search, this field should be empty. Otherwise it is required.
+  string content_id = 4;
+
+  // Optional.
+  // The source strategy for this user event.
+  // Acceptable values are "self", "byteplus", "other".
+  // self   :  came from caller's own engine.
+  // byteplus:  came from byteplus's engine.
+  // other  :  came from the third-party engine.
+  string traffic_source = 5;
+
+  // Optional.
+  // This will be provided by BytePlus,
+  // to match this user event with the request_id when calling BytePlus' Predict API.
+  string request_id = 6;
+
+  // Optional.
+  // This will be provided by BytePlus, it contains the detailed algo information from BytePlus.
+  string rec_info = 7;
+
+  // Optional.
+  // The identifier used to hook all the relevant events in a user session.
+  string attribution_token = 8;
+
+  // Depends on event_type.
+  // The unique identifier for the scene.
+  // It can be Home page, Search page, Details page, etc.
+  // It is strongly recommended that you split the scene if possible.
+  // Note:
+  //  * If `event_type` is impression or click, this is required.
+  //  * If `event type` is cart/favorite/purchase/search, this is optional.
+  string scene_name = 9;
+
+  // Optional.
+  // The page number.
+  // It can be:
+  // 1. Users swipe the screen for X times then see the content.
+  // 2. Users go to page X and see the content.
+  // In this case, X is the page number.
+  //
+  // This should default to be 0. That means everything fits into 1 page.
+  int32 page_number = 10;
+
+  // Optional.
+  // The offset starting from 1 within the page above.
+  int32 offset = 11;
+
+  // Optional.
+  // Accepted values are "0", "1", "2"
+  //  "0": play from start.
+  //  "1": continue play.
+  //  "2": trial play.
+  string play_type = 12;
+
+  // Optional.
+  // For video content, the length of user watch time, in second.
+  int64 play_duration = 13;
+
+  // Optional.
+  // For video content, the starting point of user's watch,
+  // e.g. if user starts watching from beginning,
+  // this should be 0; if user starts watching from 2 min 30 seconds, this should be 150.
+  int32 start_time = 14;
+
+  // Optional.
+  // For video content, the end point of user's watch,
+  // e.g. if user starts stops watching 5 min into the video this should be 300.
+  int32 end_time = 15;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, id of the TV show
+  // Note: if this content record is about a entity, no need to send its series and video information.
+  string entity_id = 16;
+
+  // Optional.
+  // (For OTT platform) If this is a TV show with multiple seasons, id of the season.
+  // Note: if this content record is about a series,
+  // send the series data and corresponding entity data ( entity_id and entity_name),
+  // no need to send video related info.
+  string series_id = 17;
+
+  // Optional.
+  // (For OTT platform) Id of the video in a series.
+  string video_id = 18;
+
+  // Optional.
+  // On a content detail page,
+  // if user impress/click on a recommended content, send the id of the main content.
+  string parent_content_id = 19;
+
+  // Depends on event_type.
+  // The stay time(in seconds) on detail page.
+  // When event_type is stay-detail-page, this field must be non-zero.
+  int32 detail_stay_time = 20;
+
+  // Depends on event_type.
+  // This is required for the search event.
+  // Please also provide this when the purchase/impression event follows the search event.
+  string query = 21;
+
+  // Required.
+  // The platform used by the user.
+  // The acceptable values are "app", "desktop-web", "mobile-web", "other".
+  //  app: user use APP.
+  //  desktop-web: user use desktop web.
+  //  mobile-web: user use mobile web.
+  string device = 22;
+
+  // Optional.
+  // The platform used by the user.
+  // The acceptable values are "android", "ios", "windows", "other".
+  string os_type = 23;
+
+  // Optional.
+  // Your application version.
+  // e.g. V9.0.8.
+  string app_version = 24;
+
+  // Optional.
+  // The device model.
+  // e.g. "iPhone10", "Pixel 4".
+  string device_model = 25;
+
+  // Optional.
+  // The brand of the device.
+  // e.g. "Samsung".
+  string device_brand = 26;
+
+  // Optional.
+  // The operating system version.
+  // e.g. "14.4.2".
+  string os_version = 27;
+
+  // Optional.
+  // The type of the browser.
+  // e.g. "chrome", "firefox", etc.
+  string browser_type = 28;
+
+  // Optional.
+  // The UserAgent for the browser.
+  string user_agent = 29;
+
+  // Optional.
+  // The network used.
+  // The acceptable values are "2g", "3g", "4g", "5g", "wifi", "other".
+  string network = 30;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// Request proto for WriteUserEvents method.
+message WriteUserEventsRequest {
+  // Required. A list of user events to write.
+  // The max # of events allowed is 2000.
+  repeated UserEvent user_events = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The error detail for a single user event.
+message UserEventError {
+  // Output only.
+  // The detailed error message.
+  string message = 1;
+
+  // Output only.
+  // This is the exact same user proto that was passed in the request.
+  UserEvent user_event = 2;
+}
+
+// The response proto for WriteUserEvents call.
+message WriteUserEventsResponse {
+  // Output only.
+  // When `status.code` is 0, all payload are successfully written.
+  // If `status.code` is 1001, `errors` is populated.
+  // Other non-zero values indicate all payload failed.
+  common.Status status = 1;
+
+  // Output only.
+  // This field is populated when `status.code` is 1001.
+  // When populated, this field contains the errors.
+  repeated UserEventError errors = 2;
+}
+
+// The BytePlus Media service.
+service BytePlusMediaService {
+  // WriteUsers
+  //
+  // Writes at most 2000 users at a time. Exceeding 2000 in a request results in
+  // a rejection. One can use this to upload new users, or update existing
+  // users (by providing all the fields).
+  // Refer to [this](../docs/rpcs) for how to use RPCs.
+  rpc WriteUsers(WriteUsersRequest) returns (WriteUsersResponse);
+
+  // WriteContents
+  //
+  // Writes at most 2000 contents at a time. Exceeding 2000 in a request results
+  // in a rejection.
+  // One can use this to upload new contents, or update existing contents (by
+  // providing all the fields).  Deleting a content is unsupported. One can
+  // update the existing content by
+  // setting `content.is_recommendable` to 0.
+  // Refer to [this](../docs/rpcs) for how to use RPCs.
+  rpc WriteContents(WriteContentsRequest) returns (WriteContentsResponse);
+
+  // WriteUserEvents
+  //
+  // Writes at most 2000 UserEvents at a time. Exceeding 2000 in a request
+  // results in a rejection. One should use this to upload new realtime
+  // UserEvents.  Note: This is processing realtime data, so we won't dedupe
+  // the requests.
+  // Please make sure the requests are deduplicated before sending over.
+  // Refer to [this](../docs/rpcs) for how to use RPCs.
+  rpc WriteUserEvents(WriteUserEventsRequest) returns (WriteUserEventsResponse);
+}

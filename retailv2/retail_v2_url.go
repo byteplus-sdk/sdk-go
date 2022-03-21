@@ -16,7 +16,7 @@ const (
 	ackImpressionURLFormat = "%s://%s/predict/api/retail/%s/ack_server_impressions"
 
 	// The URL format of data uploading
-	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user?method=write
+	// Example: https://tob.sgsnssdk.com/data/api/retail/v2/retail_demo/user?method=write
 	uploadURLFormat = "%s://%s/data/api/retail/v2/%s/%s?method=%s"
 )
 
@@ -34,15 +34,15 @@ type retailURL struct {
 	ackImpressionURL string
 
 	// The URL of uploading real-time user data
-	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user?method=write
+	// Example: https://tob.sgsnssdk.com/data/api/retail/v2/retail_demo/user?method=write
 	writeUsersURL string
 
 	// The URL of uploading real-time product data
-	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/product?method=write
+	// Example: https://tob.sgsnssdk.com/data/api/retail/v2/retail_demo/product?method=write
 	writeProductsURL string
 
 	// The URL of uploading real-time user event data
-	// Example: https://tob.sgsnssdk.com/data/api/retail/retail_demo/user_event?method=write
+	// Example: https://tob.sgsnssdk.com/data/api/retail/v2/retail_demo/user_event?method=write
 	writeUserEventsURL string
 }
 
