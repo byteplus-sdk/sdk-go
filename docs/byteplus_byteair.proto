@@ -43,49 +43,40 @@ message ImportResponse {
   repeated DataError error_samples = 2;
 }
 
-message PredictDevice {
-  // Optional
-  // Device id, such as 'imei'
-  string device_id = 1;
+message PredictRequest {
+  // Required
+  // The user's info
+  PredictUser user = 1;
+
+  // Required
+  // The context info
+  PredictContext context = 2;
+
+  // Required
+  // The max size of results
+  int32 size = 3;
 
   // Optional
-  // The platform used by the user, e.g. 'Android', 'Web'
-  string platform = 2;
-
-  // Optional.
-  // The brand of the device.
-  // e.g. "Samsung"
-  string device_vendor = 3;
-
-  // Optional.
-  // The device model.
-  // e.g. "iPhone10", "Pixel 4".
-  string device_model = 4;
+  // If you want predict in specified items,
+  // you can provide them in this field
+  repeated PredictCandidateItem candidateItems = 4;
 
   // Optional
-  // The device resolution
-  // e.g. "800*600"
-  string device_resolution = 5;
+  // Extra info, which can't be provided by other field
+  PredictExtra extra = 5;
 
-  // Optional.
-  // Your application version.
-  // e.g. V9.0.8.
-  string client_version = 6;
+  // If you want recommend results related specified item,
+  // you need provide it in this field.
+  PredictRelatedItem relatedItem = 6;
 
-  // Optional.
-  // The operating system version.
-  // e.g. "14.4.2"
-  string os_version = 7;
+  // Optional
+  // If this is a search request,
+  // you can provide search info in this field.
+  // Search request is considered as a special predict request.
+  SearchInfo searchInfo = 7;
 
-  // Optional.
-  // The network used.
-  // e.g. "2g", "3g", "4g", "5g", "wifi", "other".
-  string network_type = 8;
-
-  // Optional.
-  // The network carrier.
-  // e.g. "Version", "CMCC"
-  string carrier = 9;
+  // parent item for related scene
+  PredictParentItem parentItem = 8;
 }
 
 message PredictUser {
@@ -122,12 +113,12 @@ message PredictUser {
 
   // Optional
   // The app market that user download app from
-  string app_market = 8;
+  string appMarket = 8;
 
   // Optional
   // The login mode
   // e.g. "wechat", "google", "self"
-  string login_mode = 9;
+  string loginMode = 9;
 
   // Optional.
   // Country name.
@@ -140,11 +131,58 @@ message PredictUser {
   map<string, string> extra = 100;
 }
 
+message PredictDevice {
+  // Optional
+  // Device id, such as 'imei'
+  string deviceId = 1;
+
+  // Optional
+  // The platform used by the user, e.g. 'Android', 'Web'
+  string platform = 2;
+
+  // Optional.
+  // The brand of the device.
+  // e.g. "Samsung"
+  string deviceVendor = 3;
+
+  // Optional.
+  // The device model.
+  // e.g. "iPhone10", "Pixel 4".
+  string deviceModel = 4;
+
+  // Optional
+  // The device resolution
+  // e.g. "800*600"
+  string deviceResolution = 5;
+
+  // Optional.
+  // Your application version.
+  // e.g. V9.0.8.
+  string clientVersion = 6;
+
+  // Optional.
+  // The operating system version.
+  // e.g. "14.4.2"
+  string osVersion = 7;
+
+  // Optional.
+  // The network used.
+  // e.g. "2g", "3g", "4g", "5g", "wifi", "other".
+  string networkType = 8;
+
+  // Optional.
+  // The network carrier.
+  // e.g. "Version", "CMCC"
+  string carrier = 9;
+}
+
 message PredictContext {
   // Required
   // The position of showing recommend result.
   // You need to negotiate with ByteDance how to define it
   string spm = 1;
+  // whether close personal recommend
+  bool closePersonalizedRecommend = 2;
 
   // Optional.
   // This is a catch-all field to pass all the additional information.
@@ -177,6 +215,9 @@ message PredictCandidateItem {
 
 message PredictExtra {
   // Optional.
+  // mark for test
+  bool innerTest = 1;
+  // Optional.
   // This is a catch-all field to pass all the additional information.
   // Please provide as much information as possible.
   map<string, string> extra = 101;
@@ -193,27 +234,7 @@ message PredictRelatedItem {
   map<string, string> extra = 100;
 }
 
-message SearchItems {
-  // Required
-  // The item id
-  string goods_id = 2;
-
-  // Optional
-  // The item's price
-  float  price = 3;
-
-  // Optional
-  // Boost coefficient when sorting
-  float boost_ceof = 4;
-}
-
-// Protobuf does not support array type as map's value,
-// so we wrap array as a object, which can be value of map
-message StringArray {
-  repeated string values = 1;
-}
-
-message SearchCondition {
+message SearchInfo {
   // Required
   // The starting position of fetching,
   // which plus `size` must less or equal 5000, and begin from '0'.
@@ -225,12 +246,12 @@ message SearchCondition {
   // 0: query
   // 1: filter
   // 2: search in specified items provided by request
-  int32 search_type = 2;
+  int32 searchType = 2;
 
   // Optional
   // 0: ascending order;
   // 1: descending order (default)
-  int32 sort_mode = 3;
+  int32 sortMode = 3;
 
   // Optional
   // The item's attribute used by sorting
@@ -239,7 +260,7 @@ message SearchCondition {
   //  2: price
   //  3: time
   //  4: commission
-  int32 sort_type = 4;
+  int32 sortType = 4;
 
   // Optional
   // The content type of result.
@@ -247,7 +268,7 @@ message SearchCondition {
   string content = 5;
 
   // Optional
-  // The key word of searching by, it's required when `search_type` is "0"
+  // The key word of searching by, it's required when `searchType` is "0"
   string query = 6;
 
   // Optional
@@ -257,78 +278,47 @@ message SearchCondition {
 
   // Optional
   // Search results will be ignored, if they are hit those conditions
-  map<string, StringArray > filter_out = 8;
+  map<string, StringArray > filterOut = 8;
 
   // Optional
-  // The list of searching in, it's required when `search_type` is "0"
-  repeated SearchItems items = 9;
+  // The list of searching in, it's required when `searchType` is "0"
+  repeated SearchGoods goodsList = 9;
 }
 
-message PredictRequest {
-  // Required
-  // The user's info
-  PredictUser user = 1;
-
-  // Required
-  // The context info
-  PredictContext context = 2;
-
-  // Required
-  // The max size of results
-  int32 size = 3;
-
-  // Optional
-  // If you want predict in specified items,
-  // you can provide them in this field
-  repeated PredictCandidateItem candidate_items = 4;
-
-  // Optional
-  // Extra info, which can't be provided by other field
-  PredictExtra extra = 5;
-
-  // If you want recommend results related specified item,
-  // you need provide it in this field.
-  PredictRelatedItem related_item = 6;
-
-  // Optional
-  // If this is a search request,
-  // you can provide search condition in this field.
-  // Search request is considered as a special predict request.
-  SearchCondition search_condition = 7;
+// Protobuf does not support array type as map's value,
+// so we wrap array as a object, which can be value of map
+message StringArray {
+  repeated string values = 1;
 }
 
-message PredictResultItem {
-  // Output Only
+message SearchGoods {
+  // Optional
+  // The item id of int type
+  int64 goodsId = 1[deprecated = true];
+
+  // Required
+  // The item id of string type
+  string goodsIdStr = 2;
+
+  // Optional
+  // The item's price
+  float  price = 3;
+
+  // Optional
+  // Boost coefficient when sorting
+  float boostCeof = 4;
+}
+
+// same as PredictRelatedItem.
+message PredictParentItem {
+  // Required
   // The item id
   string id = 1;
 
-  // Output Only
-  // This is the 1-based ranking of the product.
-  int32 rank = 3;
-
-  // Output only.
-  // The strategy used for this particular recommendation result.
-  string trans_data = 4;
-
-  // Output only.
-  // All the item extra info here.
-  map<string, string> extra = 5;
-}
-
-message PredictResult{
-  // Output only.
-  // The list of predicted products.
-  repeated PredictResultItem items = 1;
-
-  // Output only.
-  // All the predict extra info here.
-  map<string, string> extra = 2;
-
-  // Output only.
-  // It is populated when search request.
-  // The total count of search result,
-  // not the count of this request's result.
-  int32 total_count = 3;
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
 }
 
 message PredictResponse {
@@ -351,6 +341,66 @@ message PredictResponse {
   string request_id = 4;
 }
 
+message PredictResult{
+  // Output only.
+  // The list of predicted products.
+  repeated PredictItem items = 1;
+
+  // Output only.
+  // All the predict extra info here.
+  map<string, string> extra = 2;
+
+  // Output only.
+  // It is populated when search request.
+  // The total count of search result,
+  // not the count of this request's result.
+  int32 totalCount = 3;
+}
+
+message PredictItem {
+  // Output Only
+  // The item id
+  string id = 1;
+
+  // Output Only
+  // This is the 1-based ranking of the product.
+  int32 rank = 3;
+
+  // Output only.
+  // The strategy used for this particular recommendation result.
+  string transData = 4;
+
+  // Output only.
+  // All the item extra info here.
+  map<string, string> extra = 5;
+}
+
+message CallbackRequest {
+  // Required
+  // The user's id
+  string uid = 1;
+
+  // Required.
+  // The scene info.
+  // Please make sure this is the same as the predict request's scene param
+  string scene = 2;
+
+  // Required
+  // The list of need callback
+  repeated CallbackItem items = 3;
+
+  // Required.
+  // This should be same as `PredictResponse.request_id`.
+  string predict_request_id = 4;
+
+  // callback context info
+  CallbackContext context = 5;
+
+  // optional.
+  // All the callback extra info here.
+  map<string, string> extra = 100;
+}
+
 message CallbackItem {
   // Required
   // The item id, that is showed to user or filtered
@@ -371,23 +421,21 @@ message CallbackItem {
   string extra = 3;
 }
 
-message CallbackRequest {
-  // Required
-  // The user's id
-  string uid = 1;
+message CallbackContext {
+  // spm
+  string spm = 1;
 
-  // Required.
-  // The scene info.
-  // Please make sure this is the same as the predict request's scene param
-  string scene = 2;
+  // reqType.
+  CallbackReqType req_type = 2;
 
-  // Required
-  // The list of need callback
-  repeated CallbackItem items = 3;
+  // more info
+  map<string, string> extra = 100;
+}
 
-  // Required.
-  // This should be same as `PredictResponse.request_id`.
-  string predict_request_id = 4;
+enum CallbackReqType {
+  byte_scene = 0;
+  not_byte_scene = 1;
+  behavior = 2;
 }
 
 message CallbackResponse {
