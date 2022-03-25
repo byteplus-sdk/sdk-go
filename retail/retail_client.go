@@ -16,7 +16,7 @@ type Client interface {
 
 	// WriteUsers
 	//
-	// Writes at most 100 users at a time. Exceeding 100 in a request protocol.results protocol.in
+	// Writes at most 2000 users at a time. Exceeding 2000 in a request protocol.results protocol.in
 	// a rejection. One can use this to upload new users, or update existing
 	// users (by providing all the fields).
 	WriteUsers(request *WriteUsersRequest, opts ...option.Option) (*WriteUsersResponse, error)
@@ -38,7 +38,7 @@ type Client interface {
 
 	// WriteProducts
 	//
-	// Writes at most 100 products at a time. Exceeding 100 in a request protocol.protocol.results
+	// Writes at most 2000 products at a time. Exceeding 2000 in a request protocol.protocol.results
 	// in a rejection.
 	// One can use this to upload new products, or update existing products (by
 	// providing all the fields).  Deleting a product is unsupported. One can
@@ -63,7 +63,7 @@ type Client interface {
 
 	// WriteUserEvents
 	//
-	// Writes at most 100 UserEvents at a time. Exceeding 100 in a request
+	// Writes at most 2000 UserEvents at a time. Exceeding 2000 in a request
 	// results in a rejection. One should use this to upload new realtime
 	// UserEvents.  Note: This is processing realtime data, so we won't dedupe
 	// the requests.

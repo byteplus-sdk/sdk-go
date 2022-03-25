@@ -24,7 +24,7 @@ var (
 
 type clientImpl struct {
 	common.Client
-	hCaller *HttpCaller
+	hCaller *HTTPCaller
 	gu      *byteairURL
 	hostAva *HostAvailabler
 }
@@ -41,7 +41,7 @@ func (c *clientImpl) WriteData(dataList []map[string]interface{}, topic string,
 	urlFormat := c.gu.writeDataURLFormat
 	url := strings.ReplaceAll(urlFormat, "{}", topic)
 	response := &WriteResponse{}
-	err := c.hCaller.DoJsonRequest(url, dataList, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoJSONRequest(url, dataList, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *clientImpl) Predict(request *PredictRequest,
 	}
 	url := strings.ReplaceAll(urlFormat, "{}", scene)
 	response := &PredictResponse{}
-	err := c.hCaller.DoPbRequest(url, request, response, options)
+	err := c.hCaller.DoPBRequest(url, request, response, options)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *clientImpl) Callback(request *CallbackRequest,
 	if request.Scene == "" {
 		request.Scene = DefaultCallbackScene
 	}
-	err := c.hCaller.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}

@@ -12,3 +12,6 @@ gen_retail:
 
 gen_retail2:
 	protoc --go_out=retailv2/protocol -I=docs --go_opt=paths=source_relative docs/byteplus_retailv2.proto
+
+gen_media:
+	protoc --go_out=media/protocol -I=docs --go_opt=paths=source_relative docs/byteplus_media.proto

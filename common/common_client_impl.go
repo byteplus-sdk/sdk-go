@@ -10,7 +10,7 @@ import (
 	"github.com/byteplus-sdk/sdk-go/core/option"
 )
 
-func NewClient(cli *HttpCaller, cu *URL) Client {
+func NewClient(cli *HTTPCaller, cu *URL) Client {
 	return &clientImpl{
 		cli: cli,
 		cu:  cu,
@@ -18,7 +18,7 @@ func NewClient(cli *HttpCaller, cu *URL) Client {
 }
 
 type clientImpl struct {
-	cli *HttpCaller
+	cli *HTTPCaller
 	cu  *URL
 }
 
@@ -26,7 +26,7 @@ func (c *clientImpl) GetOperation(request *GetOperationRequest,
 	opts ...option.Option) (*OperationResponse, error) {
 	url := c.cu.getOperationUrl
 	response := &OperationResponse{}
-	err := c.cli.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.cli.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *clientImpl) ListOperations(request *ListOperationsRequest,
 	opts ...option.Option) (*ListOperationsResponse, error) {
 	url := c.cu.listOperationsUrl
 	response := &ListOperationsResponse{}
-	err := c.cli.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.cli.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c *clientImpl) Done(dateList []time.Time, topic string, opts ...option.Opt
 		DataDates: dates,
 	}
 	response := &DoneResponse{}
-	err := c.cli.DoPbRequest(url, request, response, option.Conv2Options(opts...))
+	err := c.cli.DoPBRequest(url, request, response, option.Conv2Options(opts...))
 	if err != nil {
 		return nil, err
 	}
