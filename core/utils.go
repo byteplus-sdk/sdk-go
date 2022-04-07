@@ -47,26 +47,24 @@ func ReportRequestError(metricsPrefix, url string, begin time.Time, code int, me
 
 func ReportRequestException(metricsPrefix, url string, begin time.Time, err error) {
 	urlTag := buildUrlTags(url)
-	withErrorTags(urlTag, err)
-	metrics.Latency(buildLatencyKey(metricsPrefix), begin, urlTag...)
-	metrics.Counter(buildCounterKey(metricsPrefix), 1, urlTag...)
+	tagKvs := appendErrorTags(urlTag, err)
+	metrics.Latency(buildLatencyKey(metricsPrefix), begin, tagKvs...)
+	metrics.Counter(buildCounterKey(metricsPrefix), 1, tagKvs...)
 }
 
-func withErrorTags(urlTag []string, err error) {
+func appendErrorTags(urlTag []string, err error) []string {
 	msg := strings.ToLower(err.Error())
 	if strings.Contains(msg, "time") && strings.Contains(msg, "out") {
 		if strings.Contains(msg, "connect") {
-			urlTag = append(urlTag, "message:connect-timeout")
-			return
+			return append(urlTag, "message:connect-timeout")
 		}
 		if strings.Contains(msg, "read") {
-			urlTag = append(urlTag, "message:read-timeout")
-			return
+			return append(urlTag, "message:read-timeout")
+
 		}
-		urlTag = append(urlTag, "message:timeout")
-		return
+		return append(urlTag, "message:timeout")
 	}
-	urlTag = append(urlTag, "message:other")
+	return append(urlTag, "message:other")
 }
 
 func buildUrlTags(url string) []string {

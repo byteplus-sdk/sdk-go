@@ -51,6 +51,7 @@ func Init(options ...Option) {
 		flushInterval: defaultFlushInterval,
 		prefix:        defaultMetricsPrefix,
 		enableMetrics: true,
+		httpTimeoutMs: defaultHttpTimeout,
 	}
 	for _, option := range options {
 		option(metricsCfg)
