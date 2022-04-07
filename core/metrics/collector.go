@@ -102,7 +102,7 @@ func WithMetricsLog() Option {
 // WithFlushInterval set the interval of reporting metrics
 func WithFlushInterval(flushInterval time.Duration) Option {
 	return func(config *config) {
-		if flushInterval > 500*time.Millisecond { // flushInterval should not be too small
+		if flushInterval > 5000*time.Millisecond { // flushInterval should not be too small
 			config.flushInterval = flushInterval
 		}
 	}
