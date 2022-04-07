@@ -203,6 +203,7 @@ func (c *HTTPCaller) doHttpRequest(url string, headers map[string]string,
 	logs.Trace("http request header:\n%s", string(request.Header.Header()))
 	err := c.smartDoRequest(timeout, request, response)
 	if err != nil {
+		ReportRequestException(metricsKeyInvokeError, url, start, err)
 		if strings.Contains(strings.ToLower(err.Error()), "timeout") {
 			logs.Error("do http request timeout, msg:%s url:%s", err.Error(), url)
 			return nil, errors.New(netErrMark + " timeout")
@@ -213,8 +214,10 @@ func (c *HTTPCaller) doHttpRequest(url string, headers map[string]string,
 	logs.Trace("http response headers:\n%s", string(response.Header.Header()))
 	if response.StatusCode() != fasthttp.StatusOK {
 		c.logHttpResponse(url, response)
+		ReportRequestError(metricsKeyInvokeError, url, start, response.StatusCode(), "invoke-fail")
 		return nil, errors.New(netErrMark + "http status not 200")
 	}
+	ReportRequestSuccess(metricsKeyInvokeSuccess, url, start)
 	return decompressResponse(url, response)
 }
 

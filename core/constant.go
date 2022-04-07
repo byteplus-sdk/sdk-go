@@ -52,3 +52,11 @@ const (
 const (
 	volcAuthService = "air"
 )
+
+const (
+	// metric name for  byteplus sdk
+	metricsKeyInvokeSuccess = "invoke.success"
+	metricsKeyInvokeError   = "invoke.error"
+	metricsKeyPingSuccess   = "ping.success"
+	metricsKeyPingError     = "ping.error"
+)

@@ -34,6 +34,7 @@ type config struct {
 	prefix        string
 	printLog      bool // whether print logs during collecting metrics
 	flushInterval time.Duration
+	httpTimeoutMs time.Duration
 }
 
 type metricValue struct {
@@ -102,6 +103,15 @@ func WithFlushInterval(flushInterval time.Duration) Option {
 	return func(config *config) {
 		if flushInterval > 500*time.Millisecond { // flushInterval should not be too small
 			config.flushInterval = flushInterval
+		}
+	}
+}
+
+// WithMetricsTimeout set the interval of reporting metrics
+func WithMetricsTimeout(timeout time.Duration) Option {
+	return func(config *config) {
+		if timeout > defaultHttpTimeout {
+			config.httpTimeoutMs = timeout
 		}
 	}
 }
@@ -247,15 +257,7 @@ func flushStore() {
 	metricsCollector.locks[metricsTypeStore].RUnlock()
 	if len(metricsRequests) > 0 {
 		url := fmt.Sprintf(otherUrlFormat, metricsCfg.domain)
-		if err := send(&MetricMessage{Metrics: metricsRequests}, url); err != nil {
-			if isEnablePrintLog() {
-				logs.Error("[Metrics] exec store err:%+v, url:%s, metricsRequests:%+v", err, url, metricsRequests)
-			}
-			return
-		}
-		if isEnablePrintLog() {
-			logs.Debug("[Metrics] exec store success, url:%s, metricsRequests:%+v", url, metricsRequests)
-		}
+		sendMetrics(metricsRequests, url)
 	}
 }
 
@@ -291,15 +293,7 @@ func flushCounter() {
 
 	if len(metricsRequests) > 0 {
 		url := fmt.Sprintf(counterUrlFormat, metricsCfg.domain)
-		if err := send(&MetricMessage{Metrics: metricsRequests}, url); err != nil {
-			if isEnablePrintLog() {
-				logs.Error("[Metrics] exec counter err:%+v, url:%s, metricsRequests:%+v", err, url, metricsRequests)
-			}
-			return
-		}
-		if isEnablePrintLog() {
-			logs.Debug("[Metrics] exec counter success, url:%s, metricsRequests:%+v", url, metricsRequests)
-		}
+		sendMetrics(metricsRequests, url)
 	}
 }
 
@@ -323,15 +317,17 @@ func flushTimer() {
 	metricsCollector.locks[metricsTypeTimer].RUnlock()
 	if len(metricsRequests) > 0 {
 		url := fmt.Sprintf(otherUrlFormat, metricsCfg.domain)
-		if err := send(&MetricMessage{Metrics: metricsRequests}, url); err != nil {
-			if isEnablePrintLog() {
-				logs.Error("[Metrics] exec timer err:%+v, url:%s, metricsRequests:%+v", err, url, metricsRequests)
-			}
-			return
-		}
-		if isEnablePrintLog() {
-			logs.Debug("[Metrics] exec timer success, url:%s, metricsRequests:%+v", url, metricsRequests)
-		}
+		sendMetrics(metricsRequests, url)
+	}
+}
+
+func sendMetrics(metricsRequests []*Metric, url string) {
+	if err := send(&MetricMessage{Metrics: metricsRequests}, url); err != nil {
+		logs.Error("[BytePlusSDK][Metrics] send metrics err:%+v, url:%s, metricsRequests:%+v", err, url, metricsRequests)
+		return
+	}
+	if isEnablePrintLog() {
+		logs.Debug("[BytePlusSDK][Metrics] send metrics success, url:%s, metricsRequests:%+v", url, metricsRequests)
 	}
 }
 
@@ -423,7 +419,7 @@ func doSend(request *fasthttp.Request) error {
 		fasthttp.ReleaseRequest(request)
 		fasthttp.ReleaseResponse(response)
 	}()
-	err := metricsCollector.httpCli.DoTimeout(request, response, defaultHttpTimeout)
+	err := metricsCollector.httpCli.DoTimeout(request, response, metricsCfg.httpTimeoutMs)
 	if err == nil && response.StatusCode() == fasthttp.StatusOK {
 		return nil
 	}
