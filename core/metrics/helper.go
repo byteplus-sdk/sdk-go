@@ -58,8 +58,8 @@ func recoverTags(tagString string) map[string]string {
 	tagKvs := make(map[string]string)
 	kvs := strings.Split(tagString, "|")
 	for _, kv := range kvs {
-		res := strings.Split(kv, ":")
-		if len(res) != 2 {
+		res := strings.SplitN(kv, ":", 2)
+		if len(res) < 2 {
 			continue
 		}
 		tagKvs[res[0]] = res[1]

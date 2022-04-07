@@ -112,8 +112,14 @@ func (receiver *HostAvailabler) ping(host string) bool {
 	err := httpCli.DoTimeout(request, response, pingTimeout)
 	cost := time.Now().Sub(start)
 	if err == nil && response.StatusCode() == fasthttp.StatusOK {
+		ReportRequestSuccess(metricsKeyPingSuccess, url, start)
 		logs.Trace("ping success host:'%s' cost:'%s'", host, cost)
 		return true
+	}
+	if err != nil {
+		ReportRequestException(metricsKeyPingError, url, start, err)
+	} else {
+		ReportRequestError(metricsKeyPingError, url, start, response.StatusCode(), "ping-fail")
 	}
 	logs.Warn("ping fail, host:%s cost:%s status:%d err:%v",
 		host, cost, response.StatusCode(), err)
