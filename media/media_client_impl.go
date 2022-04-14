@@ -3,6 +3,7 @@ package media
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/byteplus-sdk/sdk-go/common"
 	"github.com/byteplus-sdk/sdk-go/core"
@@ -65,6 +66,30 @@ func (c clientImpl) WriteUserEvents(request *protocol.WriteUserEventsRequest,
 		return nil, err
 	}
 	logs.Debug("[WriteUserEvents] rsp:\n%s\n", response)
+	return response, nil
+}
+
+func (c *clientImpl) Predict(request *protocol.PredictRequest, scene string,
+	opts ...option.Option) (*protocol.PredictResponse, error) {
+	url := strings.ReplaceAll(c.mu.predictURLFormat, "{}", scene)
+	response := &protocol.PredictResponse{}
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
+	if err != nil {
+		return nil, err
+	}
+	logs.Debug("[Predict] rsp:\n%s\n", response)
+	return response, nil
+}
+
+func (c *clientImpl) AckServerImpressions(request *protocol.AckServerImpressionsRequest,
+	opts ...option.Option) (*protocol.AckServerImpressionsResponse, error) {
+	url := c.mu.ackImpressionURL
+	response := &protocol.AckServerImpressionsResponse{}
+	err := c.hCaller.DoPBRequest(url, request, response, option.Conv2Options(opts...))
+	if err != nil {
+		return nil, err
+	}
+	logs.Debug("[AckImpressions] rsp:\n%s\n", response)
 	return response, nil
 }
 

@@ -38,6 +38,37 @@ type Client interface {
 	WriteUserEvents(request *protocol.WriteUserEventsRequest,
 		opts ...option.Option) (*protocol.WriteUserEventsResponse, error)
 
+	// Predict
+	//
+	// Gets the list of contents (ranked).
+	// The updated user data will take effect in 24 hours.
+	// The updated content data will take effect in 30 mins.
+	// Depending on how (realtime or batch) the UserEvents are sent back, it will
+	// be fed into the models and take effect after that.
+	Predict(request *protocol.PredictRequest, scene string,
+		opts ...option.Option) (*protocol.PredictResponse, error)
+
+	// AckServerImpressions
+	//
+	// Sends back the actual content list shown to the users based on the
+	// customized changes from `PredictResponse`.
+	// example: our Predict call returns the list of items [1, 2, 3, 4].
+	// Your custom logic have decided that content 3 has been sold out and
+	// content 10 needs to be inserted before 2 based on some promotion rules,
+	// and because the number of Byteplus recommendations is insufficient,
+	// fill in your recommended content 20 after content 4,
+	// the AckServerImpressionsRequest content items should looks like
+	// [
+	//   {content_id:1, altered_reason: "kept", rank:1},
+	//   {content_id:10, altered_reason: "inserted", rank:2},
+	//   {content_id:2, altered_reason: "kept", rank:3},
+	//   {content_id:4, altered_reason: "kept", rank:4},
+	//   {content_id:20, altered_reason: "filled", rank:5},
+	//   {content_id:3, altered_reason: "filtered", rank:0},
+	// ].
+	AckServerImpressions(request *protocol.AckServerImpressionsRequest,
+		opts ...option.Option) (*protocol.AckServerImpressionsResponse, error)
+
 	// Release resources
 	Release()
 }
