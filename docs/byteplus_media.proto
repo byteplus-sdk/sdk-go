@@ -70,7 +70,7 @@ message User {
   // Optional.
   // List of content_ids consumed by this user.
   // Some sample values are ["123","124"], etc.
-  repeated string history = 9;
+  repeated string view_history = 9;
 
   // Optional.
   // The channel where the given user is acquired.
@@ -153,7 +153,7 @@ message WriteUsersResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  common.Status status = 1;
+  bytedance.byteplus.common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -408,7 +408,7 @@ message WriteContentsResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  common.Status status = 1;
+  bytedance.byteplus.common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
@@ -457,7 +457,7 @@ message UserEvent {
   //             Note:
   //                * content_id must be non-empty.
   //
-  // comment:    Optional. If content_type is video, when a user plays a video.
+  // comment:    Optional. When a user leaves a comment on a content.
   //             Note:
   //                * content_id must be non-empty.
   //
@@ -686,12 +686,239 @@ message WriteUserEventsResponse {
   // When `status.code` is 0, all payload are successfully written.
   // If `status.code` is 1001, `errors` is populated.
   // Other non-zero values indicate all payload failed.
-  common.Status status = 1;
+  bytedance.byteplus.common.Status status = 1;
 
   // Output only.
   // This field is populated when `status.code` is 1001.
   // When populated, this field contains the errors.
   repeated UserEventError errors = 2;
+}
+
+// The request proto for `Predict` call.
+message PredictRequest {
+  // Required.
+  // This is same as `User.user_id`.
+  string user_id = 1;
+
+  // Required.
+  // The maximum number of contents returned.
+  // The actual # of contents returned is the min of:
+  // `size`
+  // length(`context.candidates_content_ids`)
+  // total # of contents with `is_recommendable=True`
+  int32 size = 2;
+
+  // Required.
+  // The scene for the recommendation.
+  message Scene {
+    // Required.
+    // This is same as `UserEvent.scene_name`.
+    string scene_name = 1;
+
+    // Optional.
+    // The page number.
+    // It can be:
+    // 1. Users swipe the screen for X times then see the content.
+    // 2. Users go to page X and see the content.
+    // In this case, X is the page number.
+    //
+    // This should default to be 0. That means everything fits into 1 page.
+    int32 page_number = 2;
+
+    // Optional.
+    // The offset starting from 1 within the page above.
+    int32 offset = 3;
+  }
+
+  Scene scene = 3;
+
+  // The context of this request.
+  message Context {
+    // Optional.
+    // This is only required for content details page.
+    Content root_content = 1;
+
+    // Optional.
+    // The list of candidates for the recommendation.
+    // If this is empty, all contents are the candidates.
+    repeated string candidate_content_ids = 3;
+
+    // Required.
+    // The platform used by the user.
+    // The acceptable values are "app", "desktop-web", "mobile-web", "other".
+    //  app: user use APP.
+    //  desktop-web: user use desktop web.
+    //  mobile-web: user use mobile web.
+    string device = 22;
+
+    // Optional.
+    // The platform used by the user.
+    // The acceptable values are "android", "ios", "windows", "other".
+    string os_type = 23;
+
+    // Optional.
+    // Your application version.
+    // e.g. V9.0.8.
+    string app_version = 24;
+
+    // Optional.
+    // The device model.
+    // e.g. "iPhone10", "Pixel 4".
+    string device_model = 25;
+
+    // Optional.
+    // The brand of the device.
+    // e.g. "Samsung".
+    string device_brand = 26;
+
+    // Optional.
+    // The operating system version.
+    // e.g. "14.4.2".
+    string os_version = 27;
+
+    // Optional.
+    // The type of the browser.
+    // e.g. "chrome", "firefox", etc.
+    string browser_type = 28;
+
+    // Optional.
+    // The UserAgent for the browser.
+    string user_agent = 29;
+
+    // Optional.
+    // The network used.
+    // The acceptable values are "2g", "3g", "4g", "5g", "wifi", "other".
+    string network = 30;
+  }
+
+  // Optional.
+  // The context of this request.
+  Context context = 4;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// A single predict call result.
+message PredictResult {
+  // The response of a content.
+  message ResponseContent {
+    // Output only.
+    // The content id.
+    // This is consistent with `Content.content_id`.
+    string content_id = 1;
+
+    // Output only.
+    // This is the 1-based ranking of the content.
+    int32 rank = 2;
+
+    // Output only.
+    // The is the predicted CTR.
+    double pctr = 3;
+
+    // Output only.
+    // This is the predicted CVR.
+    double pcvr = 4;
+
+    // Output only.
+    // The strategy used for this particular recommendation result.
+    // Please refer to [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+    /// 只用作返回值。base64编码的字符串，记录了该次推荐的一些模型和策略信息，建议将此字段携带到行为数据中，用来辅助提升推荐效果。如base64编码不能满足要求，可联系对接同学调整编码方式。
+    string rec_info = 5;
+
+    // Output only.
+    // All the extra debug info here.
+    map<string, string> extra = 100;
+  }
+
+  // Output only.
+  // The list of predicted contents.
+  repeated ResponseContent response_contents = 1;
+
+  // Output only.
+  // Extra debug info.
+  map<string, string> extra = 100;
+}
+
+// The response proto the predict call.
+message PredictResponse {
+  // Output only.
+  // The status of the call.
+  bytedance.byteplus.common.Status status = 1;
+
+  // Output only.
+  // This is same as `PredictRequest.request_id`.
+  string request_id = 2;
+
+  // Output only.
+  // This is only populated when `PredictResponse.status.code` is not 0.
+  PredictResult value = 3;
+}
+
+// The request proto for AckServerImpressions call.
+message AckServerImpressionsRequest {
+  // Required.
+  // This should be same as `PredictRequest.request_id`.
+  string predict_request_id = 1;
+
+  // Required.
+  // This should be same as `PredictRequest.user_id`.
+  string user_id = 2;
+
+  // Required.
+  // This should be the traffic source.
+  // Please refer to
+  // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
+  string traffic_source = 3;
+
+  // Required.
+  // The scene info.
+  // Please make sure this is as close to PredictRequest.scene as possible.
+  PredictRequest.Scene scene = 4;
+
+  // The content that was altered.
+  message AlteredContent {
+    // Required.
+    // This is same as `Content.content_id`.
+    string content_id = 1;
+
+    // Required.
+    // The final state of the content.
+    // The acceptable values are "kept", "filtered", "inserted".
+    // kept     : The content was kept as is.
+    // filtered : The content is filtered by the caller's own logic.
+    // inserted : The content is inserted by the caller's own logic.
+    // filled   : The content is filled by the caller's own logic.
+    string altered_reason = 2;
+
+    // Required.
+    // The final rank.
+    // If this is unset (or 0), we assume it is filtered in actual impression.
+    int32 rank = 3;
+
+    // Internal.
+    // If `content_id` is a number, `content_id_hash` equals to `content_id`
+    // If `content_id` is not a number, `content_id_hash` equals to `fnv(content_id)`
+    int64 content_id_hash = 100;
+  }
+
+  // Required.
+  // The list of altered contents.
+  repeated AlteredContent altered_contents = 5;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+// The response message for AckServerImpressions.
+message AckServerImpressionsResponse {
+  // Output only.
+  // The status of this response.
+  bytedance.byteplus.common.Status status = 1;
 }
 
 // The BytePlus Media service.
@@ -724,4 +951,33 @@ service BytePlusMediaService {
   // Please make sure the requests are deduplicated before sending over.
   // Refer to [this](../docs/rpcs) for how to use RPCs.
   rpc WriteUserEvents(WriteUserEventsRequest) returns (WriteUserEventsResponse);
+
+  // Predict
+  //
+  // Gets the list of contents (ranked).
+  // The updated user data will take effect in 24 hours.
+  // The updated content data will take effect in 30 mins.
+  // Depending how (realtime or batch) the UserEvents are sent back, it will
+  // be fed into the models and take effect after that.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+
+  // AckServerImpressions
+  //
+  // Sends back the actual content list shown to the users based on the
+  // customized changes from `PredictResponse`.
+  // example: our Predict call returns the list of items [1, 2, 3, 4].
+  // Your custom logic have decided that content 3 has been sold out and
+  // content 10 needs to be inserted before 2 based on some promotion rules,
+  // and because the number of Byteplus recommendations is insufficient,
+  // fill in your recommended content 20 after content 4,
+  // the AckServerImpressionsRequest content items should looks like
+  // [
+  //   {content_id:1, altered_reason: "kept", rank:1},
+  //   {content_id:10, altered_reason: "inserted", rank:2},
+  //   {content_id:2, altered_reason: "kept", rank:3},
+  //   {content_id:4, altered_reason: "kept", rank:4},
+  //   {content_id:20, altered_reason: "filled", rank:5},
+  //   {content_id:3, altered_reason: "filtered", rank:0},
+  // ].
+  rpc AckServerImpressions(AckServerImpressionsRequest) returns (AckServerImpressionsResponse);
 }
