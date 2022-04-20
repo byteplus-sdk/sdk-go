@@ -5,9 +5,10 @@ import "time"
 const (
 	defaultMetricsDomain = "bot.snssdk.com"
 	defaultMetricsPrefix = "byteplus.rec.sdk"
+	defaultHttpSchema    = "https"
 
-	counterUrlFormat = "https://%s/api/counter"
-	otherUrlFormat   = "https://%s/api/put"
+	counterUrlFormat = "%s://%s/api/counter"
+	otherUrlFormat   = "%s://%s/api/put"
 
 	defaultFlushInterval = 10 * time.Second
 	reservoirSize        = 65536

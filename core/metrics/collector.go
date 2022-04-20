@@ -32,7 +32,8 @@ type config struct {
 	enableMetrics bool
 	domain        string
 	prefix        string
-	printLog      bool // whether print logs during collecting metrics
+	printLog      bool   // whether print logs during collecting metrics
+	httpSchema    string // https or http
 	flushInterval time.Duration
 	httpTimeoutMs time.Duration
 }
@@ -50,6 +51,7 @@ func Init(options ...Option) {
 		domain:        defaultMetricsDomain,
 		flushInterval: defaultFlushInterval,
 		prefix:        defaultMetricsPrefix,
+		httpSchema:    defaultHttpSchema,
 		enableMetrics: true,
 		httpTimeoutMs: defaultHttpTimeout,
 	}
@@ -88,6 +90,16 @@ func WithMetricsPrefix(prefix string) Option {
 	return func(config *config) {
 		if prefix != "" {
 			config.prefix = prefix
+		}
+	}
+}
+
+// WithMetricsHttpSchema in private env, 'https' may not be supported
+func WithMetricsHttpSchema(schema string) Option {
+	return func(config *config) {
+		// only support "http" and "https"
+		if schema == "https" || schema == "http" {
+			config.httpSchema = schema
 		}
 	}
 }
@@ -257,7 +269,7 @@ func flushStore() {
 	}
 	metricsCollector.locks[metricsTypeStore].RUnlock()
 	if len(metricsRequests) > 0 {
-		url := fmt.Sprintf(otherUrlFormat, metricsCfg.domain)
+		url := fmt.Sprintf(otherUrlFormat, metricsCfg.httpSchema, metricsCfg.domain)
 		sendMetrics(metricsRequests, url)
 	}
 }
@@ -293,7 +305,7 @@ func flushCounter() {
 	metricsCollector.locks[metricsTypeCounter].RUnlock()
 
 	if len(metricsRequests) > 0 {
-		url := fmt.Sprintf(counterUrlFormat, metricsCfg.domain)
+		url := fmt.Sprintf(counterUrlFormat, metricsCfg.httpSchema, metricsCfg.domain)
 		sendMetrics(metricsRequests, url)
 	}
 }
@@ -317,7 +329,7 @@ func flushTimer() {
 	}
 	metricsCollector.locks[metricsTypeTimer].RUnlock()
 	if len(metricsRequests) > 0 {
-		url := fmt.Sprintf(otherUrlFormat, metricsCfg.domain)
+		url := fmt.Sprintf(otherUrlFormat, metricsCfg.httpSchema, metricsCfg.domain)
 		sendMetrics(metricsRequests, url)
 	}
 }
@@ -421,8 +433,11 @@ func doSend(request *fasthttp.Request) error {
 		fasthttp.ReleaseResponse(response)
 	}()
 	err := metricsCollector.httpCli.DoTimeout(request, response, metricsCfg.httpTimeoutMs)
-	if err == nil && response.StatusCode() == fasthttp.StatusOK {
+	if err != nil {
+		return err
+	}
+	if response.StatusCode() == fasthttp.StatusOK {
 		return nil
 	}
-	return err
+	return errors.New(fmt.Sprintf("bad rsp statusCode(%d)", response.StatusCode()))
 }
