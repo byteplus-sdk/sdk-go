@@ -1,7 +1,7 @@
 syntax = "proto3";
 package bytedance.byteplus.general;
 option java_package = "byteplus.sdk.general.protocol";
-option go_package="github.com/byteplus-sdk/sdk-go/general/protocol";
+option go_package = "github.com/byteplus-sdk/sdk-go/general/protocol";
 
 import "byteplus_common.proto";
 import "google/protobuf/any.proto";
@@ -77,6 +77,10 @@ message PredictRequest {
 
   // parent item for related scene
   PredictParentItem parentItem = 8;
+
+  // Optional
+  // filter items
+  repeated PredictFilterItem filterItems = 9;
 }
 
 message PredictUser {
@@ -311,6 +315,17 @@ message SearchGoods {
 
 // same as PredictRelatedItem.
 message PredictParentItem {
+  // Required
+  // The item id
+  string id = 1;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
+}
+
+message PredictFilterItem {
   // Required
   // The item id
   string id = 1;
