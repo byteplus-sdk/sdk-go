@@ -185,13 +185,72 @@ message PredictContext {
   // The position of showing recommend result.
   // You need to negotiate with ByteDance how to define it
   string spm = 1;
+
   // whether close personal recommend
   bool closePersonalizedRecommend = 2;
+
+  // client input feature
+  PredictFeature feature = 3;
+
+  // client input filter
+  PredictFilter filter = 4;
 
   // Optional.
   // This is a catch-all field to pass all the additional information.
   // Please provide as much information as possible.
   map<string, string> extra = 100;
+}
+
+message PredictFeature {
+  // string feature
+  map<string, string> stringFeature = 1;
+
+  // int feature
+  map<string, int64> intFeature = 2;
+
+  // float feature
+  map<string, float> floatFeature = 3;
+
+  // double feature
+  map<string, double> doubleFeature = 4;
+
+  // string array feature
+  map<string, StringArray> stringArrayFeature = 5;
+
+  // int array feature
+  map<string, IntArray> intArrayFeature = 6;
+
+  // float array feature
+  map<string, FloatArray> floatArrayFeature = 7;
+
+  // double array feature
+  map<string, DoubleArray> doubleArrayFeature = 8;
+}
+
+message PredictFilter {
+  // string filter
+  map<string, string> stringFilter = 1;
+
+  // int filter
+  map<string, int64> intFilter = 2;
+
+  // float filter
+  map<string, float> floatFilter = 3;
+
+  // double filter
+  map<string, double> doubleFilter = 4;
+
+  // string array filter
+  map<string, StringArray> stringArrayFilter = 5;
+
+  // int array filter
+  map<string, IntArray> intArrayFilter = 6;
+
+  // float array filter
+  map<string, FloatArray> floatArrayFilter = 7;
+
+  // double array filter
+  map<string, DoubleArray> doubleArrayFilter = 8;
 }
 
 message PredictCandidateItem {
@@ -287,12 +346,6 @@ message SearchInfo {
   // Optional
   // The list of searching in, it's required when `searchType` is "0"
   repeated SearchGoods goodsList = 9;
-}
-
-// Protobuf does not support array type as map's value,
-// so we wrap array as a object, which can be value of map
-message StringArray {
-  repeated string values = 1;
 }
 
 message SearchGoods {
@@ -515,4 +568,22 @@ service ByteplusGeneralService {
   //   {id:3, extra: "{\"reason\": \"filtered\"}", pos:0},
   // ].
   rpc Callback(CallbackRequest) returns (CallbackResponse);
+}
+
+// Protobuf does not support array type as map's value,
+// so we wrap array as a object, which can be value of map
+message StringArray {
+  repeated string values = 1;
+}
+
+message IntArray {
+  repeated int64 values = 1;
+}
+
+message FloatArray {
+  repeated float values = 1;
+}
+
+message DoubleArray {
+  repeated double values = 1;
 }
