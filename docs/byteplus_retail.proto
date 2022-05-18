@@ -1,7 +1,7 @@
 syntax = "proto3";
 package bytedance.byteplus.retail;
 option java_package = "byteplus.sdk.retail.protocol";
-option go_package="github.com/byteplus-sdk/sdk-go/retail/protocol";
+option go_package = "github.com/byteplus-sdk/sdk-go/retail/protocol";
 
 //// This is the raw proto file which will not be shown to end customer.
 //// This file will be compiled to Chinese version and English version to
@@ -1008,6 +1008,11 @@ message AckServerImpressionsRequest {
     // The final rank.
     // If this is unset (or 0), we assume it is filtered in actual impression.
     int32 rank = 3;
+
+    // Optional.
+    // This is a catch-all field to pass all the additional information.
+    // Please provide as much information as possible.
+    map<string, string> extra = 101;
   }
 
   // Required.
