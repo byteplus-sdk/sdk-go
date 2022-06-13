@@ -972,7 +972,7 @@ message PredictResponse {
 // The request proto for AckServerImpressions call.
 message AckServerImpressionsRequest {
   // Required.
-  // This should be same as `PredictResponse.request_id`.
+  // This should be same as `PredictRequest.request_id`.
   string predict_request_id = 1;
 
   // Required.
@@ -981,6 +981,7 @@ message AckServerImpressionsRequest {
 
   // Required.
   // This should be the traffic source.
+  // The accepted values are ["self", "byteplus", "other"].
   // Please refer to
   // [this](../docs/ways-to-improve-recommendation-performance#use-usereventrec_info-and-usereventtraffic_source) for more details.
   string traffic_source = 3;
@@ -1009,6 +1010,11 @@ message AckServerImpressionsRequest {
     // If this is unset (or 0), we assume it is filtered in actual impression.
     int32 rank = 3;
 
+    // Internal
+    // If `product_id` is a number, `product_id_hash` equals to `product_id`
+    // If `product_id` is not a number, `product_id_hash` equals to `fnv(product_id)`
+    int64 product_id_hash = 100;
+
     // Optional.
     // This is a catch-all field to pass all the additional information.
     // Please provide as much information as possible.
@@ -1018,6 +1024,11 @@ message AckServerImpressionsRequest {
   // Required.
   // The list of altered products.
   repeated AlteredProduct altered_products = 5;
+
+  // Optional.
+  // This is a catch-all field to pass all the additional information.
+  // Please provide as much information as possible.
+  map<string, string> extra = 100;
 }
 
 // The response message for AckServerImpressions.
