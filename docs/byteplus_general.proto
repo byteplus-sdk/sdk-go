@@ -178,6 +178,9 @@ message PredictDevice {
   // The network carrier.
   // e.g. "Version", "CMCC"
   string carrier = 9;
+
+  // Optional
+  string os_type = 10;
 }
 
 message PredictContext {
