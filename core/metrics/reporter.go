@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/byteplus-sdk/byteplus-sdk-go-rec-core/metrics/protocol"
+	"github.com/byteplus-sdk/sdk-go/core/metrics/protocol"
+
 	"github.com/valyala/fasthttp"
 	"google.golang.org/protobuf/proto"
 )

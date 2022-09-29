@@ -5,7 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/byteplus-sdk/byteplus-sdk-go-rec-core/logs"
+	"github.com/byteplus-sdk/sdk-go/core/logs"
+
 	"github.com/google/uuid"
 )
 
