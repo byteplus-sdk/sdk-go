@@ -1,3 +1,6 @@
+gen_sdk_metrics:
+	protoc --go_out=core/metrics/protocol -I=docs --go_opt=paths=source_relative docs/sdk_metrics.proto
+
 gen_byteair:
 	protoc --go_out=byteair/protocol -I=docs --go_opt=paths=source_relative docs/byteplus_byteair.proto
 

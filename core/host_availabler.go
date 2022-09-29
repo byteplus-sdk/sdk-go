@@ -6,33 +6,51 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
+	"github.com/byteplus-sdk/sdk-go/core/metrics"
+
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/valyala/fasthttp"
 )
 
 const (
-	pingUrlFormat        = "{}://%s/predict/api/ping"
-	pingInterval         = time.Second
-	windowSize           = 60
+	defaultPingURLFormat = "{}://%s/predict/api/ping"
+	defaultWindowSize    = 60
+	defaultPingTimeout   = 300 * time.Millisecond
+	defaultPingInterval  = time.Second
 	failureRateThreshold = 0.1
-	pingTimeout          = 200 * time.Millisecond
 )
+
+type HostAvailablerConfig struct {
+	// host availabler used to test the latency, example {}://%s/predict/api/ping
+	// {} will be replaced by schema which set in context
+	// %s will be dynamically formatted by hosts
+	PingUrlFormat string
+	// record the window size of each host's test status
+	WindowSize int
+	// timeout for requesting hosts
+	PingTimeout time.Duration
+	// The time interval for pingHostAvailabler to do ping
+	PingInterval time.Duration
+}
 
 func NewHostAvailabler(urlCenter URLCenter, context *Context) *HostAvailabler {
 	availabler := &HostAvailabler{
 		context:   context,
 		urlCenter: urlCenter,
-	}
-	availabler.pingUrlFormat = strings.ReplaceAll(pingUrlFormat, "{}", context.Schema())
-	if len(context.hosts) <= 1 {
-		return availabler
+		config:    fillDefaultConfig(context.hostAvailablerConfig),
 	}
 	availabler.currentHost = context.hosts[0]
 	availabler.availableHosts = context.hosts
+	availabler.pingUrlFormat = strings.ReplaceAll(availabler.config.PingUrlFormat, "{}", context.Schema())
+	if len(context.hosts) <= 1 {
+		return availabler
+	}
 	hostWindowMap := make(map[string]*window, len(context.hosts))
 	hostHttpCliMap := make(map[string]*fasthttp.HostClient, len(context.hosts))
 	for _, host := range context.hosts {
-		hostWindowMap[host] = newWindow(windowSize)
+		hostWindowMap[host] = newWindow(availabler.config.WindowSize)
 		hostHttpCliMap[host] = &fasthttp.HostClient{Addr: host}
 	}
 	availabler.hostWindowMap = hostWindowMap
@@ -41,10 +59,30 @@ func NewHostAvailabler(urlCenter URLCenter, context *Context) *HostAvailabler {
 	return availabler
 }
 
+func fillDefaultConfig(config *HostAvailablerConfig) *HostAvailablerConfig {
+	if config == nil {
+		config = &HostAvailablerConfig{}
+	}
+	if config.PingUrlFormat == "" {
+		config.PingUrlFormat = defaultPingURLFormat
+	}
+	if config.PingTimeout <= 0 {
+		config.PingTimeout = defaultPingTimeout
+	}
+	if config.WindowSize <= 0 {
+		config.WindowSize = defaultWindowSize
+	}
+	if config.PingInterval <= 0 {
+		config.PingInterval = defaultPingInterval
+	}
+	return config
+}
+
 type HostAvailabler struct {
 	abort          bool
 	context        *Context
 	urlCenter      URLCenter
+	config         *HostAvailablerConfig
 	currentHost    string
 	availableHosts []string
 	hostWindowMap  map[string]*window
@@ -58,7 +96,7 @@ func (receiver *HostAvailabler) Shutdown() {
 
 func (receiver *HostAvailabler) scheduleFunc() func() {
 	return func() {
-		ticker := time.NewTicker(pingInterval)
+		ticker := time.NewTicker(receiver.config.PingInterval)
 		for true {
 			if receiver.abort {
 				ticker.Stop()
@@ -105,22 +143,28 @@ func (receiver *HostAvailabler) ping(host string) bool {
 	for k, v := range receiver.context.CustomerHeaders() {
 		request.Header.Set(k, v)
 	}
+	reqID := uuid.NewString()
+	request.Header.Set("Request-Id", reqID)
+	request.Header.Set("Tenant", receiver.context.Tenant())
 	if len(receiver.context.hostHeader) > 0 {
 		request.SetHost(receiver.context.hostHeader)
 	}
 	httpCli := receiver.hostHTTPCliMap[host]
-	err := httpCli.DoTimeout(request, response, pingTimeout)
+	err := httpCli.DoTimeout(request, response, receiver.config.PingTimeout)
 	cost := time.Now().Sub(start)
-	if err == nil && response.StatusCode() == fasthttp.StatusOK {
-		ReportRequestSuccess(metricsKeyPingSuccess, url, start)
-		logs.Trace("ping success host:'%s' cost:'%s'", host, cost)
+	if err != nil {
+		metrics.Warn(reqID, "[ByteplusSDK] ping find err, tenant:%s, host:%s, cost:%dms, err:%v",
+			receiver.context.Tenant(), host, cost.Milliseconds(), err)
+		logs.Warn("ping find err, host:%s cost:%dms err:%v", host, cost.Milliseconds(), err)
+	}
+	if response.StatusCode() == fasthttp.StatusOK {
+		metrics.Info(reqID, "[ByteplusSDK] ping success, tenant:%s, host:%s, cost:%dms",
+			receiver.context.Tenant(), host, cost.Milliseconds())
+		logs.Debug("ping success host:'%s' cost:'%s'", host, cost)
 		return true
 	}
-	if err != nil {
-		ReportRequestException(metricsKeyPingError, url, start, err)
-	} else {
-		ReportRequestError(metricsKeyPingError, url, start, response.StatusCode(), "ping-fail")
-	}
+	metrics.Warn(reqID, "[ByteplusSDK] ping fail, tenant:%s, host:%s, cost:%dms, status:%d",
+		receiver.context.Tenant(), host, cost.Milliseconds(), response.StatusCode())
 	logs.Warn("ping fail, host:%s cost:%s status:%d err:%v",
 		host, cost, response.StatusCode(), err)
 	return false
@@ -142,6 +186,10 @@ func (receiver *HostAvailabler) switchHost() {
 			receiver.context.hostHTTPCli = &fasthttp.HostClient{Addr: newHost}
 		}
 	}
+}
+
+func (receiver *HostAvailabler) GetHost() string {
+	return receiver.currentHost
 }
 
 func newWindow(size int) *window {
