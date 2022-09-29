@@ -15,7 +15,7 @@ const (
 var (
 	cnHosts = []string{"rec-b.volcengineapi.com", "rec.volcengineapi.com"}
 
-	sgHosts = []string{"rec-ap-singapore-1.byteplusapi.com"}
+	sgHosts = []string{"rec-ap-singapore-1.byteplusapi.com", "rec-b-ap-singapore-1.byteplusapi.com"}
 
 	usHosts = []string{"rec-us-east-1.byteplusapi.com"}
 
