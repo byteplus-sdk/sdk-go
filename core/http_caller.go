@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/byteplus-sdk/sdk-go/core/metrics"
+
 	"github.com/byteplus-sdk/sdk-go/core/logs"
 	"github.com/byteplus-sdk/sdk-go/core/option"
 	"github.com/google/uuid"
@@ -29,18 +31,35 @@ type HTTPCaller struct {
 func (c *HTTPCaller) DoJSONRequest(url string, request interface{},
 	response proto.Message, options *option.Options) error {
 	reqBytes, err := c.jsonMarshal(request)
+	headers := c.buildHeaders(options, "application/json")
+	reqID, _ := headers["Request-Id"]
 	if err != nil {
+		metricsTags := []string{
+			"type:marshal_json_request_fail",
+			"tenant:" + c.context.Tenant(),
+			"url:" + escapeMetricsTagValue(url),
+		}
+		metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
+		metrics.Error(reqID, "[ByteplusSDK] marshal json request fail, tenant:%s, url:%s err:%v",
+			c.context.Tenant(), url, err)
 		logs.Error("json marshal request fail, err:%s url:%s", err.Error(), url)
 		return err
 	}
-	headers := c.buildHeaders(options, "application/json")
 	url = c.withOptionQueries(options, url)
-	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
+	rspBytes, err := c.doHttpRequest(reqID, url, headers, reqBytes, options.Timeout)
 	if err != nil {
 		return err
 	}
 	err = proto.Unmarshal(rspBytes, response)
 	if err != nil {
+		metricsTags := []string{
+			"type:unmarshal_json_response_fail",
+			"tenant:" + c.context.Tenant(),
+			"url:" + escapeMetricsTagValue(url),
+		}
+		metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
+		metrics.Error(reqID, "[ByteplusSDK] unmarshal json response fail, tenant:%s, url:%s err:%v",
+			c.context.Tenant(), url, err)
 		logs.Error("unmarshal response fail, err:%s url:%s", err.Error(), url)
 		return err
 	}
@@ -59,18 +78,35 @@ func (c *HTTPCaller) jsonMarshal(request interface{}) ([]byte, error) {
 func (c *HTTPCaller) DoPBRequest(url string, request proto.Message,
 	response proto.Message, options *option.Options) error {
 	reqBytes, err := c.marshal(request)
+	headers := c.buildHeaders(options, "application/x-protobuf")
+	reqID, _ := headers["Request-Id"]
 	if err != nil {
+		metricsTags := []string{
+			"type:marshal_pb_request_fail",
+			"tenant:" + c.context.Tenant(),
+			"url:" + escapeMetricsTagValue(url),
+		}
+		metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
+		metrics.Error(reqID, "[ByteplusSDK] marshal pb request fail, tenant:%s, url:%s err:%v",
+			c.context.Tenant(), url, err)
 		logs.Error("marshal request fail, err:%s url:%s", err.Error(), url)
 		return err
 	}
-	headers := c.buildHeaders(options, "application/x-protobuf")
 	url = c.withOptionQueries(options, url)
-	rspBytes, err := c.doHttpRequest(url, headers, reqBytes, options.Timeout)
+	rspBytes, err := c.doHttpRequest(reqID, url, headers, reqBytes, options.Timeout)
 	if err != nil {
 		return err
 	}
 	err = proto.Unmarshal(rspBytes, response)
 	if err != nil {
+		metricsTags := []string{
+			"type:unmarshal_pb_response_fail",
+			"tenant:" + c.context.Tenant(),
+			"url:" + escapeMetricsTagValue(url),
+		}
+		metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
+		metrics.Error(reqID, "[ByteplusSDK] unmarshal pb response fail, tenant:%s, url:%s err:%v",
+			c.context.Tenant(), url, err)
 		logs.Error("unmarshal response fail, err:%s url:%s", err.Error(), url)
 		return err
 	}
@@ -187,7 +223,7 @@ func (c *HTTPCaller) withOptionQueries(options *option.Options, url string) stri
 	return url
 }
 
-func (c *HTTPCaller) doHttpRequest(url string, headers map[string]string,
+func (c *HTTPCaller) doHttpRequest(reqID, url string, headers map[string]string,
 	reqBytes []byte, timeout time.Duration) ([]byte, error) {
 	request := c.acquireRequest(url, headers, reqBytes)
 	response := fasthttp.AcquireResponse()
@@ -197,27 +233,49 @@ func (c *HTTPCaller) doHttpRequest(url string, headers map[string]string,
 	}()
 	c.withAuthHeaders(request, reqBytes)
 	start := time.Now()
-	defer func() {
-		logs.Debug("http url:%s, cost:%s", url, time.Now().Sub(start))
-	}()
 	logs.Trace("http request header:\n%s", string(request.Header.Header()))
 	err := c.smartDoRequest(timeout, request, response)
+	cost := time.Now().Sub(start)
+	defer func() {
+		metricsTags := []string{
+			"tenant:" + c.context.Tenant(),
+			"url:" + escapeMetricsTagValue(url),
+		}
+		metrics.Timer(metricsKeyRequestTotalCost, cost.Milliseconds(), metricsTags...)
+		metrics.Counter(metricsKeyRequestCount, 1, metricsTags...)
+		metrics.Info(reqID, "[ByteplusSDK] http request success tenant:%s, http url:%s, cost:%dms",
+			c.context.Tenant(), url, cost.Milliseconds())
+		logs.Debug("http url:%s, cost:%sms", url, cost.Milliseconds())
+	}()
 	if err != nil {
-		ReportRequestException(metricsKeyInvokeError, url, start, err)
 		if strings.Contains(strings.ToLower(err.Error()), "timeout") {
+			metricsTags := []string{
+				"type:request_timeout",
+				"tenant:" + c.context.Tenant(),
+				"url:" + escapeMetricsTagValue(url),
+			}
+			metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
+			metrics.Error(reqID, "[ByteplusSDK] do http request timeout, tenant:%s, url:%s, cost:%dms, err:%v",
+				c.context.Tenant(), url, cost.Milliseconds(), err)
 			logs.Error("do http request timeout, msg:%s url:%s", err.Error(), url)
 			return nil, errors.New(netErrMark + " timeout")
 		}
+		metricsTags := []string{
+			"type:request_occur_err",
+			"tenant:" + c.context.Tenant(),
+			"url:" + escapeMetricsTagValue(url),
+		}
+		metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
+		metrics.Error(reqID, "[ByteplusSDK] do http request occur err, tenant:%s, url:%s, err:%v",
+			c.context.Tenant(), url, err)
 		logs.Error("do http request occur error, msg:%s url:%s", err.Error(), url)
 		return nil, err
 	}
 	logs.Trace("http response headers:\n%s", string(response.Header.Header()))
 	if response.StatusCode() != fasthttp.StatusOK {
-		c.logHttpResponse(url, response)
-		ReportRequestError(metricsKeyInvokeError, url, start, response.StatusCode(), "invoke-fail")
+		c.logHttpResponse(reqID, url, response)
 		return nil, errors.New(netErrMark + "http status not 200")
 	}
-	ReportRequestSuccess(metricsKeyInvokeSuccess, url, start)
 	return decompressResponse(url, response)
 }
 
@@ -257,13 +315,25 @@ func (c *HTTPCaller) smartDoRequest(timeout time.Duration,
 	return err
 }
 
-func (c *HTTPCaller) logHttpResponse(url string, response *fasthttp.Response) {
+func (c *HTTPCaller) logHttpResponse(reqID, url string, response *fasthttp.Response) {
+	metricsTags := []string{
+		"type:rsp_status_not_ok",
+		"tenant:" + c.context.Tenant(),
+		"url:" + escapeMetricsTagValue(url),
+		"status:" + strconv.Itoa(response.StatusCode()),
+	}
+	metrics.Counter(metricsKeyCommonError, 1, metricsTags...)
 	rspBytes, _ := decompressResponse(url, response)
 	if len(rspBytes) > 0 {
+		logFormat := "[ByteplusSDK] http status not 200, tenant:%s, url:%s, code:%d, headers:\n%s, body:\n%s"
+		metrics.Error(reqID, logFormat,
+			c.context.Tenant(), url, response.StatusCode(), &response.Header, string(rspBytes))
 		logs.Error("http status not 200, url:%s code:%d headers:\n%s\n body:\n%s",
 			url, response.StatusCode(), string(response.Header.Header()), string(rspBytes))
 		return
 	}
+	metrics.Error(reqID, "[ByteplusSDK] http status not 200, tenant:%s, url:%s, code:%d, headers:\\n%s",
+		c.context.Tenant(), url, response.StatusCode(), &response.Header)
 	logs.Error("http status not 200, url:%s code:%d headers:\n%s\n",
 		url, response.StatusCode(), string(response.Header.Header()))
 }

@@ -1,443 +1,301 @@
 package metrics
 
 import (
-	"errors"
 	"fmt"
-	"github.com/byteplus-sdk/sdk-go/core/logs"
-	"github.com/valyala/fasthttp"
-	"go.uber.org/atomic"
-	"google.golang.org/protobuf/proto"
-	"math"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/byteplus-sdk/sdk-go/core/logs"
+	"github.com/byteplus-sdk/sdk-go/core/metrics/protocol"
+
+	"github.com/valyala/fasthttp"
 )
+
+type HostReader interface {
+	GetHost() string
+}
 
 var (
-	metricsCfg       *config
-	metricsCollector *collector
-	onceLock         = &sync.Once{}
-	// timer stat names to be reported
-	timerStatMetrics = []string{"max", "min", "avg", "pct75", "pct90", "pct95", "pct99", "pct999"}
+	Collector = &collector{}
 )
 
+type Config struct {
+	// When metrics are enabled, monitoring metrics will be reported to the byteplus server during use.
+	EnableMetrics bool
+	// When metrics log is enabled, the log will be reported to the byteplus server during use.
+	EnableMetricsLog bool
+	// The address of the byteplus metrics service, will be consistent with the host maintained by hostAvailabler.
+	Domain string
+	// The prefix of the Metrics indicator, the default is byteplus.rec.sdk, do not modify.
+	Prefix string
+	// Use this httpSchema to report metrics to byteplus server, default is https.
+	HTTPSchema string
+	// The reporting interval, the default is 15s, if the QPS is high, the reporting interval can be reduced to prevent data loss.
+	ReportInterval time.Duration
+	// Timeout for request reporting.
+	HTTPTimeout time.Duration
+}
+
+func NewConfig() *Config {
+	return &Config{
+		EnableMetrics:    false,
+		EnableMetricsLog: false,
+		Domain:           defaultMetricsDomain,
+		Prefix:           defaultMetricsPrefix,
+		HTTPSchema:       defaultMetricsHTTPSchema,
+		ReportInterval:   defaultReportInterval,
+		HTTPTimeout:      defaultHTTPTimeout,
+	}
+}
+
+func fillDefaultCfg(cfg *Config) {
+	if len(cfg.Domain) == 0 {
+		cfg.Domain = defaultMetricsDomain
+	}
+	if len(cfg.Prefix) == 0 {
+		cfg.Prefix = defaultMetricsPrefix
+	}
+	if len(cfg.HTTPSchema) == 0 {
+		cfg.HTTPSchema = defaultMetricsHTTPSchema
+	}
+	if cfg.ReportInterval <= 0 {
+		cfg.ReportInterval = defaultReportInterval
+	}
+	if cfg.HTTPTimeout <= 0 {
+		cfg.HTTPTimeout = defaultHTTPTimeout
+	}
+}
+
 type collector struct {
-	collectors map[metricsType]map[string]*metricValue
-	locks      map[metricsType]*sync.RWMutex
-	httpCli    *fasthttp.Client
+	cfg                         *Config
+	reporter                    *reporter
+	metricsCollector            chan *protocol.Metric
+	metricsLogCollector         chan *protocol.MetricLog
+	cleaningMetricsCollector    bool
+	cleaningMetricsLogCollector bool
+	initialed                   bool
+	hostReader                  HostReader
+	lock                        *sync.Mutex
 }
 
-type config struct {
-	enableMetrics bool
-	domain        string
-	prefix        string
-	printLog      bool   // whether print logs during collecting metrics
-	httpSchema    string // https or http
-	flushInterval time.Duration
-	httpTimeoutMs time.Duration
-}
-
-type metricValue struct {
-	value        interface{}
-	flushedValue interface{}
-	updated      bool // When there is a new report, updated is true, otherwise it is false
-}
-
-// Init As long as the Init function is called, the metrics are enabled
-func Init(options ...Option) {
-	// if no options, set to default config
-	metricsCfg = &config{
-		domain:        defaultMetricsDomain,
-		flushInterval: defaultFlushInterval,
-		prefix:        defaultMetricsPrefix,
-		httpSchema:    defaultHttpSchema,
-		enableMetrics: true,
-		httpTimeoutMs: defaultHttpTimeout,
+func (c *collector) Init(cfg *Config, hostReader HostReader) {
+	if c.initialed {
+		return
 	}
-	for _, option := range options {
-		option(metricsCfg)
+	if cfg == nil {
+		cfg = NewConfig()
 	}
-	metricsCollector = &collector{
-		httpCli: &fasthttp.Client{},
-		collectors: map[metricsType]map[string]*metricValue{
-			metricsTypeCounter: make(map[string]*metricValue),
-			metricsTypeTimer:   make(map[string]*metricValue),
-			metricsTypeStore:   make(map[string]*metricValue),
+	fillDefaultCfg(cfg)
+	c.lock = &sync.Mutex{}
+	c.doInit(cfg, hostReader)
+}
+
+func (c *collector) InitWithOptions(opts ...Option) {
+	if c.initialed {
+		return
+	}
+	cfg := NewConfig()
+	for _, opt := range opts {
+		opt(cfg)
+	}
+	c.lock = &sync.Mutex{}
+	c.doInit(cfg, nil)
+}
+
+func (c *collector) doInit(cfg *Config, hostReader HostReader) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if c.initialed {
+		return
+	}
+	c.cfg = cfg
+	c.hostReader = hostReader
+	// initialize metrics reporter
+	c.reporter = &reporter{
+		httpCli: &fasthttp.Client{
+			MaxIdleConnDuration: 60 * time.Second,
 		},
-		locks: map[metricsType]*sync.RWMutex{
-			metricsTypeCounter: {},
-			metricsTypeStore:   {},
-			metricsTypeTimer:   {},
-		},
+		metricsCfg: c.cfg,
 	}
-	onceLock.Do(func() {
-		startReport()
-	})
+	// initialize metrics collector
+	c.metricsCollector = make(chan *protocol.Metric, maxMetricsSize)
+	c.metricsLogCollector = make(chan *protocol.MetricLog, maxMetricsLogSize)
+	if !c.isEnableMetrics() && !c.isEnableMetricsLog() {
+		c.initialed = true
+		return
+	}
+	c.startReport()
+	c.initialed = true
 }
 
-type Option func(*config)
-
-func WithMetricsDomain(domain string) Option {
-	return func(config *config) {
-		if domain != "" {
-			config.domain = domain
-		}
-	}
-}
-
-func WithMetricsPrefix(prefix string) Option {
-	return func(config *config) {
-		if prefix != "" {
-			config.prefix = prefix
-		}
-	}
-}
-
-// WithMetricsHttpSchema in private env, 'https' may not be supported
-func WithMetricsHttpSchema(schema string) Option {
-	return func(config *config) {
-		// only support "http" and "https"
-		if schema == "https" || schema == "http" {
-			config.httpSchema = schema
-		}
-	}
-}
-
-//WithMetricsLog if not set, will not print metrics log
-func WithMetricsLog() Option {
-	return func(config *config) {
-		config.printLog = true
-	}
-}
-
-// WithFlushInterval set the interval of reporting metrics
-func WithFlushInterval(flushInterval time.Duration) Option {
-	return func(config *config) {
-		if flushInterval > 5000*time.Millisecond { // flushInterval should not be too small
-			config.flushInterval = flushInterval
-		}
-	}
-}
-
-// WithMetricsTimeout set the interval of reporting metrics
-func WithMetricsTimeout(timeout time.Duration) Option {
-	return func(config *config) {
-		if timeout > defaultHttpTimeout {
-			config.httpTimeoutMs = timeout
-		}
-	}
-}
-
-func isEnableMetrics() bool {
-	if metricsCfg == nil {
+func (c *collector) isEnableMetrics() bool {
+	if c.cfg == nil {
 		return false
 	}
-	return metricsCfg.enableMetrics
+	return c.cfg.EnableMetrics
 }
 
-// isEnablePrintLog enable print log during reporting metrics
-func isEnablePrintLog() bool {
-	if metricsCfg == nil {
+func (c *collector) isEnableMetricsLog() bool {
+	if c.cfg == nil {
 		return false
 	}
-	return metricsCfg.printLog
+	return c.cfg.EnableMetricsLog
 }
 
-// Update the value corresponding to (name, tags) to the latest value,
-// and there is no need to clear it after each report.
-func emitStore(name string, value float64, tagKvs ...string) {
-	if !isEnableMetrics() {
+func (c *collector) EmitMetric(metricsType, name string, value int64, tagKvs ...string) {
+	if !c.isEnableMetrics() {
 		return
 	}
-	collectKey := buildCollectKey(name, tagKvs)
-	updateMetric(metricsTypeStore, collectKey, value)
-}
-
-// Count the accumulated value of (name, tags) corresponding to the
-// value during this reporting period (flushInterval), and it needs
-// to be cleared after each reporting period
-func emitCounter(name string, value float64, tagKvs ...string) {
-	if !isEnableMetrics() {
-		return
-	}
-	collectKey := buildCollectKey(name, tagKvs)
-	updateMetric(metricsTypeCounter, collectKey, value)
-}
-
-func emitTimer(name string, value float64, tagKvs ...string) {
-	if !isEnableMetrics() {
-		return
-	}
-	collectKey := buildCollectKey(name, tagKvs)
-	updateMetric(metricsTypeTimer, collectKey, value)
-}
-
-func updateMetric(metricType metricsType, collectKey string, value float64) {
-	metric := getOrCreateMetric(metricType, collectKey)
-	switch metricType {
-	case metricsTypeStore:
-		metric.value = value
-	case metricsTypeCounter:
-		metric.value.(*atomic.Float64).Add(value)
-	case metricsTypeTimer:
-		metric.value.(Sample).Update(int64(value))
-	}
-	metric.updated = true
-}
-
-func getOrCreateMetric(metricType metricsType, collectKey string) *metricValue {
-	metricsCollector.locks[metricType].RLock()
-	if metricsCollector.collectors[metricType][collectKey] != nil {
-		metricsCollector.locks[metricType].RUnlock()
-		return metricsCollector.collectors[metricType][collectKey]
-	}
-	metricsCollector.locks[metricType].RUnlock()
-
-	// set default metric
-	metricsCollector.locks[metricType].Lock()
-	defer metricsCollector.locks[metricType].Unlock()
-	if metricsCollector.collectors[metricType][collectKey] == nil {
-		metricsCollector.collectors[metricType][collectKey] = buildDefaultMetric(metricType)
-	}
-	return metricsCollector.collectors[metricType][collectKey]
-}
-
-func buildDefaultMetric(metricType metricsType) *metricValue {
-	switch metricType {
-	//timer
-	case metricsTypeTimer:
-		return &metricValue{
-			value:   NewUniformSample(reservoirSize),
-			updated: false,
+	// spin when cleaning collector
+	tryTimes := 0
+	for c.cleaningMetricsCollector {
+		if tryTimes >= maxSpinTimes {
+			return
 		}
-	//counter
-	case metricsTypeCounter:
-		return &metricValue{
-			value:        atomic.NewFloat64(0),
-			flushedValue: atomic.NewFloat64(0),
-			updated:      false,
-		}
+		time.Sleep(5 * time.Millisecond)
+		tryTimes += 1
 	}
-	//store
-	return &metricValue{
-		value:   float64(0),
-		updated: false,
+	metricsName := name
+	if len(c.cfg.Prefix) > 0 {
+		metricsName = fmt.Sprintf("%s.%s", c.cfg.Prefix, metricsName)
+	}
+	metric := &protocol.Metric{
+		Name:      metricsName,
+		Value:     float64(value),
+		Type:      metricsType,
+		Timestamp: currentTimeMillis(),
+		Tags:      recoverTags(tagKvs...),
+	}
+	select {
+	case c.metricsCollector <- metric:
+	default:
+		logs.Debug("[Metrics]: The number of metrics exceeds the limit, the metrics write is rejected")
 	}
 }
 
-func startReport() {
-	if !isEnableMetrics() {
+func (c *collector) EmitLog(logID, message, logLevel string, timestamp int64) {
+	if !c.isEnableMetricsLog() {
 		return
 	}
-	ticker := time.NewTicker(metricsCfg.flushInterval)
+	// spin when cleaning collector
+	tryTimes := 0
+	for c.cleaningMetricsLogCollector {
+		if tryTimes >= maxSpinTimes {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+		tryTimes += 1
+	}
+	metricLog := &protocol.MetricLog{
+		Id:        logID,
+		Message:   message,
+		Level:     logLevel,
+		Timestamp: currentTimeMillis(),
+	}
+	select {
+	case c.metricsLogCollector <- metricLog:
+	default:
+		logs.Debug("[Metrics]: The number of metrics logs exceeds the limit, the metrics write is rejected")
+	}
+}
+
+func (c *collector) startReport() {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				if isEnablePrintLog() {
-					logs.Error("metrics report encounter panic:%+v, stack:%s", err, string(debug.Stack()))
-				}
+				logs.Error("metrics report encounter panic:%+v, stack:%s", err, string(debug.Stack()))
 			}
 		}()
+		ticker := time.NewTicker(c.cfg.ReportInterval)
 		for range ticker.C {
-			flushTimer()
-			flushStore()
-			flushCounter()
+			c.report()
 		}
 	}()
 }
 
-func flushStore() {
-	metricsRequests := make([]*Metric, 0, len(metricsCollector.collectors[metricsTypeStore]))
-	metricsCollector.locks[metricsTypeStore].RLock()
-	for key, metric := range metricsCollector.collectors[metricsTypeStore] {
-		if metric.updated { // if updated is false, means no metric emit
-			// reset updated tag after report
-			metric.updated = false
-			name, tagKvs, ok := parseNameAndTags(key)
-			if !ok {
-				continue
-			}
-			metricsRequest := &Metric{
-				Metric:    metricsCfg.prefix + "." + name,
-				Tags:      tagKvs,
-				Value:     metric.value.(float64),
-				Timestamp: uint64(time.Now().Unix()),
-			}
-			metricsRequests = append(metricsRequests, metricsRequest)
-		}
+func (c *collector) report() {
+	if c.isEnableMetrics() {
+		c.reportMetrics()
 	}
-	metricsCollector.locks[metricsTypeStore].RUnlock()
-	if len(metricsRequests) > 0 {
-		url := fmt.Sprintf(otherUrlFormat, metricsCfg.httpSchema, metricsCfg.domain)
-		sendMetrics(metricsRequests, url)
+	if c.isEnableMetricsLog() {
+		c.reportMetricsLog()
 	}
 }
 
-func flushCounter() {
-	metricsRequests := make([]*Metric, 0, len(metricsCollector.collectors[metricsTypeCounter]))
-	metricsCollector.locks[metricsTypeCounter].RLock()
-	for key, metric := range metricsCollector.collectors[metricsTypeCounter] {
-		if metric.updated {
-			// reset updated tag after report
-			metric.updated = false
-			name, tagKvs, ok := parseNameAndTags(key)
-			if !ok {
-				continue
-			}
-			valueCopy := metric.value.(*atomic.Float64).Load()
-			metricsRequest := &Metric{
-				Metric:    metricsCfg.prefix + "." + name,
-				Tags:      tagKvs,
-				Value:     valueCopy - metric.flushedValue.(*atomic.Float64).Load(),
-				Timestamp: uint64(time.Now().Unix()),
-			}
-			metricsRequests = append(metricsRequests, metricsRequest)
-			// after each flushInterval of the counter is reported, the accumulated metric needs to be cleared
-			metric.flushedValue.(*atomic.Float64).Store(valueCopy)
-			// if the value is too large, reset it
-			if valueCopy >= math.MaxFloat64/2 {
-				metric.value.(*atomic.Float64).Store(0)
-				metric.flushedValue.(*atomic.Float64).Store(0)
-			}
-		}
-	}
-	metricsCollector.locks[metricsTypeCounter].RUnlock()
-
-	if len(metricsRequests) > 0 {
-		url := fmt.Sprintf(counterUrlFormat, metricsCfg.httpSchema, metricsCfg.domain)
-		sendMetrics(metricsRequests, url)
-	}
-}
-
-func flushTimer() {
-	metricsRequests := make([]*Metric, 0, len(metricsCollector.collectors[metricsTypeTimer])*len(timerStatMetrics))
-	metricsCollector.locks[metricsTypeTimer].RLock()
-	for key, metric := range metricsCollector.collectors[metricsTypeTimer] {
-		if metric.updated {
-			// reset updated tag after report
-			metric.updated = false
-			name, tagKvs, ok := parseNameAndTags(key)
-			if !ok {
-				return
-			}
-			snapshot := metric.value.(Sample).Snapshot()
-			// clear sample every sample period
-			metric.value.(Sample).Clear()
-			metricsRequests = append(metricsRequests, buildStatMetrics(snapshot, name, tagKvs)...)
-		}
-	}
-	metricsCollector.locks[metricsTypeTimer].RUnlock()
-	if len(metricsRequests) > 0 {
-		url := fmt.Sprintf(otherUrlFormat, metricsCfg.httpSchema, metricsCfg.domain)
-		sendMetrics(metricsRequests, url)
-	}
-}
-
-func sendMetrics(metricsRequests []*Metric, url string) {
-	if err := send(&MetricMessage{Metrics: metricsRequests}, url); err != nil {
-		logs.Error("[BytePlusSDK][Metrics] send metrics err:%+v, url:%s, metricsRequests:%+v", err, url, metricsRequests)
+func (c *collector) reportMetrics() {
+	metricsLen := len(c.metricsCollector)
+	if metricsLen == 0 {
 		return
 	}
-	if isEnablePrintLog() {
-		logs.Debug("[BytePlusSDK][Metrics] send metrics success, url:%s, metricsRequests:%+v", url, metricsRequests)
+	metrics := make([]*protocol.Metric, 0, metricsLen)
+	c.cleaningMetricsCollector = true
+	for i := 0; i < metricsLen; i++ {
+		metric := <-c.metricsCollector
+		metrics = append(metrics, metric)
 	}
+	c.cleaningMetricsCollector = false
+	c.doReportMetrics(metrics)
 }
 
-func buildStatMetrics(sample Sample, name string, tagKvs map[string]string) []*Metric {
-	timestamp := uint64(time.Now().Unix())
-	metricsRequests := make([]*Metric, 0, len(timerStatMetrics))
-	for _, statName := range timerStatMetrics {
-		value, ok := getStatValue(statName, sample)
-		if !ok {
-			continue
-		}
-		metricsRequests = append(metricsRequests, &Metric{
-			Metric:    metricsCfg.prefix + "." + name + "." + statName,
-			Tags:      tagKvs,
-			Value:     value,
-			Timestamp: timestamp,
-		})
+func (c *collector) getDomain() string {
+	if c.hostReader == nil {
+		return c.cfg.Domain
 	}
-	return metricsRequests
+	return c.hostReader.GetHost()
 }
 
-func getStatValue(statName string, sample Sample) (float64, bool) {
-	switch statName {
-	case "max":
-		return float64(sample.Max()), true
-	case "min":
-		return float64(sample.Min()), true
-	case "avg":
-		return sample.Mean(), true
-	case "pct75":
-		return sample.Percentile(0.75), true
-	case "pct90":
-		return sample.Percentile(0.90), true
-	case "pct95":
-		return sample.Percentile(0.95), true
-	case "pct99":
-		return sample.Percentile(0.99), true
-	case "pct999":
-		return sample.Percentile(0.999), true
+func (c *collector) doReportMetrics(metrics []*protocol.Metric) {
+	url := fmt.Sprintf(metricsURLFormat, c.cfg.HTTPSchema, c.getDomain())
+	metricMessage := &protocol.MetricMessage{
+		Metrics: metrics,
 	}
-	return 0, false
-}
-
-// send httpRequest to metrics server
-func send(metricRequests *MetricMessage, url string) error {
-	var err error
-	var request *fasthttp.Request
-	for i := 0; i < maxTryTimes; i++ {
-		request, err = buildMetricsRequest(metricRequests, url)
-		if err != nil {
-			fasthttp.ReleaseRequest(request)
-			continue
-		}
-		err = doSend(request)
-		if err == nil {
-			return nil
-		}
-		// retry when http timeout
-		if strings.Contains(strings.ToLower(err.Error()), "timeout") {
-			err = errors.New("request timeout, msg:" + err.Error())
-			continue
-		}
-		// when occur other err, return directly
-		return err
-	}
-	return err
-}
-
-func buildMetricsRequest(metricRequests *MetricMessage, url string) (*fasthttp.Request, error) {
-	request := fasthttp.AcquireRequest()
-	request.Header.SetMethod(fasthttp.MethodPost)
-	request.SetRequestURI(url)
-	//request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Content-Type", "application/protobuf")
-	request.Header.Set("Accept", "application/json")
-	//body, err := json.Marshal(metricRequests)
-	body, err := proto.Marshal(metricRequests)
-
+	err := c.reporter.reportMetrics(metricMessage, url)
 	if err != nil {
-		return nil, err
+		logs.Error("[Metrics] report metrics fail, err:%v, url:%s", err, url)
 	}
-	request.SetBodyRaw(body)
-	return request, nil
 }
 
-func doSend(request *fasthttp.Request) error {
-	response := fasthttp.AcquireResponse()
-	defer func() {
-		fasthttp.ReleaseRequest(request)
-		fasthttp.ReleaseResponse(response)
-	}()
-	err := metricsCollector.httpCli.DoTimeout(request, response, metricsCfg.httpTimeoutMs)
+func (c *collector) reportMetricsLog() {
+	metricsLogLen := len(c.metricsLogCollector)
+	if metricsLogLen == 0 {
+		return
+	}
+	metricLogs := make([]*protocol.MetricLog, 0, metricsLogLen)
+	c.cleaningMetricsLogCollector = true
+	for i := 0; i < metricsLogLen; i++ {
+		metricLog := <-c.metricsLogCollector
+		metricLogs = append(metricLogs, metricLog)
+	}
+	c.cleaningMetricsLogCollector = false
+	c.doReportMetricsLogs(metricLogs)
+}
+
+func (c *collector) doReportMetricsLogs(metricLogs []*protocol.MetricLog) {
+	url := fmt.Sprintf(metricsLogURLFormat, c.cfg.HTTPSchema, c.getDomain())
+	metricLogMessage := &protocol.MetricLogMessage{
+		MetricLogs: metricLogs,
+	}
+	err := c.reporter.reportMetricsLog(metricLogMessage, url)
 	if err != nil {
-		return err
+		logs.Error("[Metrics] report metrics log fail, err:%v, url:%s", err, url)
 	}
-	if response.StatusCode() == fasthttp.StatusOK {
-		return nil
+}
+
+// recover tagStrings to origin Tags map
+func recoverTags(tagKvs ...string) map[string]string {
+	tagKvMap := make(map[string]string)
+	for _, kv := range tagKvs {
+		res := strings.SplitN(kv, ":", 2)
+		if len(res) < 2 {
+			continue
+		}
+		tagKvMap[res[0]] = res[1]
 	}
-	return errors.New(fmt.Sprintf("bad rsp statusCode(%d)", response.StatusCode()))
+	return tagKvMap
+}
+
+func currentTimeMillis() int64 {
+	return time.Now().UnixNano() / 1e6
 }

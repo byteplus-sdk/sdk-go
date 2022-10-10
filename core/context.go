@@ -3,21 +3,25 @@ package core
 import (
 	"errors"
 
+	"github.com/byteplus-sdk/sdk-go/core/metrics"
+
 	"github.com/valyala/fasthttp"
 )
 
 type ContextParam struct {
-	Tenant     string
-	TenantId   string
-	Token      string
-	AK         string
-	SK         string
-	Schema     string
-	HostHeader string
-	Hosts      []string
-	Headers    map[string]string
-	Region     Region
-	UseAirAuth bool
+	Tenant               string
+	TenantId             string
+	Token                string
+	AK                   string
+	SK                   string
+	Schema               string
+	HostHeader           string
+	Hosts                []string
+	Headers              map[string]string
+	Region               Region
+	UseAirAuth           bool
+	MetricsConfig        *metrics.Config
+	HostAvailablerConfig *HostAvailablerConfig
 }
 
 func (receiver *ContextParam) checkRequiredField(param *ContextParam) error {
@@ -54,14 +58,16 @@ func NewContext(param *ContextParam) (*Context, error) {
 		return nil, err
 	}
 	result := &Context{
-		tenant:          param.Tenant,
-		tenantId:        param.TenantId,
-		token:           param.Token,
-		schema:          param.Schema,
-		hostHeader:      param.HostHeader,
-		hosts:           param.Hosts,
-		customerHeaders: param.Headers,
-		useAirAuth:      param.UseAirAuth,
+		tenant:               param.Tenant,
+		tenantId:             param.TenantId,
+		token:                param.Token,
+		schema:               param.Schema,
+		hostHeader:           param.HostHeader,
+		hosts:                param.Hosts,
+		customerHeaders:      param.Headers,
+		useAirAuth:           param.UseAirAuth,
+		metricsConfig:        param.MetricsConfig,
+		hostAvailablerConfig: param.HostAvailablerConfig,
 	}
 	result.fillHosts(param)
 	result.fillVolcCredentials(param)
@@ -113,6 +119,10 @@ type Context struct {
 
 	// use air auth, otherwise use volc auth
 	useAirAuth bool
+
+	metricsConfig *metrics.Config
+
+	hostAvailablerConfig *HostAvailablerConfig
 }
 
 func (receiver *Context) Tenant() string {
@@ -157,6 +167,14 @@ func (receiver *Context) UseVolcAuth() bool {
 
 func (receiver *Context) CustomerHeaders() map[string]string {
 	return receiver.customerHeaders
+}
+
+func (receiver *Context) MetricsConfig() *metrics.Config {
+	return receiver.metricsConfig
+}
+
+func (receiver *Context) HostAvailablerConfig() *HostAvailablerConfig {
+	return receiver.hostAvailablerConfig
 }
 
 func (receiver *Context) fillHosts(param *ContextParam) {

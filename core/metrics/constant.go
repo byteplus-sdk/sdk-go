@@ -3,26 +3,41 @@ package metrics
 import "time"
 
 const (
-	defaultMetricsDomain = "bot.snssdk.com"
-	defaultMetricsPrefix = "byteplus.rec.sdk"
-	defaultHttpSchema    = "https"
+	// metrics default domain and prefix
+	defaultMetricsDomain     = "rec-api-sg1.recplusapi.com"
+	defaultMetricsPrefix     = "byteplus.rec.sdk"
+	defaultMetricsHTTPSchema = "https"
 
-	counterUrlFormat = "%s://%s/api/counter"
-	otherUrlFormat   = "%s://%s/api/put"
+	// monitor url format
+	metricsURLFormat    = "%s://%s/predict/api/monitor/metrics"
+	metricsLogURLFormat = "%s://%s/predict/api/monitor/metrics/log"
 
-	defaultFlushInterval = 10 * time.Second
-	reservoirSize        = 65536
-	decayAlpha           = 0.02
-	maxTryTimes          = 2
-	defaultHttpTimeout   = 800 * time.Millisecond
+	// domain path
+	metricsPath    = "/monitor/metrics"
+	metricsLogPath = "/monitor/metrics/log"
 
-	delimiter = "+"
-)
+	// metrics base config
+	defaultReportInterval = 15 * time.Second
+	defaultHTTPTimeout    = 800 * time.Millisecond
+	maxTryTimes           = 3
+	maxSpinTimes          = 5
+	successHTTPCode       = 200
+	maxMetricsSize        = 10000
+	maxMetricsLogSize     = 5000
 
-type metricsType int
+	// metrics log level
+	logLevelTrace  = "trace"
+	logLevelDebug  = "debug"
+	logLevelInfo   = "info"
+	logLevelNotice = "notice"
+	logLevelWarn   = "warn"
+	logLevelError  = "error"
+	logLevelFatal  = "fatal"
 
-const (
-	metricsTypeCounter metricsType = iota
-	metricsTypeTimer
-	metricsTypeStore
+	// metrics type
+	metricsTypeCounter     = "counter"
+	metricsTypeStore       = "store"
+	metricsTypeTimer       = "timer"
+	metricsTypeRateCounter = "rate_counter"
+	metricsTypeMeter       = "meter"
 )

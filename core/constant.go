@@ -54,9 +54,8 @@ const (
 )
 
 const (
-	// metric name for  byteplus sdk
-	metricsKeyInvokeSuccess = "invoke.success"
-	metricsKeyInvokeError   = "invoke.error"
-	metricsKeyPingSuccess   = "ping.success"
-	metricsKeyPingError     = "ping.error"
+	// Metrics Key
+	metricsKeyCommonError      = "common.err"
+	metricsKeyRequestTotalCost = "request.total.cost"
+	metricsKeyRequestCount     = "request.count"
 )
