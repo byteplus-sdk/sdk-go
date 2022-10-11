@@ -3,6 +3,7 @@ package general
 import (
 	"github.com/byteplus-sdk/sdk-go/common"
 	"github.com/byteplus-sdk/sdk-go/core"
+	"github.com/byteplus-sdk/sdk-go/core/metrics"
 )
 
 type ClientBuilder struct {
@@ -49,6 +50,16 @@ func (receiver *ClientBuilder) Region(region core.Region) *ClientBuilder {
 	return receiver
 }
 
+func (receiver *ClientBuilder) MetricsConfig(metricsConfig *metrics.Config) *ClientBuilder {
+	receiver.param.MetricsConfig = metricsConfig
+	return receiver
+}
+
+func (receiver *ClientBuilder) HostAvailablerConfig(hostAvailablerConfig *core.HostAvailablerConfig) *ClientBuilder {
+	receiver.param.HostAvailablerConfig = hostAvailablerConfig
+	return receiver
+}
+
 func (receiver *ClientBuilder) Build() (Client, error) {
 	receiver.param.UseAirAuth = true
 	context, err := core.NewContext(&receiver.param)
@@ -57,11 +68,13 @@ func (receiver *ClientBuilder) Build() (Client, error) {
 	}
 	gu := receiver.buildGeneralURL(context)
 	httpCaller := core.NewHTTPCaller(context)
+	hostAvailabler := core.NewHostAvailabler(gu, context)
+	metrics.Collector.Init(context.MetricsConfig(), hostAvailabler)
 	client := &clientImpl{
 		Client:  common.NewClient(httpCaller, gu.cu),
 		hCaller: httpCaller,
 		gu:      gu,
-		hostAva: core.NewHostAvailabler(gu, context),
+		hostAva: hostAvailabler,
 	}
 	return client, nil
 }

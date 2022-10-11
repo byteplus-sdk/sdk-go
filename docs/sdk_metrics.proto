@@ -1,0 +1,28 @@
+syntax = "proto3";
+package metric;
+
+option go_package = "github.com/byteplus-sdk/sdk-go/core/metrics/protocol";
+option java_package = "byteplus.sdk.core.metrics.protocol";
+
+message Metric {
+	string name = 1;
+	string type = 2;
+	int64 timestamp = 3;
+	double value = 4;
+	map<string, string> tags = 5;
+}
+
+message MetricMessage{
+	repeated Metric metrics = 1;
+}
+
+message MetricLog {
+	string id = 1;
+	string level = 2;
+	int64 timestamp = 3;
+	string message = 4;
+}
+
+message MetricLogMessage {
+	repeated MetricLog metric_logs = 1;
+}
