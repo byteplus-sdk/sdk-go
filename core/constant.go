@@ -7,21 +7,15 @@ const (
 	RegionCn
 	RegionSg
 	RegionUs
-	RegionAirCn
-	RegionAirSg
 	RegionSaasSg
 )
 
 var (
-	cnHosts = []string{"rec-b.volcengineapi.com", "rec.volcengineapi.com"}
+	cnHosts = []string{"rec.volcengineapi.com", "rec-b.volcengineapi.com"}
 
-	sgHosts = []string{"rec-ap-singapore-1.byteplusapi.com"}
+	sgHosts = []string{"rec-ap-singapore-1.byteplusapi.com", "rec-b-ap-singapore-1.byteplusapi.com"}
 
-	usHosts = []string{"rec-us-east-1.byteplusapi.com"}
-
-	airCnHosts = []string{"byteair-api-cn1.snssdk.com"}
-
-	airSgHosts = []string{"byteair-api-sg1.byteintlapi.com"}
+	usHosts = []string{"rec-us-east-1.byteplusapi.com", "rec-b-us-east-1.byteplusapi.com"}
 
 	saasSgHosts = []string{"rec-api-sg1.recplusapi.com"}
 )
