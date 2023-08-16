@@ -156,6 +156,7 @@ func (receiver *HostAvailabler) ping(host string) bool {
 		metrics.Warn(reqID, "[ByteplusSDK] ping find err, tenant:%s, host:%s, cost:%dms, err:%v",
 			receiver.context.Tenant(), host, cost.Milliseconds(), err)
 		logs.Warn("ping find err, host:%s cost:%dms err:%v", host, cost.Milliseconds(), err)
+		return false
 	}
 	if response.StatusCode() == fasthttp.StatusOK {
 		metrics.Info(reqID, "[ByteplusSDK] ping success, tenant:%s, host:%s, cost:%dms",
